@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, Users, Headphones, type LucideIcon } from "lucide-react"
 
 export interface NavItem {
   to: string
@@ -19,6 +19,12 @@ export const navItems: NavItem[] = [
     label: "Quản lý thành viên",
     icon: Users,
     match: /^\/admin\/users(\/|$)/,
+  },
+  {
+    to: "/admin/audio",
+    label: "Quản lý bài nghe",
+    icon: Headphones,
+    match: /^\/admin\/audio(\/|$)/,
   },
 ]
 

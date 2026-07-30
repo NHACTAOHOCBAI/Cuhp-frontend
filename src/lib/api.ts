@@ -9,9 +9,12 @@ export async function apiFetch<T = unknown>(
   const { token: explicitToken, headers, ...rest } = opts
   const token = explicitToken ?? localStorage.getItem("token")
 
-  const finalHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(headers as Record<string, string> | undefined),
+  const finalHeaders: Record<string, string> = {}
+  if (!(rest.body instanceof FormData)) {
+    finalHeaders["Content-Type"] = "application/json"
+  }
+  if (headers) {
+    Object.assign(finalHeaders, headers)
   }
   if (token) finalHeaders["Authorization"] = `Bearer ${token}`
 
