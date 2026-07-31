@@ -9,6 +9,7 @@ import NotFound from "@/pages/NotFound"
 import Dashboard from "@/pages/admin/Dashboard"
 import Users from "@/pages/admin/Users"
 import AudioPage from "@/pages/admin/Audio"
+import AudioDetailPage from "@/pages/admin/AudioDetail"
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="audio" element={<AudioPage />} />
+            <Route path="audio/:id" element={<AudioDetailPage />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />
