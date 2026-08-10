@@ -9,6 +9,7 @@ export const WORD_TYPES = [
   { value: "preposition", label: "Giới từ (Preposition)" },
   { value: "conjunction", label: "Liên từ (Conjunction)" },
   { value: "interjection", label: "Thán từ (Interjection)" },
+  { value: "other", label: "Khác (Other)" },
 ] as const
 
 export type WordType = (typeof WORD_TYPES)[number]["value"]
