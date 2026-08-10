@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Headphones, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, Users, Headphones, BookOpen, type LucideIcon } from "lucide-react"
 
 export interface NavItem {
   to: string
@@ -26,7 +26,14 @@ export const navItems: NavItem[] = [
     icon: Headphones,
     match: /^\/admin\/audio(\/|$)/,
   },
+  {
+    to: "/admin/vocabulary",
+    label: "Quản lý từ vựng",
+    icon: BookOpen,
+    match: /^\/admin\/vocabulary(\/|$)/,
+  },
 ]
+
 
 export function getPageTitle(pathname: string): string {
   const match = navItems.find((n) => n.match.test(pathname))
