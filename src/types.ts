@@ -8,6 +8,11 @@ export interface User {
   role: "admin" | "user"
   lastSeen?: string
   created_at?: string
+  daily_target: number
+  current_streak: number
+  last_reviewed_date?: string | null
+  words_reviewed_today: number
+  last_streak_increment_date?: string | null
 }
 
 export interface AuthState {
@@ -25,6 +30,8 @@ export interface VocabularyItem {
   created_at: string
   updated_at: string
   user_id: string
+  box_number: number
+  next_review_at: string
 }
 
 

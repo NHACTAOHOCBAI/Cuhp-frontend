@@ -25,7 +25,7 @@ export async function fetchVocabularies(
 }
 
 export async function createVocabulary(
-  payload: Omit<VocabularyItem, "id" | "user_id" | "created_at" | "updated_at">,
+  payload: Omit<VocabularyItem, "id" | "user_id" | "created_at" | "updated_at" | "box_number" | "next_review_at">,
   token: string | null,
 ): Promise<VocabularyItem> {
   return apiFetch<VocabularyItem>(API_BASE, {

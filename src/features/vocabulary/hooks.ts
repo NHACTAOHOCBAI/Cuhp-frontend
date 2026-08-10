@@ -45,7 +45,7 @@ export function useCreateVocabulary() {
   const { token } = useAuth()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: Omit<VocabularyItem, "id" | "user_id" | "created_at" | "updated_at">) =>
+    mutationFn: (payload: Omit<VocabularyItem, "id" | "user_id" | "created_at" | "updated_at" | "box_number" | "next_review_at">) =>
       createVocabulary(payload, token),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY })

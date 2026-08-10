@@ -27,6 +27,7 @@ export interface VocabularyListParams {
   page_size?: number
   q?: string
   word_type?: string
+  due?: boolean
 }
 
 export interface VocabularyListResponse {

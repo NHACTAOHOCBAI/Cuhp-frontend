@@ -90,6 +90,8 @@ export function VocabularyTable({
               <th className="p-4">Từ vựng / Phiên âm</th>
               <th className="p-4">Loại từ</th>
               <th className="p-4">Ý nghĩa</th>
+              <th className="p-4">Hộp nhớ</th>
+              <th className="p-4">Ôn tập tiếp theo</th>
               <th className="hidden lg:table-cell p-4">Ghi chú</th>
               <th className="w-28 p-4 text-right">Hành động</th>
             </tr>
@@ -98,14 +100,14 @@ export function VocabularyTable({
             {isLoading && vocabularies.length === 0 ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={`sk-${i}`} className="hover:bg-transparent">
-                  <td colSpan={6} className="p-4">
+                  <td colSpan={8} className="p-4">
                     <div className="h-10 bg-muted/40 rounded animate-pulse" />
                   </td>
                 </tr>
               ))
             ) : vocabularies.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-4 text-center py-10 text-muted-foreground">
+                <td colSpan={8} className="p-4 text-center py-10 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-40 text-muted-foreground" />
                   <p className="font-semibold text-base">Không có từ vựng nào</p>
                   <p className="text-xs mt-1 text-muted-foreground">
@@ -170,6 +172,33 @@ export function VocabularyTable({
                     {/* Meaning */}
                     <td className="p-4 align-middle text-foreground font-medium max-w-xs truncate">
                       {vocab.meaning}
+                    </td>
+
+                    {/* Leitner Box */}
+                    <td className="p-4 align-middle">
+                      <Badge variant="outline" className="text-xs bg-secondary/50 font-medium">
+                        Hộp {vocab.box_number}
+                      </Badge>
+                    </td>
+
+                    {/* Next Review Time */}
+                    <td className="p-4 align-middle text-xs">
+                      {(() => {
+                        const d = new Date(vocab.next_review_at)
+                        const isDue = d.getTime() <= Date.now()
+                        return (
+                          <span className={cn(isDue ? "text-destructive font-semibold" : "text-muted-foreground")}>
+                            {d.toLocaleDateString("vi-VN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {isDue && " (Đến hạn)"}
+                          </span>
+                        )
+                      })()}
                     </td>
 
                     {/* Notes */}
