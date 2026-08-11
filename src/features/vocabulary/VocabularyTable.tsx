@@ -1,10 +1,11 @@
 import * as React from "react"
-import { BookOpen, Loader2, Pencil, Trash2 } from "lucide-react"
+import { BookOpen, Loader2, Pencil, Trash2, Volume2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { WORD_TYPES } from "./types"
 import type { VocabularyItem } from "@/types"
+import { speakWord } from "@/lib/tts"
 
 const WORD_TYPE_LABEL: Record<string, string> = Object.fromEntries(
   WORD_TYPES.map((w) => [w.value, w.label.split(" (")[0]]),
@@ -140,15 +141,26 @@ export function VocabularyTable({
 
                     {/* Word & Pronunciation */}
                     <td className="p-4 align-middle">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-foreground text-base tracking-tight">
-                          {vocab.word}
-                        </span>
-                        {vocab.pronunciation && (
-                          <span className="text-xs font-mono text-muted-foreground mt-0.5">
-                            {vocab.pronunciation}
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-foreground text-base tracking-tight">
+                            {vocab.word}
                           </span>
-                        )}
+                          {vocab.pronunciation && (
+                            <span className="text-xs font-mono text-muted-foreground mt-0.5">
+                              {vocab.pronunciation}
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => speakWord(vocab.word)}
+                          className="h-7 w-7 text-muted-foreground hover:text-primary rounded-full shrink-0 cursor-pointer"
+                          title={`Nghe phát âm từ "${vocab.word}"`}
+                        >
+                          <Volume2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </td>
 

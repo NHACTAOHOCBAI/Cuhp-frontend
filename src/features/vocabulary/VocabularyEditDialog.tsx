@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Volume2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,9 @@ import { Select } from "@/components/ui/select"
 import { useCreateVocabulary, useUpdateVocabulary, useVocabularyById } from "./hooks"
 import { WORD_TYPES } from "./types"
 import { toast } from "sonner"
+import { speakWord } from "@/lib/tts"
+import { useAuth } from "@/hooks/useAuth"
+import { lookupVocabularyWord } from "./api"
 
 export function VocabularyEditDialog({
   vocabId,
@@ -28,6 +31,7 @@ export function VocabularyEditDialog({
 }) {
   const isEdit = !!vocabId
   const { data: vocab, isLoading } = useVocabularyById(vocabId ?? undefined)
+  const { token } = useAuth()
 
   const createMut = useCreateVocabulary()
   const updateMut = useUpdateVocabulary()
@@ -38,23 +42,64 @@ export function VocabularyEditDialog({
   const [wordType, setWordType] = React.useState("")
   const [notes, setNotes] = React.useState("")
 
-  // Sync state when editing an existing item
+  const [isLookingUp, setIsLookingUp] = React.useState(false)
+
+  const handleLookup = async (lookupWordText: string) => {
+    const queryWord = lookupWordText.trim()
+    if (!queryWord) return
+
+    setIsLookingUp(true)
+    try {
+      const result = await lookupVocabularyWord(queryWord, token)
+      if (result.word) {
+        setWord(result.word)
+      }
+      if (result.pronunciation) {
+        setPronunciation(result.pronunciation)
+      }
+      if (result.meaning) {
+        setMeaning(result.meaning)
+      }
+      if (result.word_type) {
+        const isValidType = WORD_TYPES.some((w) => w.value === result.word_type)
+        if (isValidType) {
+          setWordType(result.word_type)
+        } else {
+          setWordType(result.word_type)
+        }
+      }
+      toast.success(`Đã tự động điền gợi ý từ vựng cho "${queryWord}".`)
+    } catch (err) {
+      console.error(err)
+      toast.error("Không thể tự động gợi ý nghĩa và phiên âm.")
+    } finally {
+      setIsLookingUp(false)
+    }
+  }
+
+  // Sync state when editing an existing item, or auto lookup when defaultWord is given
   React.useEffect(() => {
     if (!open) return
-    if (!isEdit || !vocab) {
+    if (!isEdit) {
       setWord(defaultWord)
       setPronunciation("")
       setMeaning("")
       setWordType("")
       setNotes("")
+
+      if (defaultWord) {
+        handleLookup(defaultWord)
+      }
       return
     }
-    setWord(vocab.word)
-    setPronunciation(vocab.pronunciation ?? "")
-    setMeaning(vocab.meaning)
-    setWordType(vocab.word_type ?? "")
-    setNotes(vocab.notes ?? "")
-  }, [vocab, isEdit, open])
+    if (vocab) {
+      setWord(vocab.word)
+      setPronunciation(vocab.pronunciation ?? "")
+      setMeaning(vocab.meaning)
+      setWordType(vocab.word_type ?? "")
+      setNotes(vocab.notes ?? "")
+    }
+  }, [vocab, isEdit, open, defaultWord])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,14 +164,45 @@ export function VocabularyEditDialog({
               <label htmlFor="vocab-word" className="text-sm font-medium">
                 Từ vựng <span className="text-destructive">*</span>
               </label>
-              <Input
-                id="vocab-word"
-                value={word}
-                onChange={(e) => setWord(e.target.value)}
-                placeholder="Ví dụ: Apple, Benevolent"
-                maxLength={100}
-                required
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="vocab-word"
+                  value={word}
+                  onChange={(e) => setWord(e.target.value)}
+                  placeholder="Ví dụ: Apple, Benevolent"
+                  maxLength={100}
+                  required
+                  className="flex-1"
+                />
+                {word.trim() && (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleLookup(word)}
+                      disabled={isLookingUp}
+                      className="px-3 text-xs gap-1 cursor-pointer font-medium hover:text-primary shrink-0 h-10 flex items-center animate-in fade-in duration-150"
+                      title="Tự động tra nghĩa, phiên âm, loại từ"
+                    >
+                      {isLookingUp ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        "✨ Tra từ"
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => speakWord(word)}
+                      className="h-10 w-10 text-muted-foreground hover:text-primary shrink-0 cursor-pointer animate-in fade-in duration-150"
+                      title={`Nghe phát âm từ "${word}"`}
+                    >
+                      <Volume2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Pronunciation */}

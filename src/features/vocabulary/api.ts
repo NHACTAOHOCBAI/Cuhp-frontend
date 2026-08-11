@@ -67,3 +67,18 @@ export async function bulkDeleteVocabularies(
     token,
   })
 }
+
+export interface VocabularyLookupResult {
+  word: string
+  pronunciation?: string | null
+  meaning?: string | null
+  word_type?: string | null
+}
+
+export async function lookupVocabularyWord(
+  word: string,
+  token: string | null,
+): Promise<VocabularyLookupResult> {
+  const qs = new URLSearchParams({ word }).toString()
+  return apiFetch<VocabularyLookupResult>(`${API_BASE}/lookup/word?${qs}`, { token })
+}

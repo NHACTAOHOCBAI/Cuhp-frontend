@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useParams, Link } from "react-router-dom"
-import { ArrowLeft, BookOpen, Send, Trash2, Save, Sparkles, Languages, Edit2, Check, X } from "lucide-react"
+import { ArrowLeft, BookOpen, Send, Trash2, Save, Sparkles, Languages, Edit2, Check, X, Volume2 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,7 @@ import {
   useUpdateReadingComment,
 } from "./hooks"
 import { toast } from "sonner"
+import { speakWord } from "@/lib/tts"
 
 export function ReadingDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -114,8 +115,8 @@ export function ReadingDetailPage() {
       return
     }
 
-    // Limit selection to single words or short phrases (alphanumeric and spaces)
-    if (text.length >= 2 && text.length <= 40 && !text.includes("\n")) {
+    // Limit selection to valid lengths (between 2 and 1000 characters)
+    if (text.length >= 2 && text.length <= 1000) {
       setSelectedWord(text)
       try {
         const range = selection.getRangeAt(0)
@@ -631,18 +632,38 @@ export function ReadingDetailPage() {
         >
           {tooltipMode === "menu" ? (
             <div className="flex items-center gap-1">
-              <span className="text-xs max-w-[10ch] truncate font-semibold block text-primary px-1 select-none">
-                {selectedWord}
-              </span>
+              <div className="flex items-center gap-0.5">
+                <span className="text-xs max-w-[10ch] truncate font-semibold block text-primary px-1 select-none">
+                  {selectedWord}
+                </span>
+                {selectedWord.length <= 80 && !selectedWord.includes("\n") && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => speakWord(selectedWord)}
+                    className="h-6 w-6 text-muted-foreground hover:text-primary rounded-full shrink-0 cursor-pointer"
+                    title={`Nghe phát âm từ "${selectedWord}"`}
+                  >
+                    <Volume2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
+
+              {selectedWord.length <= 80 && !selectedWord.includes("\n") && (
+                <>
+                  <Separator orientation="vertical" className="h-4" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleOpenVocabDialog}
+                    className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 cursor-pointer animate-in slide-in-from-left-1 duration-150"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" /> Thêm từ vựng
+                  </Button>
+                </>
+              )}
+
               <Separator orientation="vertical" className="h-4" />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleOpenVocabDialog}
-                className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 cursor-pointer animate-in slide-in-from-left-1 duration-150"
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Thêm từ vựng
-              </Button>
               <Button
                 size="sm"
                 variant="ghost"
