@@ -19,10 +19,12 @@ export function VocabularyEditDialog({
   vocabId,
   open,
   onOpenChange,
+  defaultWord = "",
 }: {
   vocabId: string | null
   open: boolean
   onOpenChange: (v: boolean) => void
+  defaultWord?: string
 }) {
   const isEdit = !!vocabId
   const { data: vocab, isLoading } = useVocabularyById(vocabId ?? undefined)
@@ -40,7 +42,7 @@ export function VocabularyEditDialog({
   React.useEffect(() => {
     if (!open) return
     if (!isEdit || !vocab) {
-      setWord("")
+      setWord(defaultWord)
       setPronunciation("")
       setMeaning("")
       setWordType("")

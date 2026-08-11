@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Headphones, BookOpen, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, Users, Headphones, BookOpen, Languages, type LucideIcon } from "lucide-react"
 
 export interface NavItem {
   to: string
@@ -31,6 +31,12 @@ export const navItems: NavItem[] = [
     label: "Quản lý từ vựng",
     icon: BookOpen,
     match: /^\/admin\/vocabulary(\/|$)/,
+  },
+  {
+    to: "/admin/reading",
+    label: "Luyện dịch & Bài đọc",
+    icon: Languages,
+    match: /^\/admin\/reading(\/|$)/,
   },
 ]
 
