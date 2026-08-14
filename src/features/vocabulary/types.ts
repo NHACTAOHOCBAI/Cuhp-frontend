@@ -20,6 +20,7 @@ export interface VocabularyUpdate {
   meaning?: string
   word_type?: string | null
   notes?: string | null
+  context_sentence?: string | null
 }
 
 export interface VocabularyListParams {

@@ -5,7 +5,6 @@ import {
   LogOut,
 } from "lucide-react"
 import { Avatar } from "@/components/ui/avatar"
-import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/hooks/useAuth"
 import { navItems } from "./navItems"
@@ -23,7 +22,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
   return (
     <aside
       className={cn(
-        "flex flex-col border-r border-border bg-card transition-[width] duration-200 shrink-0 h-full",
+        "flex flex-col border-r border-border bg-background transition-[width] duration-200 shrink-0 h-full text-foreground",
         collapsed ? "w-16" : "w-64",
         className
       )}
@@ -31,11 +30,11 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
       {/* Header / brand */}
       <div className="flex items-center justify-between p-3 border-b border-border min-h-[3.5rem]">
         <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "justify-center w-full")}>
-          <div className="h-7 w-7 shrink-0 rounded-md bg-foreground text-background flex items-center justify-center font-bold text-sm">
+          <div className="h-7 w-7 shrink-0 rounded-md bg-[#76baf9] text-[#193665] flex items-center justify-center font-bold text-sm">
             C
           </div>
           {!collapsed && (
-            <span className="font-bold tracking-tight text-base whitespace-nowrap">Monochat</span>
+            <span className="font-bold tracking-tight text-base whitespace-nowrap text-foreground">Monochat</span>
           )}
         </div>
         {!collapsed && (
@@ -44,7 +43,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
             onClick={onToggleCollapsed}
             title="Thu gọn"
             aria-label="Thu gọn sidebar"
-            className="hidden md:flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+            className="hidden md:flex h-7 w-7 items-center justify-center rounded-md text-foreground/60 hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
           >
             <ChevronsLeft className="h-4 w-4" />
           </button>
@@ -59,7 +58,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
             onClick={onToggleCollapsed}
             title="Mở rộng"
             aria-label="Mở rộng sidebar"
-            className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
+            className="h-7 w-7 flex items-center justify-center rounded-md text-foreground/60 hover:bg-secondary hover:text-foreground transition-colors cursor-pointer"
           >
             <ChevronsRight className="h-4 w-4" />
           </button>
@@ -78,11 +77,11 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
                 onClick={() => onNavigate?.()}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200",
                     collapsed && "justify-center px-0",
                     isActive
-                      ? "bg-foreground text-background"
-                      : "text-foreground hover:bg-secondary"
+                      ? "bg-[#c2e6fb] text-foreground font-semibold"
+                      : "text-foreground/80 hover:bg-[#c2e6fb]/40"
                   )
                 }
               >
@@ -102,7 +101,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
         </ul>
       </nav>
 
-      <Separator />
+      <div className="border-t border-border my-1" />
 
       {/* Footer / user */}
       <div className="p-3 flex items-center justify-between gap-2">
@@ -110,7 +109,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
           <Avatar fallback={user?.initials || "?"} className="h-9 w-9 shrink-0 border border-border" />
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate">{user?.name}</p>
+              <p className="text-sm font-semibold truncate text-foreground">{user?.name}</p>
               <p className="text-xs text-muted-foreground truncate">Quản trị viên</p>
             </div>
           )}
@@ -121,7 +120,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
             onClick={() => void logout()}
             title="Đăng xuất"
             aria-label="Đăng xuất"
-            className="h-8 w-8 shrink-0 flex items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+            className="h-8 w-8 shrink-0 flex items-center justify-center rounded-md text-foreground/60 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
           </button>

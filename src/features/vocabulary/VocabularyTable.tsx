@@ -93,6 +93,7 @@ export function VocabularyTable({
               <th className="p-4">Ý nghĩa</th>
               <th className="p-4">Hộp nhớ</th>
               <th className="p-4">Ôn tập tiếp theo</th>
+              <th className="hidden md:table-cell p-4">Ngữ cảnh</th>
               <th className="hidden lg:table-cell p-4">Ghi chú</th>
               <th className="w-28 p-4 text-right">Hành động</th>
             </tr>
@@ -101,14 +102,14 @@ export function VocabularyTable({
             {isLoading && vocabularies.length === 0 ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={`sk-${i}`} className="hover:bg-transparent">
-                  <td colSpan={8} className="p-4">
+                  <td colSpan={9} className="p-4">
                     <div className="h-10 bg-muted/40 rounded animate-pulse" />
                   </td>
                 </tr>
               ))
             ) : vocabularies.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-4 text-center py-10 text-muted-foreground">
+                <td colSpan={9} className="p-4 text-center py-10 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-40 text-muted-foreground" />
                   <p className="font-semibold text-base">Không có từ vựng nào</p>
                   <p className="text-xs mt-1 text-muted-foreground">
@@ -211,6 +212,17 @@ export function VocabularyTable({
                           </span>
                         )
                       })()}
+                    </td>
+
+                    {/* Ngữ cảnh */}
+                    <td className="hidden md:table-cell p-4 align-middle max-w-xs">
+                      {vocab.context_sentence ? (
+                        <span className="text-sm text-muted-foreground truncate block max-w-xs italic" title={vocab.context_sentence}>
+                          "{vocab.context_sentence}"
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60 italic">—</span>
+                      )}
                     </td>
 
                     {/* Notes */}

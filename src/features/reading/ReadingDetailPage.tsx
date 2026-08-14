@@ -45,6 +45,7 @@ export function ReadingDetailPage() {
 
   // Floating word selection states
   const [selectedWord, setSelectedWord] = React.useState("")
+  const [selectedSentence, setSelectedSentence] = React.useState("")
   const [selectedWordParaIdx, setSelectedWordParaIdx] = React.useState<number | null>(null)
   const [selectedWordOccIdx, setSelectedWordOccIdx] = React.useState<number | null>(null)
   const [showTooltip, setShowTooltip] = React.useState(false)
@@ -123,6 +124,7 @@ export function ReadingDetailPage() {
     // Limit selection to valid lengths (between 2 and 1000 characters)
     if (text.length >= 2 && text.length <= 1000) {
       setSelectedWord(text)
+      setSelectedSentence(text) // default fallback
 
       // Calculate indices immediately while selection is still active
       let paraIndex = 0
@@ -158,6 +160,37 @@ export function ReadingDetailPage() {
               occurrenceIndex = occIdx
               hasSelectionDetails = true
             }
+
+            // Extract the sentence containing the selection
+            let sentenceStart = 0
+            for (let i = startOffset - 1; i >= 0; i--) {
+              const char = paraText[i]
+              if ((char === "." || char === "?" || char === "!") && (i === paraText.length - 1 || /\s/.test(paraText[i + 1]))) {
+                sentenceStart = i + 1
+                break
+              }
+              if (char === "\n") {
+                sentenceStart = i + 1
+                break
+              }
+            }
+
+            let sentenceEnd = paraText.length
+            const endOffset = startOffset + text.length
+            for (let i = endOffset; i < paraText.length; i++) {
+              const char = paraText[i]
+              if (char === "." || char === "?" || char === "!") {
+                sentenceEnd = i + 1
+                break
+              }
+              if (char === "\n") {
+                sentenceEnd = i
+                break
+              }
+            }
+
+            const sentence = paraText.substring(sentenceStart, sentenceEnd).trim()
+            setSelectedSentence(sentence)
           } catch (err) {
             console.error(err)
           }
@@ -186,6 +219,7 @@ export function ReadingDetailPage() {
       }
     } else {
       setShowTooltip(false)
+      setSelectedSentence("")
     }
   }
 
@@ -740,6 +774,7 @@ export function ReadingDetailPage() {
       <VocabularyEditDialog
         vocabId={null}
         defaultWord={selectedWord}
+        defaultSentence={selectedSentence}
         open={vocabDialogOpen}
         onOpenChange={setVocabDialogOpen}
       />

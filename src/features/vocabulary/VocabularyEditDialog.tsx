@@ -23,11 +23,13 @@ export function VocabularyEditDialog({
   open,
   onOpenChange,
   defaultWord = "",
+  defaultSentence = "",
 }: {
   vocabId: string | null
   open: boolean
   onOpenChange: (v: boolean) => void
   defaultWord?: string
+  defaultSentence?: string
 }) {
   const isEdit = !!vocabId
   const { data: vocab, isLoading } = useVocabularyById(vocabId ?? undefined)
@@ -41,6 +43,7 @@ export function VocabularyEditDialog({
   const [meaning, setMeaning] = React.useState("")
   const [wordType, setWordType] = React.useState("")
   const [notes, setNotes] = React.useState("")
+  const [contextSentence, setContextSentence] = React.useState("")
 
   const [isLookingUp, setIsLookingUp] = React.useState(false)
 
@@ -86,6 +89,7 @@ export function VocabularyEditDialog({
       setMeaning("")
       setWordType("")
       setNotes("")
+      setContextSentence(defaultSentence)
 
       if (defaultWord) {
         handleLookup(defaultWord)
@@ -98,8 +102,9 @@ export function VocabularyEditDialog({
       setMeaning(vocab.meaning)
       setWordType(vocab.word_type ?? "")
       setNotes(vocab.notes ?? "")
+      setContextSentence(vocab.context_sentence ?? "")
     }
-  }, [vocab, isEdit, open, defaultWord])
+  }, [vocab, isEdit, open, defaultWord, defaultSentence])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -119,6 +124,7 @@ export function VocabularyEditDialog({
       meaning: meaning.trim(),
       word_type: wordType || null,
       notes: notes.trim() || null,
+      context_sentence: contextSentence.trim() || null,
     }
 
     try {
@@ -181,7 +187,7 @@ export function VocabularyEditDialog({
                       variant="outline"
                       onClick={() => handleLookup(word)}
                       disabled={isLookingUp}
-                      className="px-3 text-xs gap-1 cursor-pointer font-medium hover:text-primary shrink-0 h-10 flex items-center animate-in fade-in duration-150"
+                      className="px-3 text-xs gap-1 cursor-pointer font-medium hover:text-primary shrink-0 h-10 flex items-center animate-in fade-in duration-150 shadow-none"
                       title="Tự động tra nghĩa, phiên âm, loại từ"
                     >
                       {isLookingUp ? (
@@ -195,7 +201,7 @@ export function VocabularyEditDialog({
                       variant="outline"
                       size="icon"
                       onClick={() => speakWord(word)}
-                      className="h-10 w-10 text-muted-foreground hover:text-primary shrink-0 cursor-pointer animate-in fade-in duration-150"
+                      className="h-10 w-10 text-muted-foreground hover:text-primary shrink-0 cursor-pointer animate-in fade-in duration-150 shadow-none"
                       title={`Nghe phát âm từ "${word}"`}
                     >
                       <Volume2 className="h-4 w-4" />
@@ -248,6 +254,22 @@ export function VocabularyEditDialog({
                 ]}
                 className="[&_button]:shadow-none"
                 ariaLabel="Chọn loại từ"
+              />
+            </div>
+
+            {/* Context Sentence */}
+            <div className="space-y-2">
+              <label htmlFor="vocab-context-sentence" className="text-sm font-medium">
+                Câu chứa từ (Ngữ cảnh)
+              </label>
+              <textarea
+                id="vocab-context-sentence"
+                value={contextSentence}
+                onChange={(e) => setContextSentence(e.target.value)}
+                placeholder="Câu tiếng Anh chứa từ vựng này..."
+                maxLength={2000}
+                rows={3}
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
 
