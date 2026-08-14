@@ -102,6 +102,7 @@ export function AudioEditDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
+              className="shadow-none"
               required
             />
           </div>
@@ -116,6 +117,7 @@ export function AudioEditDialog({
                   { value: "", label: "-- Chọn --" },
                   ...LEVELS.map((l) => ({ value: l.value, label: l.label })),
                 ]}
+                className="[&_button]:shadow-none"
                 ariaLabel="Chọn level"
               />
             </div>
@@ -128,6 +130,7 @@ export function AudioEditDialog({
                   { value: "", label: "-- Chọn --" },
                   ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
                 ]}
+                className="[&_button]:shadow-none"
                 ariaLabel="Chọn danh mục"
               />
             </div>
@@ -155,7 +158,7 @@ export function AudioEditDialog({
               onChange={(e) => setTranscript(e.target.value)}
               maxLength={MAX_TRANSCRIPT_LENGTH}
               rows={6}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>
 

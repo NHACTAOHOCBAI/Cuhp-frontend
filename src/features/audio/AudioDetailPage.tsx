@@ -143,7 +143,7 @@ export function AudioDetailPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Quay lại danh sách
         </Button>
-        <Card>
+        <Card className="shadow-none rounded-md">
           <CardContent className="p-6">
             <p className="text-destructive font-medium">
               {error?.message ?? "Không tìm thấy bài nghe."}
@@ -212,7 +212,7 @@ export function AudioDetailPage() {
       {/* Player + Script grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Player (sticky on lg+) */}
-        <Card className="lg:sticky lg:top-4 h-fit lg:col-span-5 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="lg:sticky lg:top-4 h-fit lg:col-span-5 shadow-none rounded-md">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold">
               <Mic className="h-5 w-5 text-primary" />
@@ -225,7 +225,7 @@ export function AudioDetailPage() {
         </Card>
 
         {/* Script */}
-        <Card className="lg:col-span-7 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="lg:col-span-7 shadow-none rounded-md">
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 space-y-0 pb-3 border-b border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
               <CardTitle className="text-lg flex items-center gap-2 shrink-0 font-semibold">

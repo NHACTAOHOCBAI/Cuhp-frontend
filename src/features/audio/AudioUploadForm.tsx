@@ -98,7 +98,7 @@ export function AudioUploadForm() {
   const pct = progress?.pct ?? 0
 
   return (
-    <Card className="h-fit">
+    <Card className="h-fit shadow-none rounded-md">
       <CardHeader>
         <CardTitle className="text-lg">Tải bài nghe mới lên</CardTitle>
         <CardDescription>
@@ -119,6 +119,7 @@ export function AudioUploadForm() {
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
               disabled={isUploading}
+              className="shadow-none"
               required
             />
           </div>
@@ -134,6 +135,7 @@ export function AudioUploadForm() {
                   { value: "", label: "-- Chọn --" },
                   ...LEVELS.map((l) => ({ value: l.value, label: l.label })),
                 ]}
+                className="[&_button]:shadow-none"
                 ariaLabel="Chọn level"
               />
             </div>
@@ -146,6 +148,7 @@ export function AudioUploadForm() {
                   { value: "", label: "-- Chọn --" },
                   ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
                 ]}
+                className="[&_button]:shadow-none"
                 ariaLabel="Chọn danh mục"
               />
             </div>
@@ -176,7 +179,7 @@ export function AudioUploadForm() {
               disabled={isUploading}
               maxLength={MAX_TRANSCRIPT_LENGTH}
               rows={6}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 

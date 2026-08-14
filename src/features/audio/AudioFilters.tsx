@@ -55,7 +55,7 @@ export function AudioFilters({
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm theo tiêu đề, tên file, danh mục..."
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 shadow-none"
           />
           {searchInput && (
             <button
@@ -77,7 +77,7 @@ export function AudioFilters({
             { value: "", label: "Tất cả level" },
             ...LEVELS.map((l) => ({ value: l.value, label: l.label })),
           ]}
-          className="sm:w-44"
+          className="sm:w-44 [&_button]:shadow-none"
           ariaLabel="Lọc theo level"
         />
 
@@ -89,7 +89,7 @@ export function AudioFilters({
             { value: "", label: "Tất cả danh mục" },
             ...CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
           ]}
-          className="sm:w-44"
+          className="sm:w-44 [&_button]:shadow-none"
           ariaLabel="Lọc theo danh mục"
         />
 
