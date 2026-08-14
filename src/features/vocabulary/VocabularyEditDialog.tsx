@@ -172,7 +172,7 @@ export function VocabularyEditDialog({
                   placeholder="Ví dụ: Apple, Benevolent"
                   maxLength={100}
                   required
-                  className="flex-1"
+                  className="flex-1 shadow-none"
                 />
                 {word.trim() && (
                   <>
@@ -216,6 +216,7 @@ export function VocabularyEditDialog({
                 onChange={(e) => setPronunciation(e.target.value)}
                 placeholder="Ví dụ: /ˈæp.əl/"
                 maxLength={100}
+                className="shadow-none"
               />
             </div>
 
@@ -230,6 +231,7 @@ export function VocabularyEditDialog({
                 onChange={(e) => setMeaning(e.target.value)}
                 placeholder="Nghĩa tiếng Việt của từ vựng"
                 maxLength={500}
+                className="shadow-none"
                 required
               />
             </div>
@@ -244,6 +246,7 @@ export function VocabularyEditDialog({
                   { value: "", label: "-- Chọn loại từ --" },
                   ...WORD_TYPES.map((w) => ({ value: w.value, label: w.label })),
                 ]}
+                className="[&_button]:shadow-none"
                 ariaLabel="Chọn loại từ"
               />
             </div>
@@ -260,7 +263,7 @@ export function VocabularyEditDialog({
                 placeholder="Từ đồng nghĩa, trái nghĩa, cách dùng..."
                 maxLength={2000}
                 rows={4}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
             </div>
 

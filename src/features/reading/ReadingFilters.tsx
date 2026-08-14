@@ -41,7 +41,7 @@ export function ReadingFilters({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 items-center w-full bg-card p-4 rounded-lg border border-border">
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
       {/* Search Input */}
       <div className="relative flex-1 w-full">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -49,7 +49,7 @@ export function ReadingFilters({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Tìm bài đọc (tiêu đề, nội dung)..."
-          className="pl-9"
+          className="pl-9 shadow-none"
         />
       </div>
 
@@ -63,6 +63,7 @@ export function ReadingFilters({
             { value: "", label: "Tất cả cấp độ" },
             ...READING_LEVELS.map((item) => ({ value: item.value, label: item.label })),
           ]}
+          className="[&_button]:shadow-none"
           ariaLabel="Chọn cấp độ bài đọc"
         />
       </div>
@@ -77,6 +78,7 @@ export function ReadingFilters({
             { value: "", label: "Tất cả danh mục" },
             ...READING_CATEGORIES.map((item) => ({ value: item.value, label: item.label })),
           ]}
+          className="[&_button]:shadow-none"
           ariaLabel="Chọn danh mục bài đọc"
         />
       </div>

@@ -51,7 +51,7 @@ export function VocabularyFilters({
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm theo từ vựng, nghĩa, ghi chú..."
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 shadow-none"
           />
           {searchInput && (
             <button
@@ -73,7 +73,7 @@ export function VocabularyFilters({
             { value: "", label: "Tất cả loại từ" },
             ...WORD_TYPES.map((w) => ({ value: w.value, label: w.label })),
           ]}
-          className="sm:w-56"
+          className="sm:w-56 [&_button]:shadow-none"
           ariaLabel="Lọc theo loại từ"
         />
 

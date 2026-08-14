@@ -96,7 +96,7 @@ function KpiCard({
   icon: React.ComponentType<{ className?: string }>
 }) {
   return (
-    <Card>
+    <Card className="shadow-none rounded-md">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />

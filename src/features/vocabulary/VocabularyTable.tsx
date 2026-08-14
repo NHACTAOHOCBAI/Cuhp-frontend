@@ -73,11 +73,11 @@ export function VocabularyTable({
   const canModify = (v: VocabularyItem) => isAdmin || v.user_id === currentUserId
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+    <div className="rounded-md border border-border bg-card overflow-hidden shadow-none">
       <div className="overflow-x-auto animate-in fade-in-0 duration-200">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-border bg-secondary/30 text-muted-foreground text-xs uppercase font-semibold tracking-wider">
+            <tr className="border-b border-border bg-muted/50 text-muted-foreground text-sm font-medium">
               <th className="w-10 p-4">
                 <input
                   type="checkbox"

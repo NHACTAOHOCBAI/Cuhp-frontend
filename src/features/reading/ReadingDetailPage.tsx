@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { VocabularyEditDialog } from "../vocabulary/VocabularyEditDialog" // Tích hợp dialog thêm từ vựng hiện có
+import { VocabularyEditDialog } from "../vocabulary/VocabularyEditDialog"
 import { READING_LEVELS, READING_CATEGORIES } from "./types"
 import {
   useReadingPassageById,
@@ -27,7 +27,7 @@ export function ReadingDetailPage() {
   // Queries
   const { data: passage, isLoading: loadingPassage } = useReadingPassageById(id)
   const { data: translationPractice, isLoading: loadingTranslation } = useTranslationPracticeQuery(id)
-  const { data: comments = [], isLoading: loadingComments } = useReadingCommentsQuery(id)
+  const { data: comments = [] } = useReadingCommentsQuery(id)
 
   // Mutations
   const saveTranslationMut = useSaveTranslationPractice(id!)
@@ -39,15 +39,14 @@ export function ReadingDetailPage() {
   const [translationDraft, setTranslationDraft] = React.useState("")
   const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false)
 
-  // Comment input state
-  const [commentContent, setCommentContent] = React.useState("")
-
   // Edit comment states
   const [editingCommentId, setEditingCommentId] = React.useState<string | null>(null)
   const [editingCommentText, setEditingCommentText] = React.useState("")
 
   // Floating word selection states
   const [selectedWord, setSelectedWord] = React.useState("")
+  const [selectedWordParaIdx, setSelectedWordParaIdx] = React.useState<number | null>(null)
+  const [selectedWordOccIdx, setSelectedWordOccIdx] = React.useState<number | null>(null)
   const [showTooltip, setShowTooltip] = React.useState(false)
   const [tooltipPosition, setTooltipPosition] = React.useState({ top: 0, left: 0 })
 
@@ -60,6 +59,8 @@ export function ReadingDetailPage() {
 
   // Notion-style inline comments popover states
   const [activeCommentWord, setActiveCommentWord] = React.useState<string | null>(null)
+  const [activeCommentPIdx, setActiveCommentPIdx] = React.useState<number | null>(null)
+  const [activeCommentOccIdx, setActiveCommentOccIdx] = React.useState<number | null>(null)
   const [commentPopupPosition, setCommentPopupPosition] = React.useState<{ top: number; left: number } | null>(null)
   const [replyCommentContent, setReplyCommentContent] = React.useState("")
 
@@ -87,6 +88,8 @@ export function ReadingDetailPage() {
     if (!showTooltip) {
       setTooltipMode("menu")
       setMiniComment("")
+      setSelectedWordParaIdx(null)
+      setSelectedWordOccIdx(null)
     }
   }, [showTooltip])
 
@@ -96,6 +99,8 @@ export function ReadingDetailPage() {
       if (activeCommentWord && !(e.target as HTMLElement).closest(".inline-comment-popup")) {
         setActiveCommentWord(null)
         setCommentPopupPosition(null)
+        setActiveCommentPIdx(null)
+        setActiveCommentOccIdx(null)
         setReplyCommentContent("")
       }
     }
@@ -103,14 +108,14 @@ export function ReadingDetailPage() {
     return () => document.removeEventListener("mousedown", handleOutsideClickPopup)
   }, [activeCommentWord])
 
-  const handleTextSelection = (e: React.MouseEvent) => {
+  const handleTextSelection = (e: React.MouseEvent, targetElement?: HTMLElement) => {
     const selection = window.getSelection()
     if (!selection) return
     const text = selection.toString().trim()
 
     // Ensure selection is inside the container
-    const container = e.currentTarget
-    if (!selection.anchorNode || !container.contains(selection.anchorNode)) {
+    const container = targetElement || (e.currentTarget as HTMLElement)
+    if (!container || !selection.anchorNode || !container.contains(selection.anchorNode)) {
       setShowTooltip(false)
       return
     }
@@ -118,6 +123,55 @@ export function ReadingDetailPage() {
     // Limit selection to valid lengths (between 2 and 1000 characters)
     if (text.length >= 2 && text.length <= 1000) {
       setSelectedWord(text)
+
+      // Calculate indices immediately while selection is still active
+      let paraIndex = 0
+      let occurrenceIndex = 0
+      let hasSelectionDetails = false
+
+      let anchorParent = selection.anchorNode?.parentElement
+      while (anchorParent && anchorParent.tagName !== "P" && anchorParent.parentElement) {
+        anchorParent = anchorParent.parentElement
+      }
+      if (anchorParent && anchorParent.tagName === "P") {
+        const pElements = Array.from(container.getElementsByTagName("p"))
+        const pIdx = pElements.indexOf(anchorParent as HTMLParagraphElement)
+        if (pIdx !== -1) {
+          try {
+            const range = selection.getRangeAt(0)
+            const preSelectionRange = range.cloneRange()
+            preSelectionRange.selectNodeContents(anchorParent)
+            preSelectionRange.setEnd(range.startContainer, range.startOffset)
+            const startOffset = preSelectionRange.toString().length
+
+            const paraText = anchorParent.textContent || ""
+            const occurrences = []
+            let pos = paraText.toLowerCase().indexOf(text.toLowerCase())
+            while (pos !== -1) {
+              occurrences.push(pos)
+              pos = paraText.toLowerCase().indexOf(text.toLowerCase(), pos + 1)
+            }
+
+            const occIdx = occurrences.findIndex((pos) => Math.abs(pos - startOffset) < 3)
+            if (occIdx !== -1) {
+              paraIndex = pIdx
+              occurrenceIndex = occIdx
+              hasSelectionDetails = true
+            }
+          } catch (err) {
+            console.error(err)
+          }
+        }
+      }
+
+      if (hasSelectionDetails) {
+        setSelectedWordParaIdx(paraIndex)
+        setSelectedWordOccIdx(occurrenceIndex)
+      } else {
+        setSelectedWordParaIdx(null)
+        setSelectedWordOccIdx(null)
+      }
+
       try {
         const range = selection.getRangeAt(0)
         const rect = range.getBoundingClientRect()
@@ -136,7 +190,8 @@ export function ReadingDetailPage() {
   }
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    setTimeout(() => handleTextSelection(e), 50)
+    const target = e.currentTarget as HTMLElement
+    setTimeout(() => handleTextSelection(e, target), 50)
   }
 
   const handleOpenVocabDialog = () => {
@@ -162,33 +217,26 @@ export function ReadingDetailPage() {
     }
   }
 
-  const handlePostComment = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!commentContent.trim()) return
-
-    try {
-      await createCommentMut.mutateAsync({
-        content: commentContent.trim(),
-      })
-      setCommentContent("")
-      toast.success("Đã đăng bình luận thành công.")
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Đăng bình luận thất bại."
-      toast.error(msg)
-    }
-  }
-
   const handleSendMiniComment = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!miniComment.trim()) return
 
     try {
+      const hasSelectionDetails = selectedWordParaIdx !== null && selectedWordOccIdx !== null
+      const selectedTextValue = hasSelectionDetails
+        ? `${selectedWord}|||${selectedWordParaIdx}|||${selectedWordOccIdx}`
+        : selectedWord
+
       await createCommentMut.mutateAsync({
         content: miniComment.trim(),
-        selected_text: selectedWord,
+        selected_text: selectedTextValue,
       })
       setMiniComment("")
+      setSelectedWord("")
+      setSelectedWordParaIdx(null)
+      setSelectedWordOccIdx(null)
       setShowTooltip(false)
+      window.getSelection()?.removeAllRanges() // Giải phóng vùng bôi đen của trình duyệt
       toast.success("Đã đăng bình luận về từ vựng thành công.")
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Đăng bình luận thất bại."
@@ -206,32 +254,38 @@ export function ReadingDetailPage() {
     }
   }
 
+  const handleDeleteAllComments = async () => {
+    if (comments.length === 0) return
+    const confirmDelete = window.confirm(
+      `Bạn có chắc chắn muốn xóa toàn bộ ${comments.length} thảo luận của bài đọc này? Hành động này không thể hoàn tác.`
+    )
+    if (!confirmDelete) return
+
+    try {
+      await Promise.all(
+        comments.map((cmt) => deleteCommentMut.mutateAsync(cmt.id))
+      )
+      toast.success("Đã xóa toàn bộ thảo luận thành công.")
+    } catch (err) {
+      toast.error("Có lỗi xảy ra khi xóa toàn bộ thảo luận.")
+    }
+  }
+
   const handleUpdateComment = async (commentId: string) => {
     if (!editingCommentText.trim()) return
 
     try {
       await updateCommentMut.mutateAsync({
         commentId,
-        payload: { content: editingCommentText.trim() },
+        content: editingCommentText.trim(),
       })
       setEditingCommentId(null)
       setEditingCommentText("")
-      toast.success("Đã cập nhật bình luận thành công.")
+      toast.success("Đã cập nhật bình luận.")
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Cập nhật bình luận thất bại."
       toast.error(msg)
     }
-  }
-
-  const handleHighlightedWordClick = (e: React.MouseEvent<HTMLSpanElement>, word: string) => {
-    e.stopPropagation()
-    const rect = e.currentTarget.getBoundingClientRect()
-    setCommentPopupPosition({
-      top: rect.bottom + window.scrollY,
-      left: rect.left + rect.width / 2 + window.scrollX,
-    })
-    setActiveCommentWord(word)
-    setReplyCommentContent("")
   }
 
   const handleSendReplyComment = async (e: React.FormEvent) => {
@@ -239,29 +293,70 @@ export function ReadingDetailPage() {
     if (!replyCommentContent.trim() || !activeCommentWord) return
 
     try {
+      const selectedTextValue = activeCommentPIdx !== null && activeCommentOccIdx !== null
+        ? `${activeCommentWord}|||${activeCommentPIdx}|||${activeCommentOccIdx}`
+        : activeCommentWord
+
       await createCommentMut.mutateAsync({
         content: replyCommentContent.trim(),
-        selected_text: activeCommentWord,
+        selected_text: selectedTextValue,
       })
       setReplyCommentContent("")
-      toast.success("Đã gửi phản hồi thành công.")
+      toast.success("Đã đăng phản hồi thành công.")
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Gửi phản hồi thất bại."
+      const msg = err instanceof Error ? err.message : "Đăng phản hồi thất bại."
       toast.error(msg)
     }
   }
 
-  const renderHighlightedContent = (rawContent: string) => {
-    const commentedWords = Array.from(
-      new Set(
-        comments
-          .map((c) => c.selected_text)
-          .filter((t): t is string => !!t && t.trim().length > 0)
-      )
-    ).sort((a, b) => b.length - a.length)
+  const handleHighlightedWordClick = (
+    e: React.MouseEvent,
+    word: string,
+    pIdx: number,
+    occIdx: number
+  ) => {
+    e.stopPropagation()
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setCommentPopupPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + rect.width / 2 + window.scrollX,
+    })
+    setActiveCommentWord(word)
+    setActiveCommentPIdx(pIdx)
+    setActiveCommentOccIdx(occIdx)
+  }
 
-    if (commentedWords.length === 0) {
-      return rawContent.split("\n\n").map((para, i) => (
+  const renderHighlightedContent = (rawContent: string) => {
+    // Normalize newlines to Unix style to avoid \r issues
+    const normalizedContent = rawContent.replace(/\r\n/g, "\n")
+
+    // Parse comments and identify which ones are specific to a paragraph + occurrence
+    const parsedComments = comments.map((c) => {
+      const selected = c.selected_text || ""
+      if (selected.includes("|||")) {
+        const [word, pIdxStr, occIdxStr] = selected.split("|||")
+        return {
+          id: c.id,
+          word,
+          pIdx: parseInt(pIdxStr, 10),
+          occIdx: parseInt(occIdxStr, 10),
+          isSpecific: true,
+          originalComment: c
+        }
+      } else {
+        return {
+          id: c.id,
+          word: selected,
+          pIdx: -1,
+          occIdx: -1,
+          isSpecific: false,
+          originalComment: c
+        }
+      }
+    }).filter((item) => item.word.trim().length > 0)
+
+    if (parsedComments.length === 0) {
+      return normalizedContent.split("\n\n").map((para, i) => (
         <p key={i} className="mb-4">
           {para}
         </p>
@@ -272,34 +367,89 @@ export function ReadingDetailPage() {
       return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     }
 
-    const pattern = commentedWords.map((w) => escapeRegExp(w)).join("|")
-    const regex = new RegExp(`\\b(${pattern})\\b`, "gi")
+    return normalizedContent.split("\n\n").map((para, pIdx) => {
+      // Find comments active for this paragraph
+      const paraComments = parsedComments.filter(
+        (c) => (c.isSpecific && c.pIdx === pIdx) || !c.isSpecific
+      )
 
-    return rawContent.split("\n\n").map((para, pIdx) => {
+      if (paraComments.length === 0) {
+        return (
+          <p key={pIdx} className="mb-4">
+            {para}
+          </p>
+        )
+      }
+
+      // Unique match words sorted by length descending
+      const matchWords = Array.from(
+        new Set(paraComments.map((c) => c.word))
+      ).sort((a, b) => b.length - a.length)
+
+      const regexParts = matchWords.map((word) => {
+        const escaped = escapeRegExp(word)
+        let part = escaped.replace(/\s+/g, '\\s+')
+        part = part.replace(/['’]/g, "['’]")
+        part = part.replace(/["“”]/g, '["“”]')
+
+        const startsWithWordChar = /^\w/.test(word)
+        const endsWithWordChar = /\w$/.test(word)
+
+        if (startsWithWordChar) {
+          part = '\\b' + part
+        }
+        if (endsWithWordChar) {
+          part = part + '\\b'
+        }
+        return `(${part})`
+      })
+
+      const pattern = regexParts.join("|")
+      const regex = new RegExp(pattern, "gi")
+
       const parts = []
       let lastIndex = 0
       let match
 
       regex.lastIndex = 0
 
+      // Match occurrence counters for each normalized word in this paragraph
+      const wordMatchCounts: Record<string, number> = {}
+
       while ((match = regex.exec(para)) !== null) {
         const matchIndex = match.index
         const matchText = match[0]
+
+        // Keep track of which occurrence this is (0-indexed)
+        const normText = matchText.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
+        const currentOccCount = wordMatchCounts[normText] ?? 0
+        wordMatchCounts[normText] = currentOccCount + 1
+
+        // Check if there is any comment (specific or fallback) matching this word and occurrence
+        const hasMatchingComment = paraComments.some((c) => {
+          const cNorm = c.word.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
+          if (cNorm !== normText) return false
+          return !c.isSpecific || c.occIdx === currentOccCount
+        })
 
         if (matchIndex > lastIndex) {
           parts.push(para.substring(lastIndex, matchIndex))
         }
 
-        parts.push(
-          <span
-            key={`${pIdx}-${matchIndex}`}
-            onClick={(e) => handleHighlightedWordClick(e, matchText)}
-            className="bg-amber-150 dark:bg-amber-500/25 border-b-2 border-dashed border-amber-400 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/45 transition-colors px-0.5 rounded select-text"
-            title={`Nhấp để xem thảo luận về "${matchText}"`}
-          >
-            {matchText}
-          </span>
-        )
+        if (hasMatchingComment) {
+          parts.push(
+            <span
+              key={`${pIdx}-${matchIndex}`}
+              onClick={(e) => handleHighlightedWordClick(e, matchText, pIdx, currentOccCount)}
+              className="bg-amber-150 dark:bg-amber-500/25 border-b-2 border-dashed border-amber-400 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/45 transition-colors px-0.5 rounded select-text"
+              title={`Nhấp để xem thảo luận về "${matchText}"`}
+            >
+              {matchText}
+            </span>
+          )
+        } else {
+          parts.push(matchText)
+        }
 
         lastIndex = regex.lastIndex
       }
@@ -369,9 +519,9 @@ export function ReadingDetailPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 h-full bg-background p-4 sm:p-6 overflow-y-auto animate-in fade-in-0 duration-150 relative">
+    <div className="flex-1 flex flex-col min-w-0 lg:h-full h-auto bg-background p-4 sm:p-6 lg:overflow-hidden overflow-y-auto animate-in fade-in-0 duration-150 relative">
       {/* Top Navigation */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 shrink-0">
         <Link to="/admin/reading" className="hover:text-foreground flex items-center gap-1">
           <ArrowLeft className="h-4 w-4" /> Bài đọc
         </Link>
@@ -380,7 +530,7 @@ export function ReadingDetailPage() {
       </div>
 
       {/* Header Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-border">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 shrink-0">
         <div className="space-y-1.5">
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{passage.title}</h1>
           <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground mt-1">
@@ -399,12 +549,24 @@ export function ReadingDetailPage() {
             </span>
           </div>
         </div>
+
+        {/* Actions */}
+        {user?.role === "admin" && comments.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteAllComments}
+            className="text-destructive hover:bg-destructive/10 border-destructive/20 hover:border-destructive/30 flex items-center gap-1.5 self-start md:self-auto cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" /> Xóa tất cả thảo luận
+          </Button>
+        )}
       </div>
 
       {/* Split screen content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 h-[550px] min-h-[400px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2 lg:flex-1 lg:min-h-0 min-h-[400px] h-[550px] lg:h-auto">
         {/* Left Side: Original reading text */}
-        <Card className="flex flex-col h-full border border-border bg-card shadow-sm">
+        <Card className="flex flex-col h-full border border-border bg-card shadow-none rounded-md overflow-hidden">
           <CardHeader className="py-3 px-4 border-b border-border bg-muted/20">
             <CardTitle className="text-base font-semibold flex items-center gap-1.5">
               <BookOpen className="h-4 w-4 text-primary" /> Văn bản gốc
@@ -418,13 +580,13 @@ export function ReadingDetailPage() {
           >
             {renderHighlightedContent(passage.content)}
           </CardContent>
-          <div className="p-3 bg-muted/10 border-t border-border text-xs text-muted-foreground">
+          <div className="p-3 bg-muted/10 border-t border-border text-xs text-muted-foreground select-none shrink-0">
             💡 <span className="font-semibold text-primary">Mẹo học nhanh:</span> Bôi đen hoặc nhấp đúp vào bất kỳ từ tiếng Anh nào để kích hoạt bong bóng thêm từ vựng.
           </div>
         </Card>
 
         {/* Right Side: Translation Editor */}
-        <Card className="flex flex-col h-full border border-border bg-card shadow-sm">
+        <Card className="flex flex-col h-full border border-border bg-card shadow-none rounded-md overflow-hidden">
           <CardHeader className="py-3 px-4 border-b border-border bg-muted/20 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-semibold flex items-center gap-1.5">
               <Languages className="h-4 w-4 text-primary" /> Bản dịch của bạn
@@ -433,7 +595,7 @@ export function ReadingDetailPage() {
               size="sm"
               onClick={handleSaveTranslation}
               disabled={saveTranslationMut.isPending || loadingTranslation}
-              className="gap-1.5 cursor-pointer text-xs h-8"
+              className="gap-1.5 cursor-pointer text-xs h-8 shadow-none"
             >
               <Save className="h-3.5 w-3.5" />
               {saveTranslationMut.isPending ? "Đang lưu..." : "Lưu bản dịch"}
@@ -456,14 +618,14 @@ export function ReadingDetailPage() {
                   className="flex-1 w-full bg-transparent border-0 resize-none outline-none focus:ring-0 text-base leading-relaxed font-sans placeholder:text-muted-foreground/60 focus-visible:outline-none"
                 />
                 {hasUnsavedChanges && (
-                  <p className="text-xs text-amber-500 animate-pulse">
+                  <p className="text-xs text-amber-500 animate-pulse select-none">
                     ⚠️ Có thay đổi chưa được lưu nháp.
                   </p>
                 )}
               </div>
             )}
           </CardContent>
-          <div className="p-3 bg-muted/10 border-t border-border text-xs text-muted-foreground flex justify-between items-center">
+          <div className="p-3 bg-muted/10 border-t border-border text-xs text-muted-foreground flex justify-between items-center select-none shrink-0">
             <span>
               Cập nhật cuối:{" "}
               {translationPractice
@@ -477,147 +639,10 @@ export function ReadingDetailPage() {
         </Card>
       </div>
 
-      {/* Comment Section below split screens */}
-      <Card className="border border-border bg-card shadow-sm mb-8">
-        <CardHeader className="py-4 px-6 border-b border-border">
-          <CardTitle className="text-lg font-bold">Thảo luận & Bình luận ({comments.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          {/* List of comments */}
-          {loadingComments ? (
-            <div className="flex justify-center py-4">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            </div>
-          ) : comments.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Chưa có thảo luận nào. Hãy là người đầu tiên đưa ra câu hỏi hoặc ý kiến nhé!
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {comments.map((cmt) => {
-                const isAuthor = cmt.user_id === user?.id
-                const canDelete = isAuthor || user?.role === "admin"
-
-                return (
-                  <div key={cmt.id} className="flex items-start gap-3 group/comment">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0 select-none">
-                      {cmt.user.initials}
-                    </div>
-                    <div className="flex-1 bg-muted/40 p-3 rounded-lg border border-border/50 text-sm space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-foreground">{cmt.user.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(cmt.created_at).toLocaleString("vi-VN", {
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          {isAuthor && editingCommentId !== cmt.id && (
-                            <button
-                              onClick={() => {
-                                setEditingCommentId(cmt.id)
-                                setEditingCommentText(cmt.content)
-                              }}
-                              className="text-muted-foreground opacity-0 group-hover/comment:opacity-100 focus:opacity-100 transition-opacity hover:text-foreground cursor-pointer flex items-center"
-                              title="Sửa bình luận"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                          {canDelete && editingCommentId !== cmt.id && (
-                            <button
-                              onClick={() => handleDeleteComment(cmt.id)}
-                              disabled={deleteCommentMut.isPending}
-                              className="text-destructive opacity-0 group-hover/comment:opacity-100 focus:opacity-100 transition-opacity hover:underline cursor-pointer flex items-center gap-0.5"
-                              title="Xóa bình luận"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      {cmt.selected_text && (
-                        <div className="mb-1">
-                          <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px] font-semibold py-0.5 px-1.5 select-none inline-flex items-center gap-1">
-                            <Languages className="h-3 w-3" /> Hỏi về: "{cmt.selected_text}"
-                          </Badge>
-                        </div>
-                      )}
-                      {editingCommentId === cmt.id ? (
-                        <div className="flex gap-2 items-center mt-1 animate-in fade-in duration-200">
-                          <input
-                            type="text"
-                            value={editingCommentText}
-                            onChange={(e) => setEditingCommentText(e.target.value)}
-                            required
-                            className="flex-1 rounded border border-input bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateComment(cmt.id)}
-                            disabled={updateCommentMut.isPending || !editingCommentText.trim()}
-                            className="h-8 px-2.5 cursor-pointer flex items-center gap-1"
-                          >
-                            <Check className="h-3.5 w-3.5" /> Lưu
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setEditingCommentId(null)
-                              setEditingCommentText("")
-                            }}
-                            className="h-8 px-2.5 cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1"
-                          >
-                            <X className="h-3.5 w-3.5" /> Hủy
-                          </Button>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{cmt.content}</p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Comment submission form */}
-          <form onSubmit={handlePostComment} className="flex gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0 select-none">
-              {user?.initials ?? "ME"}
-            </div>
-            <div className="flex-1 relative">
-              <textarea
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-                placeholder="Viết thắc mắc hoặc thảo luận tại đây..."
-                rows={2}
-                required
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring pr-12 resize-none"
-              />
-              <Button
-                type="submit"
-                size="icon"
-                disabled={createCommentMut.isPending || !commentContent.trim()}
-                className="absolute right-2 bottom-2 h-7 w-7 cursor-pointer"
-              >
-                <Send className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
       {/* Floating tooltip popover for quick vocabulary addition or commenting */}
       {showTooltip && (
         <div
-          className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-lg p-2 rounded-lg translation-tooltip animate-in fade-in-0 duration-100 max-w-[280px]"
+          className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-lg p-2 rounded-lg translation-tooltip animate-in fade-in-0 duration-100 w-max max-w-[340px]"
           style={{
             top: `${tooltipPosition.top}px`,
             left: `${tooltipPosition.left}px`,
@@ -686,7 +711,7 @@ export function ReadingDetailPage() {
                   placeholder="Nhập câu hỏi/bình luận..."
                   autoFocus
                   required
-                  className="flex-1 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="flex-1 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
                 <Button
                   type="submit"
@@ -720,45 +745,64 @@ export function ReadingDetailPage() {
       />
 
       {/* Notion-style Inline Comments Popover */}
-      {activeCommentWord && commentPopupPosition && (
-        <div
-          className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-xl rounded-lg p-3 w-[290px] inline-comment-popup animate-in fade-in-0 zoom-in-95 duration-150"
-          style={{
-            top: `${commentPopupPosition.top}px`,
-            left: `${commentPopupPosition.left}px`,
-            transform: "translate(-50%, 8px)",
-          }}
-          onMouseDown={(e) => {
-            // Prevent selection from disappearing when clicking inside comments popup
-            e.stopPropagation()
-          }}
-        >
-          {/* Header */}
-          <div className="flex justify-between items-center pb-2 border-b border-border mb-2 select-none">
-            <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
-              💬 Thảo luận từ: <span className="text-primary font-extrabold max-w-[120px] truncate">"{activeCommentWord}"</span>
-            </span>
-            <button
-              onClick={() => {
-                setActiveCommentWord(null)
-                setCommentPopupPosition(null)
-              }}
-              className="text-muted-foreground hover:text-foreground text-xs cursor-pointer px-1"
-            >
-              ✕
-            </button>
-          </div>
+      {activeCommentWord && commentPopupPosition && (() => {
+        const sActive = activeCommentWord.toLowerCase()
+        const relevantComments = comments.filter((c) => {
+          if (!c.selected_text) return false
+          const selected = c.selected_text
+          if (selected.includes("|||")) {
+            const [word, pIdxStr, occIdxStr] = selected.split("|||")
+            const p = parseInt(pIdxStr, 10)
+            const occ = parseInt(occIdxStr, 10)
+            return (
+              word.toLowerCase() === sActive &&
+              p === activeCommentPIdx &&
+              occ === activeCommentOccIdx
+            )
+          } else {
+            return selected.toLowerCase() === sActive
+          }
+        })
 
-          {/* List of comments for this word */}
-          <div className="max-h-[180px] overflow-y-auto space-y-2 mb-2 pr-1 scrollbar-thin">
-            {comments.filter((c) => c.selected_text?.toLowerCase() === activeCommentWord.toLowerCase()).length === 0 ? (
-              <p className="text-[11px] text-muted-foreground text-center py-4">
-                Chưa có thảo luận nào cho từ này. Hãy đặt câu hỏi đầu tiên!
-              </p>
-            ) : (
-              comments
-                .filter((c) => c.selected_text?.toLowerCase() === activeCommentWord.toLowerCase())
-                .map((cmt) => {
+        return (
+          <div
+            className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-xl rounded-lg p-3 w-[290px] inline-comment-popup animate-in fade-in-0 zoom-in-95 duration-150"
+            style={{
+              top: `${commentPopupPosition.top}px`,
+              left: `${commentPopupPosition.left}px`,
+              transform: "translate(-50%, 8px)",
+            }}
+            onMouseDown={(e) => {
+              e.stopPropagation()
+            }}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-center pb-2 border-b border-border mb-2 select-none">
+              <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                💬 Thảo luận từ: <span className="text-primary font-extrabold max-w-[120px] truncate">"{activeCommentWord}"</span>
+              </span>
+              <button
+                onClick={() => {
+                  setActiveCommentWord(null)
+                  setCommentPopupPosition(null)
+                  setActiveCommentPIdx(null)
+                  setActiveCommentOccIdx(null)
+                  setReplyCommentContent("")
+                }}
+                className="text-muted-foreground hover:text-foreground text-xs cursor-pointer px-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* List of comments for this word */}
+            <div className="max-h-[180px] overflow-y-auto space-y-2 mb-2 pr-1 scrollbar-thin">
+              {relevantComments.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground text-center py-4">
+                  Chưa có thảo luận nào cho từ này. Hãy đặt câu hỏi đầu tiên!
+                </p>
+              ) : (
+                relevantComments.map((cmt) => {
                   const isAuthor = cmt.user_id === user?.id
                   const canDelete = isAuthor || user?.role === "admin"
                   return (
@@ -835,30 +879,31 @@ export function ReadingDetailPage() {
                     </div>
                   )
                 })
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Reply Form */}
-          <form onSubmit={handleSendReplyComment} className="flex gap-1.5 pt-2 border-t border-border">
-            <input
-              type="text"
-              value={replyCommentContent}
-              onChange={(e) => setReplyCommentContent(e.target.value)}
-              placeholder="Nhập phản hồi..."
-              required
-              className="flex-1 rounded border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              className="h-7 px-2.5 text-xs shrink-0 cursor-pointer"
-              disabled={createCommentMut.isPending || !replyCommentContent.trim()}
-            >
-              Gửi
-            </Button>
-          </form>
-        </div>
-      )}
+            {/* Reply Form */}
+            <form onSubmit={handleSendReplyComment} className="flex gap-1.5 pt-2 border-t border-border">
+              <input
+                type="text"
+                value={replyCommentContent}
+                onChange={(e) => setReplyCommentContent(e.target.value)}
+                placeholder="Nhập phản hồi..."
+                required
+                className="flex-1 rounded border border-input bg-transparent px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="h-7 px-2.5 text-xs shrink-0 cursor-pointer"
+                disabled={createCommentMut.isPending || !replyCommentContent.trim()}
+              >
+                Gửi
+              </Button>
+            </form>
+          </div>
+        )
+      })()}
     </div>
   )
 }

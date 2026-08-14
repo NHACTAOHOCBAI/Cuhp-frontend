@@ -119,6 +119,7 @@ export function ReadingEditDialog({
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ví dụ: The History of the Internet"
                 maxLength={200}
+                className="shadow-none"
                 required
               />
             </div>
@@ -135,6 +136,7 @@ export function ReadingEditDialog({
                     { value: "", label: "Không chọn" },
                     ...READING_LEVELS.map((w) => ({ value: w.value, label: w.label })),
                   ]}
+                  className="[&_button]:shadow-none"
                   ariaLabel="Chọn cấp độ bài đọc"
                 />
               </div>
@@ -149,6 +151,7 @@ export function ReadingEditDialog({
                     { value: "", label: "Không chọn" },
                     ...READING_CATEGORIES.map((w) => ({ value: w.value, label: w.label })),
                   ]}
+                  className="[&_button]:shadow-none"
                   ariaLabel="Chọn danh mục bài đọc"
                 />
               </div>
@@ -166,7 +169,7 @@ export function ReadingEditDialog({
                 placeholder="Nhập nội dung văn bản gốc ở đây..."
                 required
                 rows={12}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-sans leading-relaxed resize-y"
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-sans leading-relaxed resize-y"
               />
             </div>
 

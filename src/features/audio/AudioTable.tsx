@@ -78,12 +78,12 @@ export function AudioTable({
   const canModify = (t: AudioListItem) => isAdmin || t.user_id === currentUserId
 
   return (
-    <div className="rounded-md border border-border overflow-hidden">
+    <div className="rounded-md border border-border bg-card overflow-hidden shadow-none">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-muted/50 text-muted-foreground text-sm font-medium">
             <tr>
-              <th className="w-10 px-3 py-2.5">
+              <th className="w-10 p-4">
                 <input
                   type="checkbox"
                   aria-label="Chọn tất cả"
@@ -93,35 +93,35 @@ export function AudioTable({
                   className="h-4 w-4 cursor-pointer accent-primary"
                 />
               </th>
-              <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">
+              <th className="p-4 text-left font-medium text-muted-foreground">
                 Bài nghe
               </th>
-              <th className="hidden md:table-cell px-3 py-2.5 text-left font-medium text-muted-foreground">
+              <th className="hidden md:table-cell p-4 text-left font-medium text-muted-foreground">
                 Level
               </th>
-              <th className="hidden lg:table-cell px-3 py-2.5 text-left font-medium text-muted-foreground">
+              <th className="hidden lg:table-cell p-4 text-left font-medium text-muted-foreground">
                 Danh mục
               </th>
-              <th className="hidden lg:table-cell px-3 py-2.5 text-left font-medium text-muted-foreground">
+              <th className="hidden lg:table-cell p-4 text-left font-medium text-muted-foreground">
                 Ngày tải
               </th>
-              <th className="w-32 px-3 py-2.5 text-right font-medium text-muted-foreground">
+              <th className="w-32 p-4 text-right font-medium text-muted-foreground">
                 Hành động
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border text-sm">
             {isLoading && tracks.length === 0 ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <tr key={`sk-${i}`} className="border-t border-border">
-                  <td colSpan={6} className="px-3 py-3">
+                <tr key={`sk-${i}`}>
+                  <td colSpan={6} className="p-4">
                     <div className="h-10 bg-muted/40 rounded animate-pulse" />
                   </td>
                 </tr>
               ))
             ) : tracks.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-12 text-center text-muted-foreground">
+                <td colSpan={6} className="p-4 text-center py-12 text-muted-foreground">
                   <Music className="h-10 w-10 mx-auto mb-2 opacity-40" />
                   <p className="font-medium">Không có bài nghe nào</p>
                   <p className="text-xs mt-1">
@@ -137,11 +137,11 @@ export function AudioTable({
                   <tr
                     key={track.id}
                     className={cn(
-                      "border-t border-border hover:bg-muted/30 transition-colors",
+                      "hover:bg-muted/30 transition-colors",
                       isSelected && "bg-primary/5",
                     )}
                   >
-                    <td className="px-3 py-2.5">
+                    <td className="p-4 align-middle">
                       <input
                         type="checkbox"
                         aria-label={`Chọn ${track.title}`}
@@ -150,7 +150,7 @@ export function AudioTable({
                         className="h-4 w-4 cursor-pointer accent-primary"
                       />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="p-4 align-middle">
                       <div className="flex items-start gap-3 min-w-0">
                         <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                           <Music className="h-4 w-4 text-primary" />
@@ -165,7 +165,7 @@ export function AudioTable({
                         </div>
                       </div>
                     </td>
-                    <td className="hidden md:table-cell px-3 py-2.5">
+                    <td className="hidden md:table-cell p-4 align-middle">
                       {track.level ? (
                         <Badge
                           className={cn(
@@ -179,7 +179,7 @@ export function AudioTable({
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="hidden lg:table-cell px-3 py-2.5">
+                    <td className="hidden lg:table-cell p-4 align-middle">
                       {track.category ? (
                         <Badge
                           className={cn(
@@ -193,10 +193,10 @@ export function AudioTable({
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="hidden lg:table-cell px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                    <td className="hidden lg:table-cell p-4 text-xs text-muted-foreground whitespace-nowrap align-middle">
                       {new Date(track.created_at).toLocaleDateString("vi-VN")}
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="p-4 align-middle">
                       <div className="flex items-center justify-end gap-1">
                         <Link
                           to={`/admin/audio/${track.id}`}

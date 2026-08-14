@@ -50,7 +50,7 @@ export function ReadingTable({
 
   if (isLoading) {
     return (
-      <div className="w-full bg-card rounded-lg border border-border overflow-hidden min-h-[300px] flex items-center justify-center">
+      <div className="w-full bg-card rounded-md border border-border overflow-hidden min-h-[300px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-sm text-muted-foreground">Đang tải danh sách bài đọc...</p>
@@ -61,7 +61,7 @@ export function ReadingTable({
 
   if (passages.length === 0) {
     return (
-      <div className="w-full bg-card rounded-lg border border-border p-12 text-center">
+      <div className="w-full bg-card rounded-md border border-border p-12 text-center">
         <div className="max-w-md mx-auto space-y-3">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto" />
           <h3 className="text-lg font-semibold">Chưa có bài đọc nào</h3>
@@ -74,11 +74,11 @@ export function ReadingTable({
   }
 
   return (
-    <div className="w-full bg-card rounded-lg border border-border overflow-hidden shadow-sm">
+    <div className="w-full bg-card rounded-md border border-border overflow-hidden shadow-none">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b border-border bg-muted/50 text-sm font-medium text-muted-foreground">
               <th className="p-4">Tiêu đề bài đọc</th>
               <th className="p-4 w-[140px]">Cấp độ</th>
               <th className="p-4 w-[180px]">Danh mục</th>

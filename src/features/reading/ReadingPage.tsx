@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Plus } from "lucide-react"
+import { Plus, LayoutGrid, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
 import { useConfirm } from "@/components/ConfirmDialog"
@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { useReadingPassagesQuery, useDeleteReadingPassage } from "./hooks"
 import { ReadingFilters, type FilterValue } from "./ReadingFilters"
 import { ReadingTable } from "./ReadingTable"
+import { ReadingGrid } from "./ReadingGrid"
 import { ReadingEditDialog } from "./ReadingEditDialog"
 import { Pagination } from "../vocabulary/Pagination" // Reusing existing Pagination component
 import type { ReadingPassageListItem } from "./types"
@@ -24,6 +25,15 @@ export function ReadingPage() {
     level: "",
     category: "",
   })
+
+  // Grid/Table view mode state with local storage persistence
+  const [viewMode, setViewMode] = React.useState<"table" | "grid">(() => {
+    return (localStorage.getItem("reading_view_mode") as "table" | "grid") || "table"
+  })
+
+  React.useEffect(() => {
+    localStorage.setItem("reading_view_mode", viewMode)
+  }, [viewMode])
 
   // Dialog states
   const [dialogOpen, setDialogOpen] = React.useState(false)
@@ -98,24 +108,60 @@ export function ReadingPage() {
               Đọc các bài văn tiếng Anh, luyện tập dịch sang tiếng Việt và học nhanh từ mới bằng cách bôi đen văn bản.
             </p>
           </div>
-          <Button onClick={handleCreate} className="gap-1.5 cursor-pointer self-start sm:self-auto shrink-0">
-            <Plus className="h-4 w-4" /> Tạo bài đọc mới
-          </Button>
+          <div className="flex items-center gap-3 self-start sm:self-auto shrink-0 select-none">
+            {/* View Mode Toggle */}
+            <div className="flex items-center border border-border rounded-md p-0.5 bg-muted/20">
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
+                onClick={() => setViewMode("table")}
+                title="Dạng danh sách"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
+                onClick={() => setViewMode("grid")}
+                title="Dạng lưới"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Button onClick={handleCreate} className="gap-1.5 cursor-pointer shrink-0">
+              <Plus className="h-4 w-4" /> Tạo bài đọc mới
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
         <ReadingFilters value={filters} onChange={setFilters} />
 
-        {/* Table list */}
-        <ReadingTable
-          passages={items}
-          isLoading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          isDeletingId={deletingId}
-          currentUserId={currentUserId}
-          isAdmin={isAdmin}
-        />
+        {/* List Content */}
+        {viewMode === "table" ? (
+          <ReadingTable
+            passages={items}
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isDeletingId={deletingId}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
+          />
+        ) : (
+          <ReadingGrid
+            passages={items}
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isDeletingId={deletingId}
+            currentUserId={currentUserId}
+            isAdmin={isAdmin}
+          />
+        )}
 
         {/* Pagination */}
         <Pagination
