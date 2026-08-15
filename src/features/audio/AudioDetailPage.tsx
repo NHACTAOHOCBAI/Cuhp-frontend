@@ -399,7 +399,8 @@ export function AudioDetailPage() {
   }
 
   const renderHighlightedContent = (rawContent: string) => {
-    const normalizedContent = rawContent.replace(/\r\n/g, "\n")
+    const isHtml = /<[a-z][\s\S]*>/i.test(rawContent)
+    
     const parsedComments = comments.map((c) => {
       const selected = c.selected_text || ""
       if (selected.includes("|||")) {
@@ -429,115 +430,194 @@ export function AudioDetailPage() {
     }
 
     const highlightSearchQuery = (text: string, search: string) => {
-      if (!search.trim()) return text
+      if (!search.trim()) return [text]
       const escapedSearch = search.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")
       const parts = text.split(new RegExp(`(${escapedSearch})`, "gi"))
-      return (
-        <>
-          {parts.map((part, i) =>
-            part.toLowerCase() === search.toLowerCase() ? (
-              <mark key={i} className="bg-yellow-200 dark:bg-yellow-800/60 rounded px-0.5 text-foreground font-medium">
-                {part}
-              </mark>
-            ) : (
-              part
-            )
-          )}
-        </>
+      return parts.map((part, i) =>
+        part.toLowerCase() === search.toLowerCase() ? (
+          <mark key={i} className="bg-yellow-200 dark:bg-yellow-800/60 rounded px-0.5 text-foreground font-medium">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
       )
     }
 
-    return normalizedContent.split("\n\n").map((para, pIdx) => {
-      const paraComments = parsedComments.filter(
-        (c) => (c.isSpecific && c.pIdx === pIdx) || !c.isSpecific
-      )
-
-      if (paraComments.length === 0) {
-        return (
-          <p key={pIdx} className="mb-4">
-            {highlightSearchQuery(para, searchQuery)}
-          </p>
+    const parseNode = (node: Node, pIdx: number, state: { offset: number; wordMatchCounts: Record<string, number> }): React.ReactNode => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent || ""
+        const paraText = node.parentElement?.textContent || ""
+        
+        const paraComments = parsedComments.filter(
+          (c) => (c.isSpecific && c.pIdx === pIdx) || !c.isSpecific
         )
-      }
 
-      const matchWords = Array.from(
-        new Set(paraComments.map((c) => c.word))
-      ).sort((a, b) => b.length - a.length)
-
-      const regexParts = matchWords.map((word) => {
-        const escaped = escapeRegExp(word)
-        let part = escaped.replace(/\s+/g, '\\s+')
-        part = part.replace(/['’]/g, "['’]")
-        part = part.replace(/["“”]/g, '["“”]')
-
-        const startsWithWordChar = /^\w/.test(word)
-        const endsWithWordChar = /\w$/.test(word)
-
-        if (startsWithWordChar) {
-          part = '\\b' + part
+        if (paraComments.length === 0) {
+          const result = highlightSearchQuery(text, searchQuery)
+          state.offset += text.length
+          return <React.Fragment key={state.offset}>{result}</React.Fragment>
         }
-        if (endsWithWordChar) {
-          part = part + '\\b'
-        }
-        return `(${part})`
-      })
 
-      const pattern = regexParts.join("|")
-      const regex = new RegExp(pattern, "gi")
+        const matchWords = Array.from(
+          new Set(paraComments.map((c) => c.word))
+        ).sort((a, b) => b.length - a.length)
 
-      const parts = []
-      let lastIndex = 0
-      let match
+        const regexParts = matchWords.map((word) => {
+          const escaped = escapeRegExp(word)
+          let part = escaped.replace(/\s+/g, '\\s+')
+          part = part.replace(/['’]/g, "['’]")
+          part = part.replace(/["“”]/g, '["“”]')
 
-      regex.lastIndex = 0
-      const wordMatchCounts: Record<string, number> = {}
+          const startsWithWordChar = /^\w/.test(word)
+          const endsWithWordChar = /\w$/.test(word)
 
-      while ((match = regex.exec(para)) !== null) {
-        const matchIndex = match.index
-        const matchText = match[0]
-
-        const normText = matchText.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
-        const currentOccCount = wordMatchCounts[normText] ?? 0
-        wordMatchCounts[normText] = currentOccCount + 1
-
-        const hasMatchingComment = paraComments.some((c) => {
-          const cNorm = c.word.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
-          if (cNorm !== normText) return false
-          return !c.isSpecific || c.occIdx === currentOccCount
+          if (startsWithWordChar) {
+            part = '\\b' + part
+          }
+          if (endsWithWordChar) {
+            part = part + '\\b'
+          }
+          return `(${part})`
         })
 
-        if (matchIndex > lastIndex) {
-          parts.push(highlightSearchQuery(para.substring(lastIndex, matchIndex), searchQuery))
+        const pattern = regexParts.join("|")
+        const regex = new RegExp(pattern, "gi")
+
+        const parts: React.ReactNode[] = []
+        let lastIndex = 0
+        let match
+
+        regex.lastIndex = 0
+
+        while ((match = regex.exec(text)) !== null) {
+          const matchIndex = match.index
+          const matchText = match[0]
+
+          const absoluteStartOffset = state.offset + matchIndex
+          const normText = matchText.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
+          
+          const occurrences = []
+          let pos = paraText.toLowerCase().indexOf(normText)
+          while (pos !== -1) {
+            occurrences.push(pos)
+            pos = paraText.toLowerCase().indexOf(normText, pos + 1)
+          }
+          
+          const currentOccCount = occurrences.findIndex((pos) => Math.abs(pos - absoluteStartOffset) < 5)
+
+          const hasMatchingComment = paraComments.some((c) => {
+            const cNorm = c.word.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
+            if (cNorm !== normText) return false
+            return !c.isSpecific || c.occIdx === currentOccCount
+          })
+
+          if (matchIndex > lastIndex) {
+            parts.push(...highlightSearchQuery(text.substring(lastIndex, matchIndex), searchQuery))
+          }
+
+          if (hasMatchingComment && currentOccCount !== -1) {
+            parts.push(
+              <span
+                key={`${pIdx}-${absoluteStartOffset}`}
+                onClick={(e) => handleHighlightedWordClick(e, matchText, pIdx, currentOccCount)}
+                className="bg-amber-150 dark:bg-amber-500/25 border-b-2 border-dashed border-amber-400 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/45 transition-colors px-0.5 rounded select-text"
+                title={`Nhấp để xem thảo luận về "${matchText}"`}
+              >
+                {highlightSearchQuery(matchText, searchQuery)}
+              </span>
+            )
+          } else {
+            parts.push(...highlightSearchQuery(matchText, searchQuery))
+          }
+
+          lastIndex = regex.lastIndex
         }
 
-        if (hasMatchingComment) {
-          parts.push(
-            <span
-              key={`${pIdx}-${matchIndex}`}
-              onClick={(e) => handleHighlightedWordClick(e, matchText, pIdx, currentOccCount)}
-              className="bg-amber-150 dark:bg-amber-500/25 border-b-2 border-dashed border-amber-400 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/45 transition-colors px-0.5 rounded select-text"
-              title={`Nhấp để xem thảo luận về "${matchText}"`}
-            >
-              {highlightSearchQuery(matchText, searchQuery)}
-            </span>
-          )
-        } else {
-          parts.push(highlightSearchQuery(matchText, searchQuery))
+        if (lastIndex < text.length) {
+          parts.push(...highlightSearchQuery(text.substring(lastIndex), searchQuery))
         }
 
-        lastIndex = regex.lastIndex
+        state.offset += text.length
+        return <React.Fragment key={state.offset}>{parts}</React.Fragment>
       }
 
-      if (lastIndex < para.length) {
-        parts.push(highlightSearchQuery(para.substring(lastIndex), searchQuery))
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement
+        const tagName = el.tagName.toLowerCase()
+        const children: React.ReactNode[] = []
+        
+        for (let i = 0; i < el.childNodes.length; i++) {
+          children.push(parseNode(el.childNodes[i], pIdx, state))
+        }
+
+        const key = `${tagName}-${pIdx}-${state.offset}`
+        switch (tagName) {
+          case "strong":
+          case "b":
+            return <strong key={key}>{children}</strong>
+          case "em":
+          case "i":
+            return <em key={key}>{children}</em>
+          case "u":
+            return <u key={key}>{children}</u>
+          case "span":
+            return <span key={key} className={el.className}>{children}</span>
+          case "p":
+            return <p key={key} className="mb-4">{children}</p>
+          case "div":
+            return <div key={key} className="mb-2">{children}</div>
+          case "ul":
+            return <ul key={key} className="list-disc pl-5 mb-4">{children}</ul>
+          case "ol":
+            return <ol key={key} className="list-decimal pl-5 mb-4">{children}</ol>
+          case "li":
+            return <li key={key}>{children}</li>
+          case "br":
+            return <br key={key} />
+          default:
+            return <React.Fragment key={key}>{children}</React.Fragment>
+        }
       }
 
-      return (
-        <p key={pIdx} className="mb-4">
-          {parts.length > 0 ? parts : highlightSearchQuery(para, searchQuery)}
-        </p>
-      )
-    })
+      return null
+    }
+
+    if (isHtml) {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(rawContent, "text/html")
+      const resultElements: React.ReactNode[] = []
+
+      let pCounter = 0
+      const bodyChildren = Array.from(doc.body.childNodes)
+
+      bodyChildren.forEach((child) => {
+        const tagName = child.nodeType === Node.ELEMENT_NODE ? (child as HTMLElement).tagName.toLowerCase() : ""
+        const isBlock = ["p", "li", "ul", "ol", "div"].includes(tagName)
+        
+        const state = { offset: 0, wordMatchCounts: {} }
+        const parsed = parseNode(child, pCounter, state)
+        if (parsed) {
+          resultElements.push(parsed)
+        }
+        if (isBlock || tagName === "p") {
+          pCounter++
+        }
+      })
+
+      return resultElements
+    } else {
+      return rawContent.replace(/\r\n/g, "\n").split("\n\n").map((para, pIdx) => {
+        const state = { offset: 0, wordMatchCounts: {} }
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(para, "text/html")
+        return (
+          <p key={pIdx} className="mb-4">
+            {parseNode(doc.body, pIdx, state)}
+          </p>
+        )
+      })
+    }
   }
 
   const getLevelLabel = (val: string | null | undefined) => {
@@ -724,7 +804,7 @@ export function AudioDetailPage() {
             {showScript ? (
               data.transcript ? (
                 <div
-                  className="flex-1 overflow-y-auto rounded-md border border-input bg-muted/10 p-5 font-serif leading-relaxed text-lg tracking-wide space-y-4 select-text animate-in fade-in duration-200"
+                  className="flex-1 overflow-y-auto rounded-md border border-input bg-muted/10 p-5 font-serif leading-relaxed text-lg tracking-wide space-y-4 select-text whitespace-pre-wrap animate-in fade-in duration-200"
                   onMouseUp={(e) => handleTextSelection(e)}
                   onDoubleClick={handleDoubleClick}
                   style={{ WebkitUserSelect: "text", userSelect: "text" }}

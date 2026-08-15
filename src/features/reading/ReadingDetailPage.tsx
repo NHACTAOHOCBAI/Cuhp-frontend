@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { VocabularyEditDialog } from "../vocabulary/VocabularyEditDialog"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
 import { READING_LEVELS, READING_CATEGORIES } from "./types"
 import {
   useReadingPassageById,
@@ -361,10 +362,8 @@ export function ReadingDetailPage() {
   }
 
   const renderHighlightedContent = (rawContent: string) => {
-    // Normalize newlines to Unix style to avoid \r issues
-    const normalizedContent = rawContent.replace(/\r\n/g, "\n")
-
-    // Parse comments and identify which ones are specific to a paragraph + occurrence
+    const isHtml = /<[a-z][\s\S]*>/i.test(rawContent)
+    
     const parsedComments = comments.map((c) => {
       const selected = c.selected_text || ""
       if (selected.includes("|||")) {
@@ -389,115 +388,183 @@ export function ReadingDetailPage() {
       }
     }).filter((item) => item.word.trim().length > 0)
 
-    if (parsedComments.length === 0) {
-      return normalizedContent.split("\n\n").map((para, i) => (
-        <p key={i} className="mb-4">
-          {para}
-        </p>
-      ))
-    }
-
     const escapeRegExp = (string: string) => {
       return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     }
 
-    return normalizedContent.split("\n\n").map((para, pIdx) => {
-      // Find comments active for this paragraph
-      const paraComments = parsedComments.filter(
-        (c) => (c.isSpecific && c.pIdx === pIdx) || !c.isSpecific
-      )
-
-      if (paraComments.length === 0) {
-        return (
-          <p key={pIdx} className="mb-4">
-            {para}
-          </p>
+    const parseNode = (node: Node, pIdx: number, state: { offset: number; wordMatchCounts: Record<string, number> }): React.ReactNode => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent || ""
+        const paraText = node.parentElement?.textContent || ""
+        
+        const paraComments = parsedComments.filter(
+          (c) => (c.isSpecific && c.pIdx === pIdx) || !c.isSpecific
         )
-      }
 
-      // Unique match words sorted by length descending
-      const matchWords = Array.from(
-        new Set(paraComments.map((c) => c.word))
-      ).sort((a, b) => b.length - a.length)
-
-      const regexParts = matchWords.map((word) => {
-        const escaped = escapeRegExp(word)
-        let part = escaped.replace(/\s+/g, '\\s+')
-        part = part.replace(/['’]/g, "['’]")
-        part = part.replace(/["“”]/g, '["“”]')
-
-        const startsWithWordChar = /^\w/.test(word)
-        const endsWithWordChar = /\w$/.test(word)
-
-        if (startsWithWordChar) {
-          part = '\\b' + part
+        if (paraComments.length === 0) {
+          state.offset += text.length
+          return text
         }
-        if (endsWithWordChar) {
-          part = part + '\\b'
-        }
-        return `(${part})`
-      })
 
-      const pattern = regexParts.join("|")
-      const regex = new RegExp(pattern, "gi")
+        const matchWords = Array.from(
+          new Set(paraComments.map((c) => c.word))
+        ).sort((a, b) => b.length - a.length)
 
-      const parts = []
-      let lastIndex = 0
-      let match
+        const regexParts = matchWords.map((word) => {
+          const escaped = escapeRegExp(word)
+          let part = escaped.replace(/\s+/g, '\\s+')
+          part = part.replace(/['’]/g, "['’]")
+          part = part.replace(/["“”]/g, '["“”]')
 
-      regex.lastIndex = 0
+          const startsWithWordChar = /^\w/.test(word)
+          const endsWithWordChar = /\w$/.test(word)
 
-      // Match occurrence counters for each normalized word in this paragraph
-      const wordMatchCounts: Record<string, number> = {}
-
-      while ((match = regex.exec(para)) !== null) {
-        const matchIndex = match.index
-        const matchText = match[0]
-
-        // Keep track of which occurrence this is (0-indexed)
-        const normText = matchText.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
-        const currentOccCount = wordMatchCounts[normText] ?? 0
-        wordMatchCounts[normText] = currentOccCount + 1
-
-        // Check if there is any comment (specific or fallback) matching this word and occurrence
-        const hasMatchingComment = paraComments.some((c) => {
-          const cNorm = c.word.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
-          if (cNorm !== normText) return false
-          return !c.isSpecific || c.occIdx === currentOccCount
+          if (startsWithWordChar) {
+            part = '\\b' + part
+          }
+          if (endsWithWordChar) {
+            part = part + '\\b'
+          }
+          return `(${part})`
         })
 
-        if (matchIndex > lastIndex) {
-          parts.push(para.substring(lastIndex, matchIndex))
+        const pattern = regexParts.join("|")
+        const regex = new RegExp(pattern, "gi")
+
+        const parts: React.ReactNode[] = []
+        let lastIndex = 0
+        let match
+
+        regex.lastIndex = 0
+
+        while ((match = regex.exec(text)) !== null) {
+          const matchIndex = match.index
+          const matchText = match[0]
+
+          const absoluteStartOffset = state.offset + matchIndex
+          const normText = matchText.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
+          
+          const occurrences = []
+          let pos = paraText.toLowerCase().indexOf(normText)
+          while (pos !== -1) {
+            occurrences.push(pos)
+            pos = paraText.toLowerCase().indexOf(normText, pos + 1)
+          }
+          
+          const currentOccCount = occurrences.findIndex((pos) => Math.abs(pos - absoluteStartOffset) < 5)
+
+          const hasMatchingComment = paraComments.some((c) => {
+            const cNorm = c.word.toLowerCase().replace(/\s+/g, " ").replace(/[’]/g, "'").replace(/[“”]/g, '"')
+            if (cNorm !== normText) return false
+            return !c.isSpecific || c.occIdx === currentOccCount
+          })
+
+          if (matchIndex > lastIndex) {
+            parts.push(text.substring(lastIndex, matchIndex))
+          }
+
+          if (hasMatchingComment && currentOccCount !== -1) {
+            parts.push(
+              <span
+                key={`${pIdx}-${absoluteStartOffset}`}
+                onClick={(e) => handleHighlightedWordClick(e, matchText, pIdx, currentOccCount)}
+                className="bg-amber-150 dark:bg-amber-500/25 border-b-2 border-dashed border-amber-400 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/45 transition-colors px-0.5 rounded select-text"
+                title={`Nhấp để xem thảo luận về "${matchText}"`}
+              >
+                {matchText}
+              </span>
+            )
+          } else {
+            parts.push(matchText)
+          }
+
+          lastIndex = regex.lastIndex
         }
 
-        if (hasMatchingComment) {
-          parts.push(
-            <span
-              key={`${pIdx}-${matchIndex}`}
-              onClick={(e) => handleHighlightedWordClick(e, matchText, pIdx, currentOccCount)}
-              className="bg-amber-150 dark:bg-amber-500/25 border-b-2 border-dashed border-amber-400 cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-500/45 transition-colors px-0.5 rounded select-text"
-              title={`Nhấp để xem thảo luận về "${matchText}"`}
-            >
-              {matchText}
-            </span>
-          )
-        } else {
-          parts.push(matchText)
+        if (lastIndex < text.length) {
+          parts.push(text.substring(lastIndex))
         }
 
-        lastIndex = regex.lastIndex
+        state.offset += text.length
+        return <React.Fragment key={state.offset}>{parts}</React.Fragment>
       }
 
-      if (lastIndex < para.length) {
-        parts.push(para.substring(lastIndex))
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement
+        const tagName = el.tagName.toLowerCase()
+        const children: React.ReactNode[] = []
+        
+        for (let i = 0; i < el.childNodes.length; i++) {
+          children.push(parseNode(el.childNodes[i], pIdx, state))
+        }
+
+        const key = `${tagName}-${pIdx}-${state.offset}`
+        switch (tagName) {
+          case "strong":
+          case "b":
+            return <strong key={key}>{children}</strong>
+          case "em":
+          case "i":
+            return <em key={key}>{children}</em>
+          case "u":
+            return <u key={key}>{children}</u>
+          case "span":
+            return <span key={key} className={el.className}>{children}</span>
+          case "p":
+            return <p key={key} className="mb-4">{children}</p>
+          case "div":
+            return <div key={key} className="mb-2">{children}</div>
+          case "ul":
+            return <ul key={key} className="list-disc pl-5 mb-4">{children}</ul>
+          case "ol":
+            return <ol key={key} className="list-decimal pl-5 mb-4">{children}</ol>
+          case "li":
+            return <li key={key}>{children}</li>
+          case "br":
+            return <br key={key} />
+          default:
+            return <React.Fragment key={key}>{children}</React.Fragment>
+        }
       }
 
-      return (
-        <p key={pIdx} className="mb-4">
-          {parts.length > 0 ? parts : para}
-        </p>
-      )
-    })
+      return null
+    }
+
+    if (isHtml) {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(rawContent, "text/html")
+      const resultElements: React.ReactNode[] = []
+
+      let pCounter = 0
+      const bodyChildren = Array.from(doc.body.childNodes)
+
+      bodyChildren.forEach((child) => {
+        const tagName = child.nodeType === Node.ELEMENT_NODE ? (child as HTMLElement).tagName.toLowerCase() : ""
+        const isBlock = ["p", "li", "ul", "ol", "div"].includes(tagName)
+        
+        const state = { offset: 0, wordMatchCounts: {} }
+        const parsed = parseNode(child, pCounter, state)
+        if (parsed) {
+          resultElements.push(parsed)
+        }
+        if (isBlock || tagName === "p") {
+          pCounter++
+        }
+      })
+
+      return resultElements
+    } else {
+      return rawContent.replace(/\r\n/g, "\n").split("\n\n").map((para, pIdx) => {
+        const state = { offset: 0, wordMatchCounts: {} }
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(para, "text/html")
+        return (
+          <p key={pIdx} className="mb-4">
+            {parseNode(doc.body, pIdx, state)}
+          </p>
+        )
+      })
+    }
   }
 
   const getLevelLabel = (val: string | null | undefined) => {
@@ -607,7 +674,7 @@ export function ReadingDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent
-            className="flex-1 overflow-y-auto p-5 select-text font-serif leading-relaxed text-lg tracking-wide space-y-4"
+            className="flex-1 overflow-y-auto p-5 select-text font-serif leading-relaxed text-lg tracking-wide space-y-4 whitespace-pre-wrap"
             onMouseUp={handleTextSelection}
             onDoubleClick={handleDoubleClick}
             style={{ WebkitUserSelect: "text", userSelect: "text" }}
@@ -642,14 +709,14 @@ export function ReadingDetailPage() {
               </div>
             ) : (
               <div className="flex-1 flex flex-col space-y-2 h-full">
-                <textarea
+                <RichTextEditor
                   value={translationDraft}
-                  onChange={(e) => {
-                    setTranslationDraft(e.target.value)
+                  onChange={(val) => {
+                    setTranslationDraft(val)
                     setHasUnsavedChanges(true)
                   }}
                   placeholder="Nhập bản dịch tiếng Việt của bạn ở đây. Nội dung dịch sẽ được lưu lại để đối chiếu..."
-                  className="flex-1 w-full bg-transparent border-0 resize-none outline-none focus:ring-0 text-base leading-relaxed font-sans placeholder:text-muted-foreground/60 focus-visible:outline-none"
+                  className="flex-1 min-h-0 border-0 focus-within:ring-0"
                 />
                 {hasUnsavedChanges && (
                   <p className="text-xs text-amber-500 animate-pulse select-none">

@@ -75,11 +75,11 @@ export function LoginRegister({ onLoginSuccess }: LoginRegisterProps) {
     <div className="flex min-h-screen w-full items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8 rounded-2xl border border-border bg-card p-8 shadow-2xl transition-all duration-300">
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 rounded-xl bg-foreground text-background flex items-center justify-center font-bold text-2xl shadow-md">
-            C
+          <div className="mx-auto h-24 w-24 flex items-center justify-center select-none">
+            <img src="/image-3.png" alt="Mascot" className="h-20 w-auto hover:scale-110 transition-transform duration-300" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-foreground">
-            Monochat
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground">
+            Cuhp
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {isLogin

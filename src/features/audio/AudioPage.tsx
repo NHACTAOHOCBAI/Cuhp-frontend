@@ -7,9 +7,12 @@ import * as React from "react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
 import { useConfirm } from "@/components/ConfirmDialog"
+import { LayoutGrid, List } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { AudioUploadForm } from "./AudioUploadForm"
 import { AudioFilters, type FilterValue } from "./AudioFilters"
 import { AudioTable } from "./AudioTable"
+import { AudioGrid } from "./AudioGrid"
 import { AudioEditDialog } from "./AudioEditDialog"
 import { Pagination } from "./Pagination"
 import {
@@ -34,6 +37,15 @@ export function AudioPage() {
     category: "",
   })
   const [page, setPage] = React.useState(1)
+
+  // Grid/Table view mode state with local storage persistence
+  const [viewMode, setViewMode] = React.useState<"table" | "grid">(() => {
+    return (localStorage.getItem("audio_view_mode") as "table" | "grid") || "table"
+  })
+
+  React.useEffect(() => {
+    localStorage.setItem("audio_view_mode", viewMode)
+  }, [viewMode])
 
   // Reset to page 1 when filters change
   React.useEffect(() => {
@@ -136,11 +148,33 @@ export function AudioPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6 w-full">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Quản lý bài nghe tiếng Anh</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Tải file âm thanh lên hệ thống Cloudflare R2 để đồng bộ trực tiếp với ứng dụng di động Android.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Quản lý bài nghe tiếng Anh</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Tải file âm thanh lên hệ thống Cloudflare R2 để đồng bộ trực tiếp với ứng dụng di động Android.
+          </p>
+        </div>
+        <div className="flex items-center border border-border rounded-md p-0.5 bg-muted/20 self-start sm:self-auto shrink-0 select-none">
+          <Button
+            variant={viewMode === "table" ? "secondary" : "ghost"}
+            size="icon"
+            className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
+            onClick={() => setViewMode("table")}
+            title="Dạng danh sách"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === "grid" ? "secondary" : "ghost"}
+            size="icon"
+            className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
+            onClick={() => setViewMode("grid")}
+            title="Dạng lưới"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -155,19 +189,33 @@ export function AudioPage() {
             isBulkDeleting={deleteBulk.isPending}
           />
 
-          <AudioTable
-            tracks={items}
-            isLoading={isLoading}
-            playingId={player.playingId}
-            onTogglePlay={player.toggle}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            onEdit={(t) => setEditing(t)}
-            onDelete={handleDelete}
-            isDeletingId={deletingId}
-            currentUserId={currentUserId}
-            isAdmin={isAdmin}
-          />
+          {viewMode === "table" ? (
+            <AudioTable
+              tracks={items}
+              isLoading={isLoading}
+              playingId={player.playingId}
+              onTogglePlay={player.toggle}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onEdit={(t) => setEditing(t)}
+              onDelete={handleDelete}
+              isDeletingId={deletingId}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+            />
+          ) : (
+            <AudioGrid
+              tracks={items}
+              isLoading={isLoading}
+              playingId={player.playingId}
+              onTogglePlay={player.toggle}
+              onEdit={(t) => setEditing(t)}
+              onDelete={handleDelete}
+              isDeletingId={deletingId}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+            />
+          )}
 
           <Pagination
             page={page}

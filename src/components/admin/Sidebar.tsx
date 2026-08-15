@@ -30,11 +30,9 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate, className }:
       {/* Header / brand */}
       <div className="flex items-center justify-between p-3 border-b border-border min-h-[3.5rem]">
         <div className={cn("flex items-center gap-2 overflow-hidden", collapsed && "justify-center w-full")}>
-          <div className="h-7 w-7 shrink-0 rounded-md bg-[#76baf9] text-[#193665] flex items-center justify-center font-bold text-sm">
-            C
-          </div>
+          <img src="/logo.png" alt="Logo" className="h-9 w-9 shrink-0 object-contain rounded-md select-none" />
           {!collapsed && (
-            <span className="font-bold tracking-tight text-base whitespace-nowrap text-foreground">Monochat</span>
+            <span className="font-bold tracking-tight text-base whitespace-nowrap text-foreground">Cuhp</span>
           )}
         </div>
         {!collapsed && (

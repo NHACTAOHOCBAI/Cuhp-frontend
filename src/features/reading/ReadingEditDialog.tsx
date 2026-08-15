@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/select"
 import { useCreateReadingPassage, useUpdateReadingPassage, useReadingPassageById } from "./hooks"
 import { READING_LEVELS, READING_CATEGORIES } from "./types"
 import { toast } from "sonner"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
 
 export function ReadingEditDialog({
   passageId,
@@ -162,14 +163,10 @@ export function ReadingEditDialog({
               <label htmlFor="passage-content" className="text-sm font-medium">
                 Nội dung bài đọc gốc (Tiếng Anh...) <span className="text-destructive">*</span>
               </label>
-              <textarea
-                id="passage-content"
+              <RichTextEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={setContent}
                 placeholder="Nhập nội dung văn bản gốc ở đây..."
-                required
-                rows={12}
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-sans leading-relaxed resize-y"
               />
             </div>
 

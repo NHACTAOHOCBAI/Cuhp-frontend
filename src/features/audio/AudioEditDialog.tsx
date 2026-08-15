@@ -19,6 +19,7 @@ import { useAudioById, useUpdateAudio } from "./hooks"
 import { CATEGORIES, LEVELS, MAX_TRANSCRIPT_LENGTH } from "./types"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
 
 export function AudioEditDialog({
   trackId,
@@ -79,7 +80,7 @@ export function AudioEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Chỉnh sửa bài nghe</DialogTitle>
           <DialogDescription>
@@ -152,13 +153,10 @@ export function AudioEditDialog({
                 {transcript.length.toLocaleString("vi-VN")} / {MAX_TRANSCRIPT_LENGTH.toLocaleString("vi-VN")}
               </span>
             </div>
-            <textarea
-              id="edit-transcript"
+            <RichTextEditor
               value={transcript}
-              onChange={(e) => setTranscript(e.target.value)}
-              maxLength={MAX_TRANSCRIPT_LENGTH}
-              rows={6}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              onChange={setTranscript}
+              placeholder="Nhập nội dung transcript ở đây..."
             />
           </div>
 

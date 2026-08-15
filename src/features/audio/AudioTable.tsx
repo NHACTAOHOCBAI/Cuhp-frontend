@@ -121,10 +121,10 @@ export function AudioTable({
               ))
             ) : tracks.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-4 text-center py-12 text-muted-foreground">
-                  <Music className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                  <p className="font-medium">Không có bài nghe nào</p>
-                  <p className="text-xs mt-1">
+                <td colSpan={6} className="p-4 text-center py-10 text-muted-foreground">
+                  <img src="/image-2.png" alt="Mascot" className="h-28 w-auto mx-auto mb-2 select-none" />
+                  <p className="font-bold text-foreground">Không có bài nghe nào</p>
+                  <p className="text-xs mt-1 text-muted-foreground">
                     Thử thay đổi bộ lọc hoặc tải lên một bài nghe mới.
                   </p>
                 </td>
@@ -156,9 +156,13 @@ export function AudioTable({
                           <Music className="h-4 w-4 text-primary" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium truncate" title={track.title}>
+                          <Link
+                            to={`/admin/audio/${track.id}`}
+                            className="font-medium hover:text-primary hover:underline line-clamp-1 block text-foreground"
+                            title={track.title}
+                          >
                             {track.title}
-                          </p>
+                          </Link>
                           <p className="text-xs text-muted-foreground truncate" title={track.filename}>
                             {track.filename}
                           </p>

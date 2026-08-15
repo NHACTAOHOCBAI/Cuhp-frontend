@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Edit2, Trash2, BookOpen } from "lucide-react"
+import { Edit2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { READING_LEVELS, READING_CATEGORIES } from "./types"
@@ -61,10 +61,10 @@ export function ReadingTable({
 
   if (passages.length === 0) {
     return (
-      <div className="w-full bg-card rounded-md border border-border p-12 text-center">
-        <div className="max-w-md mx-auto space-y-3">
-          <BookOpen className="h-12 w-12 text-muted-foreground mx-auto" />
-          <h3 className="text-lg font-semibold">Chưa có bài đọc nào</h3>
+      <div className="w-full bg-card rounded-md border border-border p-10 text-center">
+        <div className="max-w-md mx-auto space-y-4">
+          <img src="/image-1.png" alt="Mascot" className="h-28 w-auto mx-auto select-none" />
+          <h3 className="text-lg font-bold text-foreground">Chưa có bài đọc nào</h3>
           <p className="text-sm text-muted-foreground">
             Hãy tạo bài đọc đầu tiên của bạn để bắt đầu ôn luyện dịch và học tập từ vựng!
           </p>

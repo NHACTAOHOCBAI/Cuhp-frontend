@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom"
 import { Sidebar } from "./Sidebar"
 import { Topbar } from "./Topbar"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { MascotAssistant } from "@/components/ui/MascotAssistant"
 
 const COLLAPSED_KEY = "admin-sidebar-collapsed"
 
@@ -24,7 +25,7 @@ export function AdminLayout() {
   }, [])
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground relative">
       {/* Desktop sidebar */}
       <div className="hidden md:block h-full">
         <Sidebar collapsed={collapsed} onToggleCollapsed={toggleCollapsed} />
@@ -48,6 +49,9 @@ export function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Floating Mascot Assistant */}
+      <MascotAssistant />
     </div>
   )
 }
