@@ -11,6 +11,10 @@ import {
   fetchAudios,
   updateAudio,
   uploadAudioWithProgress,
+  fetchAudioComments,
+  createAudioComment,
+  updateAudioComment,
+  deleteAudioComment,
 } from "./api"
 import type {
   AudioListItem,
@@ -132,3 +136,63 @@ export function useAudioPlayer() {
 
   return { playingId, toggle }
 }
+
+export function useAudioCommentsQuery(audioId: string | undefined) {
+  const { token } = useAuth()
+  return useQuery({
+    queryKey: [...QUERY_KEY, "detail", audioId, "comments"] as const,
+    queryFn: () => fetchAudioComments(audioId!, token),
+    enabled: !!token && !!audioId,
+  })
+}
+
+export function useCreateAudioComment(audioId: string) {
+  const { token } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      content,
+      selected_text,
+    }: {
+      content: string
+      selected_text: string | null
+    }) => createAudioComment(audioId, content, selected_text, token),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: [...QUERY_KEY, "detail", audioId, "comments"],
+      })
+    },
+  })
+}
+
+export function useUpdateAudioComment(audioId: string) {
+  const { token } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      content,
+    }: {
+      commentId: string
+      content: string
+    }) => updateAudioComment(commentId, content, token),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: [...QUERY_KEY, "detail", audioId, "comments"],
+      })
+    },
+  })
+}
+
+export function useDeleteAudioComment(audioId: string) {
+  const { token } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (commentId: string) => deleteAudioComment(commentId, token),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: [...QUERY_KEY, "detail", audioId, "comments"],
+      })
+    },
+  })
+}

@@ -15,6 +15,7 @@ import type {
   AudioUpdate,
   BulkDeleteResponse,
   UploadProgress,
+  AudioComment,
 } from "./types"
 
 const API_BASE = "/api/v1/audio"
@@ -124,3 +125,45 @@ export function uploadAudioWithProgress(
     xhr.send(formData)
   })
 }
+
+export async function fetchAudioComments(
+  audioId: string,
+  token: string | null,
+): Promise<AudioComment[]> {
+  return apiFetch<AudioComment[]>(`${API_BASE}/${audioId}/comments`, { token })
+}
+
+export async function createAudioComment(
+  audioId: string,
+  content: string,
+  selectedText: string | null,
+  token: string | null,
+): Promise<AudioComment> {
+  return apiFetch<AudioComment>(`${API_BASE}/${audioId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ content, selected_text: selectedText }),
+    token,
+  })
+}
+
+export async function updateAudioComment(
+  commentId: string,
+  content: string,
+  token: string | null,
+): Promise<AudioComment> {
+  return apiFetch<AudioComment>(`${API_BASE}/comments/${commentId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content }),
+    token,
+  })
+}
+
+export async function deleteAudioComment(
+  commentId: string,
+  token: string | null,
+): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`${API_BASE}/comments/${commentId}`, {
+    method: "DELETE",
+    token,
+  })
+}

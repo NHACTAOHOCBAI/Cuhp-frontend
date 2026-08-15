@@ -74,3 +74,20 @@ export interface UploadProgress {
 }
 
 export const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
+
+export interface AudioCommentUser {
+  id: string
+  name: string
+  initials: string
+  role: string
+}
+
+export interface AudioComment {
+  id: string
+  audio_id: string
+  user_id: string
+  content: string
+  selected_text?: string | null
+  created_at: string
+  user: AudioCommentUser
+}

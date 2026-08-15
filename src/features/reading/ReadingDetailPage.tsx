@@ -311,7 +311,7 @@ export function ReadingDetailPage() {
     try {
       await updateCommentMut.mutateAsync({
         commentId,
-        content: editingCommentText.trim(),
+        payload: { content: editingCommentText.trim() },
       })
       setEditingCommentId(null)
       setEditingCommentText("")
@@ -715,7 +715,7 @@ export function ReadingDetailPage() {
                     size="sm"
                     variant="ghost"
                     onClick={handleOpenVocabDialog}
-                    className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 cursor-pointer animate-in slide-in-from-left-1 duration-150"
+                    className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 hover:text-primary cursor-pointer animate-in slide-in-from-left-1 duration-150"
                   >
                     <Sparkles className="h-3.5 w-3.5" /> Thêm từ vựng
                   </Button>
@@ -727,7 +727,7 @@ export function ReadingDetailPage() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setTooltipMode("comment")}
-                className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 cursor-pointer animate-in slide-in-from-left-2 duration-150"
+                className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 hover:text-primary cursor-pointer animate-in slide-in-from-left-2 duration-150"
               >
                 <Send className="h-3.5 w-3.5 rotate-45" /> Bình luận
               </Button>
