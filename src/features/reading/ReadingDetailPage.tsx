@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useParams, Link } from "react-router-dom"
-import { ArrowLeft, BookOpen, Send, Trash2, Save, Sparkles, Languages, Edit2, Check, X, Volume2 } from "lucide-react"
+import { ArrowLeft, BookOpen, Send, Trash2, Save, Sparkles, Languages, Edit2, Check, X, Volume2, ExternalLink } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -676,7 +676,7 @@ export function ReadingDetailPage() {
       {/* Floating tooltip popover for quick vocabulary addition or commenting */}
       {showTooltip && (
         <div
-          className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-lg p-2 rounded-lg translation-tooltip animate-in fade-in-0 duration-100 w-max max-w-[340px]"
+          className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-lg p-2 rounded-lg translation-tooltip animate-in fade-in-0 duration-100 w-max max-w-[460px]"
           style={{
             top: `${tooltipPosition.top}px`,
             left: `${tooltipPosition.left}px`,
@@ -718,6 +718,20 @@ export function ReadingDetailPage() {
                     className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 hover:text-primary cursor-pointer animate-in slide-in-from-left-1 duration-150"
                   >
                     <Sparkles className="h-3.5 w-3.5" /> Thêm từ vựng
+                  </Button>
+
+                  <Separator orientation="vertical" className="h-4" />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const url = `https://youglish.com/pronounce/${encodeURIComponent(selectedWord)}/english`
+                      window.open(url, "_blank", "noopener,noreferrer")
+                    }}
+                    className="h-7 px-1.5 text-xs text-primary font-medium flex items-center gap-1 hover:bg-primary/10 hover:text-primary cursor-pointer animate-in slide-in-from-left-1 duration-150"
+                    title={`Tra cách phát âm từ "${selectedWord}" trên YouGlish`}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> YouGlish
                   </Button>
                 </>
               )}
