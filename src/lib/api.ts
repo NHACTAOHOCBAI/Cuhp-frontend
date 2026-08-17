@@ -18,7 +18,9 @@ export async function apiFetch<T = unknown>(
   }
   if (token) finalHeaders["Authorization"] = `Bearer ${token}`
 
-  const url = path.startsWith("/api/") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`
+  const apiBase = import.meta.env.VITE_API_BASE_URL || "";
+  const relativeUrl = path.startsWith("/api/") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
+  const url = `${apiBase}${relativeUrl}`;
 
   const res = await fetch(url, { ...rest, headers: finalHeaders })
   if (!res.ok) {
