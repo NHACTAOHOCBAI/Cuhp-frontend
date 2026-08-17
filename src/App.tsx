@@ -13,6 +13,7 @@ import AudioDetailPage from "@/pages/admin/AudioDetail"
 import VocabularyPage from "@/pages/admin/Vocabulary"
 import ReadingPage from "@/pages/admin/Reading"
 import ReadingDetailPage from "@/pages/admin/ReadingDetail"
+import GymPage from "@/pages/admin/Gym"
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="vocabulary" element={<VocabularyPage />} />
             <Route path="reading" element={<ReadingPage />} />
             <Route path="reading/:id" element={<ReadingDetailPage />} />
+            <Route path="gym" element={<GymPage />} />
           </Route>
 
           <Route path="/" element={<Navigate to="/login" replace />} />

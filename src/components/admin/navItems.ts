@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Headphones, BookOpen, Languages, type LucideIcon } from "lucide-react"
+import { LayoutDashboard, Users, Headphones, BookOpen, Languages, Dumbbell, type LucideIcon } from "lucide-react"
 
 export interface NavItem {
   to: string
@@ -38,7 +38,14 @@ export const navItems: NavItem[] = [
     icon: Languages,
     match: /^\/admin\/reading(\/|$)/,
   },
+  {
+    to: "/admin/gym",
+    label: "Hỗ trợ tập gym",
+    icon: Dumbbell,
+    match: /^\/admin\/gym(\/|$)/,
+  },
 ]
+
 
 
 export function getPageTitle(pathname: string): string {

@@ -131,7 +131,7 @@ export default function Dashboard() {
   const progressRatio = Math.min(reviewedToday / dailyTarget, 1)
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 w-full h-full overflow-y-auto">
+    <div className="p-4 sm:p-6 space-y-6 w-full">
       {/* Welcome banner */}
       <div className="relative rounded-2xl overflow-hidden border border-border bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 text-center md:text-left z-10">

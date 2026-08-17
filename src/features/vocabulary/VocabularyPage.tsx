@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/admin/PageHeader"
 import { useAuth } from "@/hooks/useAuth"
 import { useConfirm } from "@/components/ConfirmDialog"
 import { toast } from "sonner"
@@ -127,17 +128,14 @@ export function VocabularyPage() {
     <div className="flex-1 flex flex-col min-w-0 h-full bg-background p-6 overflow-y-auto animate-in fade-in-0 duration-150">
       <div className="w-full space-y-6">
         {/* Title & Actions Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Quản lý từ vựng</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Lưu trữ, tra cứu và chuẩn bị danh mục từ vựng học tập cho hệ thống.
-            </p>
-          </div>
-          <Button onClick={handleCreate} className="gap-1.5 cursor-pointer self-start sm:self-auto shrink-0">
+        <PageHeader
+          title="Quản lý từ vựng"
+          description="Lưu trữ, tra cứu và chuẩn bị danh mục từ vựng học tập cho hệ thống."
+        >
+          <Button onClick={handleCreate} className="gap-1.5 cursor-pointer shrink-0">
             <Plus className="h-4 w-4" /> Thêm từ mới
           </Button>
-        </div>
+        </PageHeader>
 
         {/* Filters */}
         <VocabularyFilters

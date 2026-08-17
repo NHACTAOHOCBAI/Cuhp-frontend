@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useConfirm } from "@/components/ConfirmDialog"
 import { LayoutGrid, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/admin/PageHeader"
 import { AudioUploadForm } from "./AudioUploadForm"
 import { AudioFilters, type FilterValue } from "./AudioFilters"
 import { AudioTable } from "./AudioTable"
@@ -147,15 +148,11 @@ export function AudioPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Quản lý bài nghe tiếng Anh</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Tải file âm thanh lên hệ thống Cloudflare R2 để đồng bộ trực tiếp với ứng dụng di động Android.
-          </p>
-        </div>
-        <div className="flex items-center border border-border rounded-md p-0.5 bg-muted/20 self-start sm:self-auto shrink-0 select-none">
+      <PageHeader
+        title="Quản lý bài nghe tiếng Anh"
+        description="Tải file âm thanh lên hệ thống Cloudflare R2 để đồng bộ trực tiếp với ứng dụng di động Android."
+      >
+        <div className="flex items-center border border-border rounded-md p-0.5 bg-muted/20 select-none">
           <Button
             variant={viewMode === "table" ? "secondary" : "ghost"}
             size="icon"
@@ -175,7 +172,7 @@ export function AudioPage() {
             <LayoutGrid className="h-4 w-4" />
           </Button>
         </div>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* List (left, takes most of the width) */}

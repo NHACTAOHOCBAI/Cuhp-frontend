@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Plus, LayoutGrid, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/admin/PageHeader"
 import { useAuth } from "@/hooks/useAuth"
 import { useConfirm } from "@/components/ConfirmDialog"
 import { toast } from "sonner"
@@ -101,41 +102,35 @@ export function ReadingPage() {
     <div className="flex-1 flex flex-col min-w-0 h-full bg-background p-6 overflow-y-auto animate-in fade-in-0 duration-150">
       <div className="w-full space-y-6">
         {/* Title & Actions Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Luyện dịch & Bài đọc</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Đọc các bài văn tiếng Anh, luyện tập dịch sang tiếng Việt và học nhanh từ mới bằng cách bôi đen văn bản.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 self-start sm:self-auto shrink-0 select-none">
-            {/* View Mode Toggle */}
-            <div className="flex items-center border border-border rounded-md p-0.5 bg-muted/20">
-              <Button
-                variant={viewMode === "table" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
-                onClick={() => setViewMode("table")}
-                title="Dạng danh sách"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
-                onClick={() => setViewMode("grid")}
-                title="Dạng lưới"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <Button onClick={handleCreate} className="gap-1.5 cursor-pointer shrink-0">
-              <Plus className="h-4 w-4" /> Tạo bài đọc mới
+        <PageHeader
+          title="Luyện dịch & Bài đọc"
+          description="Đọc các bài văn tiếng Anh, luyện tập dịch sang tiếng Việt và học nhanh từ mới bằng cách bôi đen văn bản."
+        >
+          <div className="flex items-center border border-border rounded-md p-0.5 bg-muted/20">
+            <Button
+              variant={viewMode === "table" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
+              onClick={() => setViewMode("table")}
+              title="Dạng danh sách"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              size="icon"
+              className="h-7 w-7 rounded-sm shadow-none cursor-pointer"
+              onClick={() => setViewMode("grid")}
+              title="Dạng lưới"
+            >
+              <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-        </div>
+
+          <Button onClick={handleCreate} className="gap-1.5 cursor-pointer shrink-0">
+            <Plus className="h-4 w-4" /> Tạo bài đọc mới
+          </Button>
+        </PageHeader>
 
         {/* Filters */}
         <ReadingFilters value={filters} onChange={setFilters} />

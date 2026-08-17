@@ -35,6 +35,52 @@ export interface VocabularyItem {
   next_review_at: string
 }
 
+export interface WorkoutCategory {
+  id: string
+  user_id: string
+  name: string
+  color: string
+  created_at: string
+}
+
+export interface WorkoutExercise {
+  id: string
+  user_id: string
+  category_id?: string | null
+  name: string
+  date: string
+  sets: number
+  reps: number
+  weight?: number | null
+  completed: boolean
+  created_at: string
+  category?: WorkoutCategory | null
+}
+
+export interface DailyVolume {
+  date: string
+  volume: number
+  completed_count: number
+  total_count: number
+}
+
+export interface ExerciseProgressPoint {
+  date: string
+  max_weight: number
+  volume: number
+}
+
+export interface ExerciseProgress {
+  exercise_name: string
+  points: ExerciseProgressPoint[]
+}
+
+export interface GymStats {
+  weekly_volume: DailyVolume[]
+  exercise_progress: ExerciseProgress[]
+}
+
+
 
 
 
