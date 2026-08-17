@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { apiFetch } from "@/lib/api"
 import type { User } from "../types"
 
 interface LoginRegisterProps {
@@ -23,43 +24,29 @@ export function LoginRegister({ onLoginSuccess }: LoginRegisterProps) {
 
     try {
       if (isLogin) {
-        const res = await fetch("/api/v1/auth/login", {
+        const data = await apiFetch<{ token: string; user: User }>("/api/v1/auth/login", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password })
         })
-
-        const data = await res.json()
-        if (!res.ok) {
-          throw new Error(data.detail || "Đăng nhập thất bại. Vui lòng kiểm tra lại.")
-        }
 
         onLoginSuccess(data.token, data.user)
       } else {
         if (!name.trim()) {
           throw new Error("Vui lòng nhập họ tên của bạn.")
         }
-        const res = await fetch("/api/v1/auth/register", {
+        await apiFetch("/api/v1/auth/register", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password, name, role })
         })
 
-        const data = await res.json()
-        if (!res.ok) {
-          throw new Error(data.detail || "Đăng ký thất bại. Tên đăng nhập có thể đã tồn tại.")
-        }
-
         // Auto login after register
-        const loginRes = await fetch("/api/v1/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        })
-        const loginData = await loginRes.json()
-        if (loginRes.ok) {
+        try {
+          const loginData = await apiFetch<{ token: string; user: User }>("/api/v1/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ username, password })
+          })
           onLoginSuccess(loginData.token, loginData.user)
-        } else {
+        } catch {
           setIsLogin(true)
           setError("Đăng ký thành công! Hãy đăng nhập bằng tài khoản mới.")
         }
