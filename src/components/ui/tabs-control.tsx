@@ -1,8 +1,8 @@
 /**
- * Pill-style tab control used in the Gym header.
+ * Pill-style tab control.
  *
  * Renders an inline-flex group with a soft `bg-muted` background and one
- * active pill mirrored from the existing radio/tab group.
+ * active pill. Shared by the Gym and Todo pages for their header tabs.
  */
 import * as React from "react"
 import { cn } from "@/lib/utils"

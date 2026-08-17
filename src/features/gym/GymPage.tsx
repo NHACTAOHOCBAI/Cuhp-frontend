@@ -36,7 +36,7 @@ import {
 } from "./hooks"
 import type { CategoryPayload, ExercisePayload } from "./api"
 
-import { TabsControl, type TabsControlItem } from "./components/TabsControl"
+import { TabsControl, type TabsControlItem } from "@/components/ui/tabs-control"
 import { WeekScheduleCard } from "./components/WeekScheduleCard"
 import { DailyProgressCircle } from "./components/DailyProgressCircle"
 import { ExerciseList } from "./components/ExerciseList"

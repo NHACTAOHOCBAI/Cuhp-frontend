@@ -80,6 +80,25 @@ export interface GymStats {
   exercise_progress: ExerciseProgress[]
 }
 
+/** The four cells of the Eisenhower time-management matrix. */
+export type TodoQuadrant = "do" | "schedule" | "delegate" | "eliminate"
+
+export interface TodoTask {
+  id: string
+  user_id: string
+  title: string
+  description?: string | null
+  quadrant: TodoQuadrant
+  /** ISO `YYYY-MM-DD`, or null for a task with no deadline. */
+  due_date?: string | null
+  completed: boolean
+  completed_at?: string | null
+  /** Sort order inside its quadrant; dense 0..n-1, maintained by the server. */
+  position: number
+  created_at: string
+  updated_at?: string | null
+}
+
 
 
 
