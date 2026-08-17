@@ -1,4 +1,4 @@
-import { useLocation, Link } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { Menu, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/hooks/useTheme"
@@ -31,12 +31,6 @@ export function Topbar({ onOpenMobileSidebar }: TopbarProps) {
         </h1>
       </div>
       <div className="flex items-center gap-1 sm:gap-2">
-        <Link
-          to="/admin/conversations"
-          className="hidden sm:inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors px-2"
-        >
-          Đi tới Chat
-        </Link>
         <Button
           variant="ghost"
           size="icon"
