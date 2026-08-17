@@ -62,8 +62,7 @@ export function ReadingTable({
   if (passages.length === 0) {
     return (
       <div className="w-full bg-card rounded-md border border-border p-10 text-center">
-        <div className="max-w-md mx-auto space-y-4">
-          <img src="/image-1.png" alt="Mascot" className="h-28 w-auto mx-auto select-none" />
+        <div className="max-w-md mx-auto space-y-2">
           <h3 className="text-lg font-bold text-foreground">Chưa có bài đọc nào</h3>
           <p className="text-sm text-muted-foreground">
             Hãy tạo bài đọc đầu tiên của bạn để bắt đầu ôn luyện dịch và học tập từ vựng!

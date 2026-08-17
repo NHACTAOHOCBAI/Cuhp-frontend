@@ -66,8 +66,7 @@ export function AudioGrid({
   if (tracks.length === 0) {
     return (
       <div className="w-full bg-card rounded-md border border-border p-10 text-center shadow-none">
-        <div className="max-w-md mx-auto space-y-4">
-          <img src="/image-2.png" alt="Mascot" className="h-28 w-auto mx-auto select-none" />
+        <div className="max-w-md mx-auto space-y-2">
           <h3 className="text-lg font-bold text-foreground">Chưa có bài nghe nào</h3>
           <p className="text-sm text-muted-foreground">
             Hãy tải lên bài nghe đầu tiên của bạn để bắt đầu ôn luyện.

@@ -122,7 +122,6 @@ export function AudioTable({
             ) : tracks.length === 0 ? (
               <tr>
                 <td colSpan={6} className="p-4 text-center py-10 text-muted-foreground">
-                  <img src="/image-2.png" alt="Mascot" className="h-28 w-auto mx-auto mb-2 select-none" />
                   <p className="font-bold text-foreground">Không có bài nghe nào</p>
                   <p className="text-xs mt-1 text-muted-foreground">
                     Thử thay đổi bộ lọc hoặc tải lên một bài nghe mới.
