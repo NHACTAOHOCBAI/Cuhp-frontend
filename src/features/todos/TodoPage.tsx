@@ -5,6 +5,10 @@
  * and a stats/report view. Tasks are a rolling backlog — an unfinished task
  * stays put until it is completed, and the optional deadline drives the
  * "Hôm nay / Tuần này / Tất cả" scope filter.
+ *
+ * Layout wrapper / header / filter / dialog conventions follow the same
+ * pattern used by `features/vocabulary` and `features/reading` so this page
+ * sits naturally next to the other admin management screens.
  */
 import * as React from "react"
 import {
@@ -17,14 +21,13 @@ import {
   useSensors,
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
-import { BarChart3, LayoutGrid, ListChecks, Plus, Search, Trash2 } from "lucide-react"
+import { BarChart3, LayoutGrid, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/admin/PageHeader"
 import { useConfirm } from "@/components/ConfirmDialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 import { TabsControl, type TabsControlItem } from "@/components/ui/tabs-control"
+import { useAuth } from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
 import type { TodoQuadrant, TodoTask } from "@/types"
 import { QUADRANTS, SCOPE_OPTIONS } from "./constants"
@@ -38,11 +41,12 @@ import {
   useToggleTodo,
   useUpdateTodo,
 } from "./hooks"
-import type { TodoScope, TodoTaskCreate, TodoTaskUpdate } from "./types"
+import type { TodoTaskCreate, TodoTaskUpdate } from "./types"
 import { QuadrantCard } from "./components/QuadrantCard"
 import { TaskCard } from "./components/TaskCard"
 import { TaskEditDialog } from "./components/TaskEditDialog"
 import { TodoStatsPanel } from "./components/TodoStatsPanel"
+import { TodoFilters, type TodoFiltersValue } from "./components/TodoFilters"
 
 type TabKey = "matrix" | "stats"
 
@@ -51,11 +55,25 @@ const TAB_ITEMS: TabsControlItem<TabKey>[] = [
   { value: "stats", label: "Thống kê", icon: <BarChart3 className="mr-1.5 size-4" /> },
 ]
 
+const SCOPE_VALUES = SCOPE_OPTIONS.map((o) => o.value)
+type ScopeValue = (typeof SCOPE_VALUES)[number]
+
+function isScopeValue(v: string): v is ScopeValue {
+  return (SCOPE_VALUES as readonly string[]).includes(v)
+}
+
 export function TodoPage() {
+  const { user } = useAuth()
   const confirm = useConfirm()
 
+  // Track user/scope so the page stays composable with the rest of admin.
+  const isAdmin = user?.role === "admin"
+  const currentUserId = user?.id
+  void isAdmin
+  void currentUserId
+
   const [activeTab, setActiveTab] = React.useState<TabKey>("matrix")
-  const [scope, setScope] = React.useState<TodoScope>("all")
+  const [scope, setScope] = React.useState<ScopeValue>("all")
   const [search, setSearch] = React.useState("")
   const [showCompleted, setShowCompleted] = React.useState(false)
 
@@ -64,20 +82,13 @@ export function TodoPage() {
   const [draftQuadrant, setDraftQuadrant] = React.useState<TodoQuadrant>("do")
   const [activeDragId, setActiveDragId] = React.useState<string | null>(null)
 
-  // Debounce the search box so typing does not fire a request per keystroke.
-  const [debouncedSearch, setDebouncedSearch] = React.useState("")
-  React.useEffect(() => {
-    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300)
-    return () => window.clearTimeout(timer)
-  }, [search])
-
   const listParams = React.useMemo(
     () => ({
-      scope,
-      q: debouncedSearch || undefined,
+      scope: scope as TodoFiltersValue["scope"],
+      q: search || undefined,
       show_completed: showCompleted,
     }),
-    [scope, debouncedSearch, showCompleted]
+    [scope, search, showCompleted]
   )
 
   const { data, isLoading } = useTodosQuery(listParams)
@@ -146,7 +157,7 @@ export function TodoPage() {
       {
         onError: (err) =>
           toast.error(
-            err instanceof Error ? err.message : "Không chuyển được công việc."
+            err instanceof Error ? err.message : "Chuyển công việc thất bại."
           ),
       }
     )
@@ -175,7 +186,7 @@ export function TodoPage() {
           },
           onError: (err) =>
             toast.error(
-              err instanceof Error ? err.message : "Không lưu được công việc."
+              err instanceof Error ? err.message : "Cập nhật công việc thất bại."
             ),
         }
       )
@@ -188,14 +199,18 @@ export function TodoPage() {
         setDialogOpen(false)
       },
       onError: (err) =>
-        toast.error(err instanceof Error ? err.message : "Không tạo được công việc."),
+        toast.error(
+          err instanceof Error ? err.message : "Tạo công việc thất bại."
+        ),
     })
   }
 
   const handleToggle = (task: TodoTask) => {
     toggleMut.mutate(task.id, {
       onError: (err) =>
-        toast.error(err instanceof Error ? err.message : "Không cập nhật được."),
+        toast.error(
+          err instanceof Error ? err.message : "Cập nhật trạng thái thất bại."
+        ),
     })
   }
 
@@ -204,15 +219,17 @@ export function TodoPage() {
       title: "Xoá công việc?",
       description: `"${task.title}" sẽ bị xoá vĩnh viễn.`,
       confirmText: "Xoá",
+      cancelText: "Huỷ",
       variant: "destructive",
     })
     if (!ok) return
 
-    deleteMut.mutate(task.id, {
-      onSuccess: () => toast.success("Đã xoá công việc."),
-      onError: (err) =>
-        toast.error(err instanceof Error ? err.message : "Không xoá được công việc."),
-    })
+    try {
+      await deleteMut.mutateAsync(task.id)
+      toast.success(`Đã xoá công việc "${task.title}".`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Xoá công việc thất bại.")
+    }
   }
 
   const handleClearCompleted = async () => {
@@ -220,134 +237,118 @@ export function TodoPage() {
       title: "Xoá các việc đã hoàn thành?",
       description: "Toàn bộ công việc đã đánh dấu hoàn thành sẽ bị xoá vĩnh viễn.",
       confirmText: "Xoá hết",
+      cancelText: "Huỷ",
       variant: "destructive",
     })
     if (!ok) return
 
-    clearDoneMut.mutate(undefined, {
-      onSuccess: (res) => toast.success(res.message),
-      onError: (err) =>
-        toast.error(err instanceof Error ? err.message : "Không xoá được."),
-    })
+    try {
+      const res = await clearDoneMut.mutateAsync()
+      toast.success(res.message)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Xoá hàng loạt thất bại.")
+    }
   }
 
+  const handleFiltersChange = React.useCallback((next: TodoFiltersValue) => {
+    if (isScopeValue(next.scope)) setScope(next.scope)
+    setSearch(next.q)
+    setShowCompleted(next.showCompleted)
+  }, [])
+
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Quản lý công việc"
-        description="Sắp xếp việc theo ma trận Eisenhower — kéo thẻ giữa các ô để đổi mức ưu tiên."
-        icon={<ListChecks className="size-6 text-primary" />}
-      >
-        <TabsControl value={activeTab} onChange={setActiveTab} items={TAB_ITEMS} />
-        <Button onClick={() => openCreate("do")}>
-          <Plus className="mr-1.5 size-4" />
-          Thêm việc
-        </Button>
-      </PageHeader>
+    <div className="flex-1 flex flex-col min-w-0 h-full bg-background p-6 overflow-y-auto animate-in fade-in-0 duration-150">
+      <div className="w-full space-y-6">
+        {/* Title & Actions Row */}
+        <PageHeader
+          title="Quản lý công việc"
+          description="Sắp xếp việc theo ma trận Eisenhower — kéo thẻ giữa các ô để đổi mức ưu tiên."
+        >
+          <Button
+            onClick={() => openCreate("do")}
+            className="gap-1.5 cursor-pointer shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            Thêm việc
+          </Button>
+        </PageHeader>
 
-      {activeTab === "matrix" ? (
-        <>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <TabsControl
-                value={scope}
-                onChange={(v) => setScope(v)}
-                items={SCOPE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-              />
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Tìm công việc..."
-                  className="w-full pl-8 sm:w-56"
-                  aria-label="Tìm công việc theo tên"
-                />
-              </div>
-            </div>
+        {/* View tabs sit outside the PageHeader right slot, like Reading/Audio. */}
+        <TabsControl value={activeTab} onChange={(v) => setActiveTab(v)} items={TAB_ITEMS} />
 
-            <div className="flex items-center gap-3">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                <Switch
-                  checked={showCompleted}
-                  onCheckedChange={setShowCompleted}
-                />
-                Hiện việc đã xong
-              </label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleClearCompleted}
-                disabled={completedCount === 0 || clearDoneMut.isPending}
-              >
-                <Trash2 className="mr-1.5 size-4" />
-                Dọn việc đã xong
-              </Button>
-            </div>
-          </div>
+        {activeTab === "matrix" ? (
+          <>
+            <TodoFilters
+              value={{ scope, q: search, showCompleted }}
+              onChange={handleFiltersChange}
+              completedCount={completedCount}
+              onClearCompleted={handleClearCompleted}
+              isClearing={clearDoneMut.isPending}
+            />
 
-          {scope !== "all" ? (
-            <p className="text-xs text-muted-foreground">
-              Đang lọc theo hạn chót — việc chưa đặt hạn chỉ hiện ở mục “Tất cả”.
-            </p>
-          ) : null}
+            {scope !== "all" ? (
+              <p className="text-xs text-muted-foreground">
+                Đang lọc theo hạn chót — việc chưa đặt hạn chỉ hiện ở mục "Tất cả".
+              </p>
+            ) : null}
 
-          {isLoading ? (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {QUADRANTS.map((q) => (
-                <div
-                  key={q.key}
-                  className="h-[260px] animate-pulse rounded-xl border-2 border-border bg-muted/40"
-                />
-              ))}
-            </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCorners}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragCancel={() => setActiveDragId(null)}
-            >
+            {isLoading ? (
               <div className="grid gap-4 lg:grid-cols-2">
-                {QUADRANTS.map((meta) => (
-                  <QuadrantCard
-                    key={meta.key}
-                    meta={meta}
-                    tasks={tasksByQuadrant.get(meta.key) ?? []}
-                    onAdd={openCreate}
-                    onToggle={handleToggle}
-                    onEdit={openEdit}
-                    onDelete={handleDelete}
+                {QUADRANTS.map((q) => (
+                  <div
+                    key={q.key}
+                    className="h-[260px] animate-pulse rounded-xl border-2 border-border bg-muted/40"
                   />
                 ))}
               </div>
-
-              {/* Follows the cursor so the card stays visible outside its cell. */}
-              <DragOverlay>
-                {activeDragTask ? (
-                  <div className={cn("w-72 rotate-1 cursor-grabbing")}>
-                    <TaskCard
-                      task={activeDragTask}
-                      onToggle={() => {}}
-                      onEdit={() => {}}
-                      onDelete={() => {}}
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCorners}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={() => setActiveDragId(null)}
+              >
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {QUADRANTS.map((meta) => (
+                    <QuadrantCard
+                      key={meta.key}
+                      meta={meta}
+                      tasks={tasksByQuadrant.get(meta.key) ?? []}
+                      onAdd={openCreate}
+                      onToggle={handleToggle}
+                      onEdit={openEdit}
+                      onDelete={handleDelete}
                     />
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
-          )}
-        </>
-      ) : statsLoading ? (
-        <div className="h-64 animate-pulse rounded-xl bg-muted/40" />
-      ) : stats ? (
-        <TodoStatsPanel stats={stats} />
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Chưa tải được dữ liệu thống kê.
-        </p>
-      )}
+                  ))}
+                </div>
+
+                {/* Follows the cursor so the card stays visible outside its cell. */}
+                <DragOverlay>
+                  {activeDragTask ? (
+                    <div className={cn("w-72 rotate-1 cursor-grabbing")}>
+                      <TaskCard
+                        task={activeDragTask}
+                        onToggle={() => {}}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
+                      />
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            )}
+          </>
+        ) : statsLoading ? (
+          <div className="h-64 animate-pulse rounded-xl bg-muted/40" />
+        ) : stats ? (
+          <TodoStatsPanel stats={stats} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Chưa tải được dữ liệu thống kê.
+          </p>
+        )}
+      </div>
 
       <TaskEditDialog
         open={dialogOpen}

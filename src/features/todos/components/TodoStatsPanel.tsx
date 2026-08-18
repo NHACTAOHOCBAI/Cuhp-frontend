@@ -28,7 +28,7 @@ interface StatTileProps {
 
 function StatTile({ label, value, hint, icon: Icon, tone = "default" }: StatTileProps) {
   return (
-    <Card>
+    <Card className="shadow-none">
       <CardContent className="flex items-start gap-3 p-4">
         <span
           className={cn(
@@ -88,7 +88,7 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="shadow-none">
           <CardHeader>
             <CardTitle className="text-base">Phân bổ theo ma trận</CardTitle>
             <CardDescription>
@@ -100,7 +100,7 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-none">
           <CardHeader>
             <CardTitle className="text-base">
               Việc hoàn thành 7 ngày qua
@@ -115,7 +115,7 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
         </Card>
       </div>
 
-      <Card>
+      <Card className="shadow-none">
         <CardHeader>
           <CardTitle className="text-base">Chi tiết từng góc phần tư</CardTitle>
           <CardDescription>

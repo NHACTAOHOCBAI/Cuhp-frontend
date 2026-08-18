@@ -36,7 +36,7 @@ export function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
         zIndex: isDragging ? 50 : undefined,
       }}
       className={cn(
-        "group relative flex items-start gap-2 rounded-lg border border-border bg-card p-2.5 shadow-sm transition-colors",
+        "group relative flex items-start gap-2 rounded-lg border border-border bg-card p-2.5 shadow-none transition-colors",
         "hover:border-foreground/20",
         isDragging && "opacity-80 shadow-lg ring-2 ring-primary/40",
         task.completed && "opacity-60"

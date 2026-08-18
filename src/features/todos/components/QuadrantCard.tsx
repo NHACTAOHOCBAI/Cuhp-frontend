@@ -37,7 +37,7 @@ export function QuadrantCard({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[260px] flex-col rounded-xl border-2 border-border bg-card shadow-sm transition-colors",
+        "flex min-h-[260px] flex-col rounded-xl border-2 border-border bg-card shadow-none transition-colors",
         isOver && cn("border-dashed", meta.ring)
       )}
     >
