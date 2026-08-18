@@ -45,6 +45,7 @@ export function TaskEditDialog({
   const [description, setDescription] = React.useState("")
   const [quadrant, setQuadrant] = React.useState<TodoQuadrant>(defaultQuadrant)
   const [dueDate, setDueDate] = React.useState("")
+  const [scheduledDate, setScheduledDate] = React.useState("")
 
   // Reseed the draft every time the dialog opens so a cancelled edit never
   // leaks into the next one.
@@ -54,6 +55,7 @@ export function TaskEditDialog({
     setDescription(task?.description ?? "")
     setQuadrant(task?.quadrant ?? defaultQuadrant)
     setDueDate(task?.due_date ?? "")
+    setScheduledDate(task?.scheduled_date ?? "")
   }, [open, task, defaultQuadrant])
 
   const trimmedTitle = title.trim()
@@ -69,6 +71,7 @@ export function TaskEditDialog({
       description: description.trim() || null,
       quadrant,
       due_date: dueDate || null,
+      scheduled_date: scheduledDate || null,
     })
   }
 
@@ -125,7 +128,7 @@ export function TaskEditDialog({
 
             <div className="space-y-1.5">
               <label htmlFor="todo-due" className="text-sm font-medium">
-                Hạn chót
+                Hạn chót (Deadline)
               </label>
               <div className="flex items-center gap-2">
                 <Input
@@ -152,6 +155,39 @@ export function TaskEditDialog({
                   disabled={!dueDate}
                 >
                   Xoá hạn
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="todo-scheduled" className="text-sm font-medium">
+                Ngày lập lịch làm việc
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="todo-scheduled"
+                  type="date"
+                  value={scheduledDate}
+                  onChange={(e) => setScheduledDate(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => setScheduledDate(todayISO())}
+                >
+                  Hôm nay
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => setScheduledDate("")}
+                  disabled={!scheduledDate}
+                >
+                  Xoá lịch
                 </Button>
               </div>
             </div>

@@ -5,7 +5,7 @@
  * activated from a dedicated grip handle rather than the whole card, so the
  * checkbox, edit and delete controls stay clickable.
  */
-import { Check, GripVertical, Pencil, Trash2 } from "lucide-react"
+import { Check, Pencil, Trash2, Calendar, Clock, AlertTriangle } from "lucide-react"
 import { useDraggable } from "@dnd-kit/core"
 import { cn } from "@/lib/utils"
 import type { TodoTask } from "@/types"
@@ -13,42 +13,49 @@ import { formatDueLabel, isDueToday, isOverdue } from "../utils/dates"
 
 interface TaskCardProps {
   task: TodoTask
+  dragId?: string
   onToggle: (task: TodoTask) => void
   onEdit: (task: TodoTask) => void
   onDelete: (task: TodoTask) => void
 }
 
-export function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: task.id, data: { quadrant: task.quadrant } })
+export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardProps) {
+  const { attributes, listeners, setNodeRef, isDragging } =
+    useDraggable({ id: dragId || task.id, data: { quadrant: task.quadrant } })
 
   const overdue = !task.completed && isOverdue(task.due_date)
   const dueToday = !task.completed && isDueToday(task.due_date)
+  const isScheduledOverdue = task.scheduled_date && task.due_date && task.scheduled_date > task.due_date
+  const hasDeadlineWarning = !task.completed && (overdue || isScheduledOverdue)
 
   return (
     <div
       ref={setNodeRef}
       style={{
-        transform: transform
-          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-          : undefined,
         // Lift the dragged card above its siblings while it is in flight.
         zIndex: isDragging ? 50 : undefined,
       }}
       className={cn(
-        "group relative flex items-start gap-2 rounded-lg border border-border bg-card p-2.5 shadow-none transition-colors",
-        "hover:border-foreground/20",
-        isDragging && "opacity-80 shadow-lg ring-2 ring-primary/40",
-        task.completed && "opacity-60"
+        "group relative flex items-start gap-2.5 rounded-xl border p-3 shadow-none transition-all duration-150 cursor-grab active:cursor-grabbing",
+        hasDeadlineWarning
+          ? "border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 hover:border-rose-300"
+          : "border-border bg-card hover:border-foreground/20",
+        isDragging && "opacity-25 border-dashed border-primary/30 bg-primary/5 shadow-none ring-0 pointer-events-none",
+        task.completed && "opacity-55"
       )}
+      {...listeners}
+      {...attributes}
     >
       <button
         type="button"
-        onClick={() => onToggle(task)}
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggle(task)
+        }}
         aria-label={task.completed ? "Đánh dấu chưa xong" : "Đánh dấu hoàn thành"}
         aria-pressed={task.completed}
         className={cn(
-          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-colors",
+          "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-colors cursor-pointer",
           task.completed
             ? "border-emerald-500 bg-emerald-500 text-white"
             : "border-input hover:border-emerald-500 hover:bg-emerald-500/10"
@@ -73,20 +80,67 @@ export function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
           </p>
         ) : null}
 
-        {task.due_date ? (
-          <span
-            className={cn(
-              "mt-1.5 inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium",
-              overdue
-                ? "bg-rose-500/10 text-rose-500"
-                : dueToday
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                  : "bg-muted text-muted-foreground"
+        {task.scheduled_date ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900/50 px-2.5 py-0.5 text-[10px] font-medium leading-none">
+              <Calendar className="size-3 shrink-0" />
+              Làm: {formatDueLabel(task.scheduled_date)}
+            </span>
+            {task.due_date && (
+              (() => {
+                const isTaskOverdue = task.scheduled_date > task.due_date;
+                return (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium leading-none border",
+                      isTaskOverdue
+                        ? "bg-rose-500 text-white border-rose-500 animate-pulse"
+                        : "bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100/50 dark:border-amber-900/30"
+                    )}
+                  >
+                    {isTaskOverdue ? (
+                      <>
+                        <AlertTriangle className="size-3 shrink-0" />
+                        Trễ hạn: {formatDueLabel(task.due_date)}
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="size-3 shrink-0 text-amber-500" />
+                        Hạn: {formatDueLabel(task.due_date)}
+                      </>
+                    )}
+                  </span>
+                );
+              })()
             )}
-          >
-            {formatDueLabel(task.due_date)}
-          </span>
-        ) : null}
+          </div>
+        ) : (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-slate-800 px-2.5 py-0.5 text-[10px] font-medium leading-none">
+              <Calendar className="size-3 shrink-0 opacity-70" />
+              Chờ xếp lịch
+            </span>
+            {task.due_date && (
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium leading-none border",
+                  overdue
+                    ? "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50"
+                    : dueToday
+                      ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30"
+                      : "bg-slate-50 dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-slate-800"
+                )}
+              >
+                {overdue ? (
+                  <AlertTriangle className="size-3 shrink-0 text-rose-500" />
+                ) : (
+                  <Clock className="size-3 shrink-0 text-amber-500" />
+                )}
+                Hạn: {formatDueLabel(task.due_date)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Action rail: hidden until hover/focus to keep the matrix uncluttered,
@@ -94,28 +148,25 @@ export function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
         <button
           type="button"
-          onClick={() => onEdit(task)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit(task)
+          }}
           aria-label={`Sửa công việc: ${task.title}`}
-          className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
         >
           <Pencil className="size-3.5" />
         </button>
         <button
           type="button"
-          onClick={() => onDelete(task)}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(task)
+          }}
           aria-label={`Xoá công việc: ${task.title}`}
-          className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer"
         >
           <Trash2 className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          aria-label={`Kéo để chuyển công việc: ${task.title}`}
-          className="cursor-grab rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing touch-none"
-          {...listeners}
-          {...attributes}
-        >
-          <GripVertical className="size-3.5" />
         </button>
       </div>
     </div>

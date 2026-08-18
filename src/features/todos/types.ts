@@ -21,6 +21,7 @@ export interface TodoTaskCreate {
   description?: string | null
   quadrant: TodoQuadrant
   due_date?: string | null
+  scheduled_date?: string | null
   completed?: boolean
 }
 
@@ -34,6 +35,7 @@ export interface TodoTaskUpdate {
   description?: string | null
   quadrant?: TodoQuadrant
   due_date?: string | null
+  scheduled_date?: string | null
   completed?: boolean
   position?: number
 }

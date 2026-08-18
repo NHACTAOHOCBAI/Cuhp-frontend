@@ -16,6 +16,7 @@ interface QuadrantCardProps {
   meta: QuadrantMeta
   tasks: TodoTask[]
   onAdd: (quadrant: QuadrantMeta["key"]) => void
+  onQuickAdd?: (quadrant: QuadrantMeta["key"], title: string) => void
   onToggle: (task: TodoTask) => void
   onEdit: (task: TodoTask) => void
   onDelete: (task: TodoTask) => void
@@ -25,6 +26,7 @@ export function QuadrantCard({
   meta,
   tasks,
   onAdd,
+  onQuickAdd,
   onToggle,
   onEdit,
   onDelete,
@@ -37,13 +39,14 @@ export function QuadrantCard({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[260px] flex-col rounded-xl border-2 border-border bg-card shadow-none transition-colors",
+        "flex min-h-[260px] flex-col rounded-xl border border-border/70 shadow-none transition-colors",
+        meta.bg,
         isOver && cn("border-dashed", meta.ring)
       )}
     >
       <div
         className={cn(
-          "flex items-start justify-between gap-2 rounded-t-xl border-b border-border px-3 py-2.5",
+          "flex items-start justify-between gap-2 rounded-t-xl px-3 py-2.5",
           meta.header
         )}
       >
@@ -69,7 +72,7 @@ export function QuadrantCard({
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
+          className="size-7 shrink-0 cursor-pointer"
           onClick={() => onAdd(meta.key)}
           aria-label={`Thêm công việc vào ô ${meta.label}`}
         >
@@ -78,21 +81,45 @@ export function QuadrantCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-2.5">
+        {/* Quick Add Inline Input */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            const form = e.currentTarget
+            const input = form.elements.namedItem("title") as HTMLInputElement
+            const title = input.value.trim()
+            if (title) {
+              onQuickAdd?.(meta.key, title)
+              input.value = ""
+            }
+          }}
+          className="flex gap-1.5"
+        >
+          <input
+            name="title"
+            placeholder="Thêm việc nhanh... (Enter)"
+            className="flex h-7 w-full rounded-md border border-input bg-transparent px-2.5 py-1 text-xs shadow-none transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-400"
+          />
+        </form>
+
         {tasks.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border/60 p-4 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border/60 p-4 text-center mt-1">
             <p className="text-xs text-muted-foreground">Chưa có công việc</p>
             <p className="text-[11px] text-muted-foreground/70">{meta.hint}</p>
           </div>
         ) : (
-          tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onToggle={onToggle}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))
+          <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+            {tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                dragId={`matrix:${task.id}`}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

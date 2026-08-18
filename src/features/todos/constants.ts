@@ -6,7 +6,7 @@
  * the badge colours on task cards, and the labels in the stats panel.
  * Colour bundles follow the same shape as `features/gym/utils/colors.ts`.
  */
-import { CalendarClock, CircleSlash, Send, Zap } from "lucide-react"
+import { CalendarClock, CircleSlash, Send, Zap, Inbox } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { TodoQuadrant } from "@/types"
 
@@ -25,10 +25,26 @@ export interface QuadrantMeta {
   dot: string
   /** Header strip tint for the quadrant card. */
   header: string
+  /** Full card background colour. */
+  bg: string
   /** Border colour applied while a card is dragged over this quadrant. */
   ring: string
   /** Raw hex, needed by the inline SVG charts. */
   hex: string
+}
+
+export const INBOX_META: QuadrantMeta = {
+  key: "inbox",
+  label: "Hộp việc tuần này",
+  rule: "Chưa phân loại",
+  hint: "Nhập nhanh các việc trong tuần vào đây rồi phân loại sau.",
+  icon: Inbox,
+  badge: "bg-slate-500/10 text-slate-500 border border-slate-500/20 dark:text-slate-400 dark:border-slate-500/30",
+  dot: "bg-slate-500",
+  header: "bg-slate-500/5",
+  bg: "bg-slate-500/[0.03] dark:bg-slate-900/20",
+  ring: "border-slate-500 bg-slate-500/10",
+  hex: "#64748b",
 }
 
 export const QUADRANTS: QuadrantMeta[] = [
@@ -41,6 +57,7 @@ export const QUADRANTS: QuadrantMeta[] = [
     badge: "bg-rose-500/10 text-rose-500 border border-rose-500/20",
     dot: "bg-rose-500",
     header: "bg-rose-500/5",
+    bg: "bg-rose-500/[0.03] dark:bg-rose-950/15",
     ring: "border-rose-500 bg-rose-500/10",
     hex: "#f43f5e",
   },
@@ -53,6 +70,7 @@ export const QUADRANTS: QuadrantMeta[] = [
     badge: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
     dot: "bg-blue-500",
     header: "bg-blue-500/5",
+    bg: "bg-blue-500/[0.03] dark:bg-blue-950/15",
     ring: "border-blue-500 bg-blue-500/10",
     hex: "#3b82f6",
   },
@@ -65,6 +83,7 @@ export const QUADRANTS: QuadrantMeta[] = [
     badge: "bg-amber-600/10 text-amber-600 border border-amber-600/20",
     dot: "bg-amber-600",
     header: "bg-amber-600/5",
+    bg: "bg-amber-500/[0.03] dark:bg-amber-950/15",
     ring: "border-amber-600 bg-amber-600/10",
     hex: "#d97706",
   },
@@ -77,22 +96,25 @@ export const QUADRANTS: QuadrantMeta[] = [
     badge: "bg-violet-500/10 text-violet-500 border border-violet-500/20",
     dot: "bg-violet-500",
     header: "bg-violet-500/5",
+    bg: "bg-violet-500/[0.03] dark:bg-violet-950/15",
     ring: "border-violet-500 bg-violet-500/10",
     hex: "#8b5cf6",
   },
 ]
 
+export const ALL_QUADRANTS: QuadrantMeta[] = [INBOX_META, ...QUADRANTS]
+
 const QUADRANT_MAP = new Map<TodoQuadrant, QuadrantMeta>(
-  QUADRANTS.map((q) => [q.key, q])
+  ALL_QUADRANTS.map((q) => [q.key, q])
 )
 
 export function getQuadrant(key: TodoQuadrant): QuadrantMeta {
-  return QUADRANT_MAP.get(key) ?? QUADRANTS[0]
+  return QUADRANT_MAP.get(key) ?? INBOX_META
 }
 
-export const QUADRANT_OPTIONS = QUADRANTS.map((q) => ({
+export const QUADRANT_OPTIONS = ALL_QUADRANTS.map((q) => ({
   value: q.key,
-  label: `${q.label} — ${q.rule}`,
+  label: q.key === "inbox" ? q.label : `${q.label} — ${q.rule}`,
 }))
 
 export const SCOPE_OPTIONS = [

@@ -38,22 +38,23 @@ export function isDueToday(iso: string | null | undefined): boolean {
   return daysUntil(iso) === 0
 }
 
-/**
- * Human label for a deadline: "Hôm nay", "Ngày mai", "Quá hạn 3 ngày",
- * or a plain `DD/MM` date once it is further out than a week.
- */
 export function formatDueLabel(iso: string | null | undefined): string {
   if (!iso) return "Không hạn"
+  const dateObj = parseISODate(iso)
   const diff = daysUntil(iso)
-  if (diff === 0) return "Hôm nay"
-  if (diff === 1) return "Ngày mai"
-  if (diff === -1) return "Quá hạn 1 ngày"
-  if (diff < -1) return `Quá hạn ${Math.abs(diff)} ngày`
-  if (diff <= 7) return `Còn ${diff} ngày`
-  return parseISODate(iso).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-  })
+  
+  const day = String(dateObj.getDate()).padStart(2, "0")
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0")
+  const daysOfWeek = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]
+  const dayName = daysOfWeek[dateObj.getDay()]
+  
+  const dateStr = `${dayName}, ${day}/${month}`
+  
+  if (diff === 0) return `Hôm nay (${dateStr})`
+  if (diff === 1) return `Ngày mai (${dateStr})`
+  if (diff === -1) return `${dateStr} (Trễ 1 ngày)`
+  if (diff < -1) return `${dateStr} (Trễ ${Math.abs(diff)} ngày)`
+  return `${dateStr} (Còn ${diff} ngày)`
 }
 
 /** Short `DD/MM` label used on chart axes. */

@@ -81,7 +81,7 @@ export interface GymStats {
 }
 
 /** The four cells of the Eisenhower time-management matrix. */
-export type TodoQuadrant = "do" | "schedule" | "delegate" | "eliminate"
+export type TodoQuadrant = "inbox" | "do" | "schedule" | "delegate" | "eliminate"
 
 export interface TodoTask {
   id: string
@@ -91,6 +91,8 @@ export interface TodoTask {
   quadrant: TodoQuadrant
   /** ISO `YYYY-MM-DD`, or null for a task with no deadline. */
   due_date?: string | null
+  /** ISO YYYY-MM-DD, date scheduled on planner. */
+  scheduled_date?: string | null
   completed: boolean
   completed_at?: string | null
   /** Sort order inside its quadrant; dense 0..n-1, maintained by the server. */
