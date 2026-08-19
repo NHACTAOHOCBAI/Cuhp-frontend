@@ -1,94 +1,162 @@
-# Cuhp Frontend Admin Dashboard 🍰🎨🎧
+# Cuhp — Frontend Web App
 
-Đây là giao diện quản trị Admin Dashboard của hệ thống Cuhp, được xây dựng dưới dạng ứng dụng Single Page Application (SPA) hiện đại. Phục vụ việc quản lý thành viên và tải lên các bài nghe tiếng Anh lên Cloudflare R2 để học viên học trên ứng dụng di động.
+Web cá nhân (admin dashboard) của hệ thống Cuhp — phục vụ 4 miền chính: **Tiếng Anh** (bài nghe, từ vựng, luyện dịch & bài đọc), **Tập gym**, **Công việc** (Eisenhower matrix + daily planner), **Quản trị** (user & role). Mobile companion app (Expo React Native) sử dụng cùng backend API.
 
----
-
-## 🛠️ Công Nghệ Sử Dụng (Tech Stack)
-
-* **Thư viện chính**: [React 19](https://react.dev/)
-* **Ngôn ngữ**: [TypeScript](https://www.typescriptlang.org/)
-* **Build Tool**: [Vite](https://vite.dev/)
-* **Styling & CSS**: [Tailwind CSS v4](https://tailwindcss.com/)
-* **Bộ Icons**: [Lucide React](https://lucide.dev/)
-* **Thông báo**: [Sonner](https://github.com/emilkowalski/sonner) (Toast notifications)
-* **Routing**: [React Router DOM v7](https://reactrouter.com/)
+Xây dựng dưới dạng SPA hiện đại, mọi route `/admin/*` yêu cầu quyền admin.
 
 ---
 
-## 📁 Cấu Trúc Thư Mục Frontend
+## 🛠️ Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | React 19 + TypeScript |
+| Build | Vite 8 |
+| Styling | Tailwind CSS v4 (`@tailwindcss/vite`) |
+| Routing | react-router-dom v7 |
+| Data | @tanstack/react-query v5 + axios |
+| Icons | lucide-react |
+| UI primitives | Radix UI (alert-dialog, dropdown-menu, dialog, sheet, tabs-control, ...) |
+| Drag & Drop | @dnd-kit (core + sortable + utilities) |
+| Toasts | sonner |
+| Lint | oxlint |
+
+---
+
+## 📁 Cấu trúc thư mục
 
 ```text
 frontend/
 ├── src/
-│   ├── assets/               # Hình ảnh và tài nguyên tĩnh
-│   ├── components/           # Các component React tái sử dụng
-│   │   ├── admin/            # Component giao diện Admin (Topbar, Sidebar, navItems,...)
-│   │   ├── ui/               # Các block UI nền tảng (button, input, card, dialog,...)
-│   │   └── ConfirmDialog.tsx # Hộp thoại xác nhận (sử dụng custom useConfirm hook toàn cục)
-│   ├── hooks/                # Custom React Hooks (useAuth, useTheme, useRoomSocket)
-│   ├── lib/                  # Tiện ích và cấu hình client API
-│   │   ├── api.ts            # Wrapper Fetch API tự động chèn Token (tự động phát hiện & hỗ trợ FormData)
-│   │   └── utils.ts          # Các hàm hỗ trợ định dạng lớp CSS
-│   ├── pages/                # Các trang chính của ứng dụng
-│   │   ├── admin/            # Các trang phân hệ quản trị
-│   │   │   ├── Dashboard.tsx     # Trang chủ thống kê tổng quan
-│   │   │   ├── Audio.tsx         # [NEW] Quản lý bài nghe tiếng Anh, tải file lên Cloudflare R2
-│   │   │   ├── Users.tsx         # Quản lý tài khoản Admin
-│   │   │   └── ...
-│   │   ├── LoginPage.tsx     # Trang đăng nhập của quản trị viên
-│   │   └── NotFound.tsx      # Trang hiển thị khi sai đường dẫn
-│   ├── types.ts              # Định nghĩa toàn bộ TypeScript Interfaces
-│   ├── App.tsx               # Cấu hình Routing chính và Provider (đã đăng ký route /admin/audio)
-│   ├── main.tsx              # Điểm khởi tạo ứng dụng React
-│   └── index.css             # Cấu hình Tailwind CSS và font chữ toàn cục
+│   ├── assets/                 # Logo, hình ảnh tĩnh
+│   ├── components/             # Component React tái sử dụng
+│   │   ├── admin/              # Shell admin: Sidebar, Topbar, AdminLayout, navItems, PageHeader, UserMenu
+│   │   ├── auth/               # ProtectedRoute (gate /admin/* — yêu cầu admin)
+│   │   ├── ui/                 # shadcn-style primitives: Button, Card, Input, Dialog, Sheet, TabsControl, RichTextEditor, MascotAssistant, Sonner...
+│   │   ├── LoginRegister.tsx   # Form login/register kết hợp
+│   │   ├── UserManagement.tsx  # Bảng user cho admin
+│   │   └── ConfirmDialog.tsx   # useConfirm() provider toàn cục
+│   ├── features/               # Module nghiệp vụ (mỗi module: Page + hooks + api + components)
+│   │   ├── audio/              # Quản lý bài nghe (upload R2, list/grid, player, comments)
+│   │   ├── vocabulary/         # Sổ tay từ vựng SRS Leitner (5 hộp), review hằng ngày
+│   │   ├── reading/            # Bài đọc song ngữ, luyện dịch, tra từ theo vùng chọn, comments
+│   │   ├── gym/                # Lịch tập, nhóm cơ, biểu đồ volume + strength progress
+│   │   └── todos/              # Eisenhower matrix + Daily Planner + Inbox, drag-drop
+│   ├── hooks/                  # useAuth (token + user), useTheme, useResizeHandle
+│   ├── lib/                    # apiFetch (wrapper có Bearer token), tts, utils (cn)
+│   ├── pages/                  # Route-level wrappers
+│   │   ├── LoginPage.tsx
+│   │   ├── NotFound.tsx
+│   │   └── admin/              # Re-export wrappers trỏ vào features/* (Dashboard, Audio, Vocabulary, Reading, AudioDetail, ReadingDetail, Gym, Todo, Users)
+│   ├── types.ts                # TypeScript interfaces chung
+│   ├── App.tsx                 # BrowserRouter + Routes + AuthProvider
+│   ├── main.tsx                # Entry point React
+│   └── index.css               # Tailwind v4 + font toàn cục
+├── index.html
+├── vite.config.ts              # Vite proxy: /api → http://127.0.0.1:8000, ws: true
+├── vercel.json                 # Cấu hình deploy Vercel
+├── components.json             # shadcn registry
+├── tsconfig.json
+├── package.json
+└── README.md
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Local
+## 🚀 Cài đặt & chạy local
 
-### 1. Cài Đặt Thư Viện
-Truy cập vào thư mục `frontend/` và chạy lệnh cài đặt:
+### 1. Cài dependencies
 ```bash
+cd frontend
 npm install
 ```
 
-### 2. Khởi Chạy Server Phát Triển (Dev Server)
-Khởi động dự án ở chế độ local dev:
+### 2. Chạy dev server
 ```bash
 npm run dev
 ```
-Ứng dụng sẽ chạy tại địa chỉ: [http://localhost:5173](http://localhost:5173).
+Mặc định chạy tại [http://localhost:5173](http://localhost:5173).
 
-### 3. Cấu hình Proxy kết nối Backend
-Trong tệp `vite.config.ts`, hệ thống đã thiết lập sẵn cơ chế **Vite Proxy** để chuyển tiếp tất cả các yêu cầu có tiền tố `/api` hoặc kết nối WebSocket về phía backend local:
+### 3. Proxy backend
+`vite.config.ts` đã cấu hình sẵn:
 ```typescript
 server: {
   proxy: {
-    "/api": {
-      target: "http://127.0.0.1:8000",
-      changeOrigin: true,
-      ws: true,
-    },
+    "/api": { target: "http://127.0.0.1:8000", changeOrigin: true, ws: true },
   },
 }
+```
+Mọi request `/api/...` và WebSocket từ frontend được chuyển tiếp sang backend local. Đảm bảo backend đang chạy ở port 8000.
+
+### 4. Các script khác
+```bash
+npm run build      # tsc -b && vite build (production)
+npm run preview    # Serve bản build
+npm run lint       # oxlint
 ```
 
 ---
 
-## 🌟 Các Phân Hệ Quản Trị Chính (Admin Dashboard)
+## 🧭 Sidebar — cấu trúc nhóm
 
-### 1. Quản Lý Bài Nghe Tiếng Anh (`Audio`) [NEW]
-* **Tải lên bài học mới**: Form nhập tiêu đề bài học và kéo thả hoặc chọn file âm thanh từ thiết bị để tải lên Cloudflare R2 thông qua API backend.
-* **Nghe thử trực quan**: Tích hợp trình chơi nhạc trực tiếp sử dụng thẻ HTML5 Audio cho phép Admin nghe trước các bài nghe đã tải lên.
-* **Xóa bài học**: Sử dụng hook `useConfirm` hiển thị hộp thoại xác nhận hủy bản ghi trong database và file vật lý trên Cloudflare R2 một cách đồng bộ, an toàn.
+Sidebar gom theo miền cá nhân, có thể đóng/mở từng nhóm (trạng thái lưu `localStorage` key `admin-sidebar-groups-collapsed`):
 
+| Nhóm | Children |
+|---|---|
+| Tổng quan | Dashboard |
+| **Tiếng Anh** | Bài nghe, Từ vựng, Luyện dịch & Bài đọc |
+| **Tập gym** | Hỗ trợ tập gym |
+| **Công việc** | Quản lý công việc |
+| **Quản trị** | Quản lý thành viên |
 
+Tự động bung nhóm khi route hiện tại thuộc nhóm đó. Sidebar có 2 chế độ: mở rộng (240px) và icon-only (64px).
+
+### Routing
+```text
+/login                 → LoginPage (public)
+/admin                 → Dashboard
+/admin/users           → Quản lý thành viên
+/admin/audio, /:id     → Bài nghe
+/admin/vocabulary      → Từ vựng
+/admin/reading, /:id   → Luyện dịch & Bài đọc
+/admin/gym             → Tập gym
+/admin/todo            → Công việc
+*                      → NotFound
+```
 
 ---
 
-## 🔒 Bảo Mật & Phân Quyền (Authentication)
+## 🌟 Tính năng theo miền
 
-* Hệ thống sử dụng cơ chế xác thực session token được lưu trữ ở `localStorage`.
-* Khi truy cập các trang `/admin/*`, component `ProtectedRoute` sẽ kiểm tra token, nếu chưa xác thực hoặc token hết hạn sẽ tự động chuyển hướng người dùng về trang `/login`.
+### Tiếng Anh
+- **Bài nghe**: upload file lên Cloudflare R2, hiển thị list/grid, player HTML5, comments theo vùng chọn.
+- **Từ vựng**: SRS Leitner 5 hộp (1→1d, 2→2d, 3→4d, 4→7d, 5→14d), streak tracking, lookup từ điển ngoài.
+- **Luyện dịch & Bài đọc**: bài viết song ngữ, ô translation, tra từ theo selection, comments.
+
+### Tập gym
+7 nhóm cơ mặc định (Ngực, Lưng, Chân, Vai, Tay, Bụng, Cardio), lịch tập theo ngày, biểu đồ weekly volume + strength progress.
+
+### Công việc
+3 cột: Inbox / Eisenhower Matrix 2×2 / Daily Planner, drag-drop thay đổi quadrant, stats panel (completion rate, focus rate, overdue).
+
+### Quản trị
+CRUD user, đổi role, xóa tài khoản.
+
+---
+
+## 🔒 Xác thực & phân quyền
+
+- Token lưu `localStorage`, `useAuth` cung cấp `login` / `logout` / `user`.
+- `apiFetch` (lib/api.ts) tự động gắn `Authorization: Bearer <token>`.
+- `<ProtectedRoute requireAdmin>` chặn mọi route `/admin/*` — chưa đăng nhập hoặc không phải admin → redirect `/login`.
+- `getPageTitle(pathname)` ở `navItems.ts` resolve title cho Topbar.
+
+Mặc định backend seed tài khoản `admin` / `admin` (SHA-256 + salt `chat_pepper_123`).
+
+---
+
+## 📝 Ghi chú thêm
+
+- Vite dev server cần backend chạy ở `127.0.0.1:8000` (hoặc cấu hình lại proxy trong `vite.config.ts`).
+- `components.json` khai báo shadcn-style UI registry — dùng `npx shadcn@latest add ...` nếu cần thêm component.
+- Build production to ra 1 bundle chính (~660 KB gzipped ~190 KB). Nếu cần tách chunk, có thể dùng dynamic import cho các feature page.
