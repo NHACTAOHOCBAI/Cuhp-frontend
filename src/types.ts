@@ -99,6 +99,7 @@ export interface TodoTask {
   position: number
   created_at: string
   updated_at?: string | null
+  estimated_time?: number | null
 }
 
 

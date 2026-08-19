@@ -46,6 +46,7 @@ export function TaskEditDialog({
   const [quadrant, setQuadrant] = React.useState<TodoQuadrant>(defaultQuadrant)
   const [dueDate, setDueDate] = React.useState("")
   const [scheduledDate, setScheduledDate] = React.useState("")
+  const [estimatedTime, setEstimatedTime] = React.useState("")
 
   // Reseed the draft every time the dialog opens so a cancelled edit never
   // leaks into the next one.
@@ -56,6 +57,7 @@ export function TaskEditDialog({
     setQuadrant(task?.quadrant ?? defaultQuadrant)
     setDueDate(task?.due_date ?? "")
     setScheduledDate(task?.scheduled_date ?? "")
+    setEstimatedTime(task?.estimated_time ? String(task.estimated_time) : "")
   }, [open, task, defaultQuadrant])
 
   const trimmedTitle = title.trim()
@@ -64,6 +66,7 @@ export function TaskEditDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!canSubmit) return
+    const parsedTime = parseInt(estimatedTime, 10)
     onSubmit({
       title: trimmedTitle,
       // Empty strings become null so the server clears the column instead of
@@ -72,6 +75,7 @@ export function TaskEditDialog({
       quadrant,
       due_date: dueDate || null,
       scheduled_date: scheduledDate || null,
+      estimated_time: isNaN(parsedTime) || parsedTime <= 0 ? null : parsedTime,
     })
   }
 
@@ -123,6 +127,20 @@ export function TaskEditDialog({
                 onChange={(v) => setQuadrant(v as TodoQuadrant)}
                 options={[...QUADRANT_OPTIONS]}
                 ariaLabel="Chọn góc phần tư Eisenhower"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="todo-estimated" className="text-sm font-medium">
+                Thời gian ước tính (phút)
+              </label>
+              <Input
+                id="todo-estimated"
+                type="number"
+                min="0"
+                value={estimatedTime}
+                onChange={(e) => setEstimatedTime(e.target.value)}
+                placeholder="Ví dụ: 30, 45, 90... (không bắt buộc)"
               />
             </div>
 

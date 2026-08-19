@@ -24,6 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
+  Hourglass,
 } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/admin/PageHeader"
@@ -49,8 +50,19 @@ import { QuadrantCard } from "./components/QuadrantCard"
 import { TaskCard } from "./components/TaskCard"
 import { TaskEditDialog } from "./components/TaskEditDialog"
 import { TodoStatsPanel } from "./components/TodoStatsPanel"
+import { ResizeDivider } from "./components/ResizeDivider"
+import { useResizeHandle } from "@/hooks/useResizeHandle"
 
 type TabKey = "matrix" | "stats"
+
+// Resizable column bounds (px)
+const INBOX_MIN = 200
+const INBOX_MAX = 500
+const INBOX_DEFAULT = 280
+const PLANNER_MIN = 200
+const PLANNER_MAX = 500
+const PLANNER_DEFAULT = 280
+const MATRIX_MIN = 280
 
 const TAB_ITEMS: TabsControlItem<TabKey>[] = [
   { value: "matrix", label: "Kế hoạch tuần", icon: <LayoutGrid className="mr-1.5 size-4" /> },
@@ -76,6 +88,15 @@ function formatDateLocal(d: Date) {
 
 const WEEKDAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]
 const formatDayName = (date: Date) => WEEKDAY_NAMES[date.getDay()]
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes}p`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remaining = minutes % 60
+  return remaining > 0 ? `${hours}h ${remaining}p` : `${hours}h`
+}
 
 function getMonthYearLabel(monday: Date) {
   const sunday = new Date(monday)
@@ -158,6 +179,85 @@ export function TodoPage() {
     })
   }
 
+  // Resizable column widths (persisted to localStorage)
+  const [inboxWidth, setInboxWidth] = React.useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("todo_inbox_width")
+      const n = raw ? Number(raw) : NaN
+      if (Number.isFinite(n)) return Math.min(INBOX_MAX, Math.max(INBOX_MIN, n))
+    }
+    return INBOX_DEFAULT
+  })
+
+  const [plannerWidth, setPlannerWidth] = React.useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const raw = localStorage.getItem("todo_planner_width")
+      const n = raw ? Number(raw) : NaN
+      if (Number.isFinite(n)) return Math.min(PLANNER_MAX, Math.max(PLANNER_MIN, n))
+    }
+    return PLANNER_DEFAULT
+  })
+
+  const updateInboxWidth = (w: number) => {
+    const c = Math.min(INBOX_MAX, Math.max(INBOX_MIN, w))
+    setInboxWidth(c)
+    localStorage.setItem("todo_inbox_width", String(c))
+  }
+
+  const updatePlannerWidth = (w: number) => {
+    const c = Math.min(PLANNER_MAX, Math.max(PLANNER_MIN, w))
+    setPlannerWidth(c)
+    localStorage.setItem("todo_planner_width", String(c))
+  }
+
+  // Re-clamp persisted widths when the viewport gets too small for our minimums.
+  React.useEffect(() => {
+    if (typeof window === "undefined") return
+    const onResize = () => {
+      const minTotal = INBOX_MIN + PLANNER_MIN + MATRIX_MIN
+      const available = window.innerWidth - 64 // reserve scrollbar + buffer
+      if (available < minTotal) return // let flex-1 absorb; CSS handles stacking
+      // Ensure each persisted value still fits when the other side is at its min.
+      const maxInbox = Math.min(INBOX_MAX, available - PLANNER_MIN - MATRIX_MIN)
+      const maxPlanner = Math.min(PLANNER_MAX, available - INBOX_MIN - MATRIX_MIN)
+      if (inboxWidth > maxInbox) updateInboxWidth(maxInbox)
+      if (plannerWidth > maxPlanner) updatePlannerWidth(maxPlanner)
+    }
+    window.addEventListener("resize", onResize)
+    onResize()
+    return () => window.removeEventListener("resize", onResize)
+    // We intentionally only react to viewport changes; width values are read at call-time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Refs for the resize hooks
+  const inboxColRef = React.useRef<HTMLDivElement>(null)
+  const plannerColRef = React.useRef<HTMLDivElement>(null)
+  const inboxDividerRef = React.useRef<HTMLDivElement>(null)
+  const plannerDividerRef = React.useRef<HTMLDivElement>(null)
+
+  const inboxResize = useResizeHandle({
+    handleRef: inboxDividerRef,
+    targetRef: inboxColRef,
+    width: inboxWidth,
+    onResize: updateInboxWidth,
+    min: INBOX_MIN,
+    max: INBOX_MAX,
+    direction: "right",
+    disabled: !isInboxExpanded || activeDragId !== null,
+  })
+
+  const plannerResize = useResizeHandle({
+    handleRef: plannerDividerRef,
+    targetRef: plannerColRef,
+    width: plannerWidth,
+    onResize: updatePlannerWidth,
+    min: PLANNER_MIN,
+    max: PLANNER_MAX,
+    direction: "left",
+    disabled: !isPlannerExpanded || activeDragId !== null,
+  })
+
   // Timeline & Planner States
   const [mondayDate, setMondayDate] = React.useState<Date>(() => getMonday(new Date()))
   const [selectedDate, setSelectedDate] = React.useState<string>(() => formatDateLocal(new Date()))
@@ -233,6 +333,10 @@ export function TodoPage() {
         return a.position - b.position
       })
   }, [tasks, selectedDate])
+
+  const plannerTotalTime = React.useMemo(() => {
+    return plannerTasks.reduce((sum, task) => sum + (task.estimated_time ?? 0), 0)
+  }, [plannerTasks])
 
   const activeDragTask = React.useMemo(
     () => tasks.find((t) => t.id === activeDragId) ?? null,
@@ -587,22 +691,32 @@ export function TodoPage() {
                 onDragCancel={() => setActiveDragId(null)}
               >
                 {/* 3-Column layout dashboard */}
-                <div className="flex flex-col lg:flex-row gap-6 items-start mt-2 w-full">
+                <div className="flex flex-col lg:flex-row gap-0 items-start mt-2 w-full">
                   {/* Column 1: Weekly Inbox (Inbox) */}
+                  <div
+                    ref={inboxColRef}
+                    style={{
+                      width: isInboxExpanded ? inboxWidth : 64,
+                      minWidth: isInboxExpanded ? INBOX_MIN : 64,
+                      maxWidth: isInboxExpanded ? INBOX_MAX : 64,
+                      transitionProperty: inboxResize.isDragging ? "none" : "width, min-width, max-width",
+                    }}
+                    className={cn(
+                      "shrink-0 transition-[width,min-width,max-width] duration-300 ease-in-out",
+                      isInboxExpanded ? "lg:block" : "lg:block"
+                    )}
+                  >
                   <DroppableContainer
                     id="inbox"
                     className={cn(
-                      "transition-all duration-300 ease-in-out border border-border/70 rounded-2xl shadow-none backdrop-blur-sm h-[680px] flex flex-col shrink-0 overflow-hidden relative",
-                      INBOX_META.bg,
-                      isInboxExpanded 
-                        ? "w-full lg:w-[280px]" 
-                        : "w-full lg:w-[64px]"
+                      "transition-all duration-300 ease-in-out border border-border/70 rounded-2xl shadow-none backdrop-blur-sm h-[680px] w-full flex flex-col shrink-0 overflow-hidden relative",
+                      INBOX_META.bg
                     )}
                     activeClassName="bg-slate-500/10 border-dashed border-slate-400"
                   >
                     {/* Collapsed View */}
                     <div className={cn(
-                      "transition-all duration-300 ease-in-out flex flex-col items-center justify-between h-full w-[64px] py-4 px-2 shrink-0",
+                      "transition-all duration-300 ease-in-out flex flex-col items-center justify-between h-full w-full py-4 px-2 shrink-0",
                       !isInboxExpanded 
                         ? "opacity-100 scale-100 pointer-events-auto" 
                         : "opacity-0 scale-95 pointer-events-none absolute inset-0 overflow-hidden invisible"
@@ -631,7 +745,7 @@ export function TodoPage() {
 
                     {/* Expanded View */}
                     <div className={cn(
-                      "transition-all duration-300 ease-in-out flex flex-col h-full gap-3 w-[280px] p-4 shrink-0",
+                      "transition-all duration-300 ease-in-out flex flex-col h-full gap-3 w-full p-4 shrink-0",
                       isInboxExpanded 
                         ? "opacity-100 scale-100 pointer-events-auto" 
                         : "opacity-0 scale-95 pointer-events-none absolute inset-0 overflow-hidden invisible"
@@ -706,9 +820,22 @@ export function TodoPage() {
                       </DroppableContainer>
                     </div>
                   </DroppableContainer>
+                  </div>
+
+                  <ResizeDivider
+                    handleRef={inboxDividerRef}
+                    handleProps={inboxResize.handleProps}
+                    isDragging={inboxResize.isDragging}
+                    isHovering={inboxResize.isHovering}
+                    currentWidth={inboxWidth}
+                    min={INBOX_MIN}
+                    max={INBOX_MAX}
+                    label="Thay đổi độ rộng Hộp việc tuần"
+                    hidden={!isInboxExpanded}
+                  />
 
                   {/* Column 2: Eisenhower Matrix 2x2 Grid */}
-                  <div className="flex-1 min-w-0 w-full flex flex-col gap-3 h-[680px]">
+                  <div className="flex-1 min-w-0 w-full flex flex-col gap-3">
                     <div className="flex items-center justify-between pb-2">
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500">
@@ -721,7 +848,7 @@ export function TodoPage() {
                       </div>
                     </div>
 
-                    <div className="grid gap-3 grid-cols-2 flex-1 min-h-0 overflow-y-auto pr-1">
+                    <div className="grid gap-3 grid-cols-2">
                       {QUADRANTS.map((meta) => (
                         <QuadrantCard
                           key={meta.key}
@@ -737,20 +864,39 @@ export function TodoPage() {
                     </div>
                   </div>
 
+                  <ResizeDivider
+                    handleRef={plannerDividerRef}
+                    handleProps={plannerResize.handleProps}
+                    isDragging={plannerResize.isDragging}
+                    isHovering={plannerResize.isHovering}
+                    currentWidth={plannerWidth}
+                    min={PLANNER_MIN}
+                    max={PLANNER_MAX}
+                    label="Thay đổi độ rộng Lịch trình ngày"
+                    hidden={!isPlannerExpanded}
+                  />
+
                   {/* Column 3: Daily Planner (Lịch hàng ngày) */}
+                  <div
+                    ref={plannerColRef}
+                    style={{
+                      width: isPlannerExpanded ? plannerWidth : 64,
+                      minWidth: isPlannerExpanded ? PLANNER_MIN : 64,
+                      maxWidth: isPlannerExpanded ? PLANNER_MAX : 64,
+                      transitionProperty: plannerResize.isDragging ? "none" : "width, min-width, max-width",
+                    }}
+                    className="shrink-0 transition-[width,min-width,max-width] duration-300 ease-in-out"
+                  >
                   <DroppableContainer
                     id="planner"
                     className={cn(
-                      "transition-all duration-300 ease-in-out bg-card/40 border border-border/70 rounded-2xl shadow-none backdrop-blur-sm h-[680px] flex flex-col shrink-0 overflow-hidden relative",
-                      isPlannerExpanded 
-                        ? "w-full lg:w-[280px]" 
-                        : "w-full lg:w-[64px]"
+                      "transition-all duration-300 ease-in-out bg-card/40 border border-border/70 rounded-2xl shadow-none backdrop-blur-sm h-[680px] w-full flex flex-col shrink-0 overflow-hidden relative"
                     )}
                     activeClassName="bg-primary/10 border-dashed border-primary/50"
                   >
                     {/* Collapsed View */}
                     <div className={cn(
-                      "transition-all duration-300 ease-in-out flex flex-col items-center justify-between h-full w-[64px] py-4 px-2 shrink-0",
+                      "transition-all duration-300 ease-in-out flex flex-col items-center justify-between h-full w-full py-4 px-2 shrink-0",
                       !isPlannerExpanded 
                         ? "opacity-100 scale-100 pointer-events-auto" 
                         : "opacity-0 scale-95 pointer-events-none absolute inset-0 overflow-hidden invisible"
@@ -779,7 +925,7 @@ export function TodoPage() {
 
                     {/* Expanded View */}
                     <div className={cn(
-                      "transition-all duration-300 ease-in-out flex flex-col h-full gap-3 w-[280px] p-4 shrink-0",
+                      "transition-all duration-300 ease-in-out flex flex-col h-full gap-3 w-full p-4 shrink-0",
                       isPlannerExpanded 
                         ? "opacity-100 scale-100 pointer-events-auto" 
                         : "opacity-0 scale-95 pointer-events-none absolute inset-0 overflow-hidden invisible"
@@ -796,8 +942,14 @@ export function TodoPage() {
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
+                            {plannerTotalTime > 0 && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 px-2 py-0.5 text-[10px] font-medium leading-none">
+                                <Hourglass className="size-2.5 shrink-0" />
+                                {formatDuration(plannerTotalTime)}
+                              </span>
+                            )}
                             <span className="rounded-full bg-primary/15 text-primary text-xs px-2 py-0.5 font-semibold">
-                              {plannerTasks.length}
+                              {plannerTasks.length} việc
                             </span>
                             <Button
                               variant="ghost"
@@ -957,6 +1109,7 @@ export function TodoPage() {
                       </DroppableContainer>
                     </div>
                   </DroppableContainer>
+                  </div>
                 </div>
 
                 {/* Follows the cursor during dragging */}

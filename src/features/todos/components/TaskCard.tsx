@@ -5,11 +5,20 @@
  * activated from a dedicated grip handle rather than the whole card, so the
  * checkbox, edit and delete controls stay clickable.
  */
-import { Check, Pencil, Trash2, Calendar, Clock, AlertTriangle } from "lucide-react"
+import { Check, Pencil, Trash2, Calendar, Clock, AlertTriangle, Hourglass } from "lucide-react"
 import { useDraggable } from "@dnd-kit/core"
 import { cn } from "@/lib/utils"
 import type { TodoTask } from "@/types"
 import { formatDueLabel, isDueToday, isOverdue } from "../utils/dates"
+
+function formatEstimatedTime(minutes: number): string {
+  if (minutes < 60) {
+    return `${minutes}p`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remaining = minutes % 60
+  return remaining > 0 ? `${hours}h ${remaining}p` : `${hours}h`
+}
 
 interface TaskCardProps {
   task: TodoTask
@@ -113,6 +122,12 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
                 );
               })()
             )}
+            {task.estimated_time && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 px-2.5 py-0.5 text-[10px] font-medium leading-none">
+                <Hourglass className="size-2.5 shrink-0 opacity-80" />
+                {formatEstimatedTime(task.estimated_time)}
+              </span>
+            )}
           </div>
         ) : (
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -137,6 +152,12 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
                   <Clock className="size-3 shrink-0 text-amber-500" />
                 )}
                 Hạn: {formatDueLabel(task.due_date)}
+              </span>
+            )}
+            {task.estimated_time && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 px-2.5 py-0.5 text-[10px] font-medium leading-none">
+                <Hourglass className="size-2.5 shrink-0 opacity-80" />
+                {formatEstimatedTime(task.estimated_time)}
               </span>
             )}
           </div>

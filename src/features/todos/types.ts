@@ -23,6 +23,7 @@ export interface TodoTaskCreate {
   due_date?: string | null
   scheduled_date?: string | null
   completed?: boolean
+  estimated_time?: number | null
 }
 
 /**
@@ -38,6 +39,7 @@ export interface TodoTaskUpdate {
   scheduled_date?: string | null
   completed?: boolean
   position?: number
+  estimated_time?: number | null
 }
 
 export interface TodoTaskMove {

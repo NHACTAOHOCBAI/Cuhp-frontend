@@ -39,7 +39,7 @@ export function QuadrantCard({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex min-h-[260px] flex-col rounded-xl border border-border/70 shadow-none transition-colors",
+        "flex flex-col rounded-xl border border-border/70 shadow-none transition-colors overflow-hidden",
         meta.bg,
         isOver && cn("border-dashed", meta.ring)
       )}
@@ -80,7 +80,7 @@ export function QuadrantCard({
         </Button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 p-2.5">
+      <div className="flex flex-col gap-2 p-2.5">
         {/* Quick Add Inline Input */}
         <form
           onSubmit={(e) => {
@@ -103,12 +103,12 @@ export function QuadrantCard({
         </form>
 
         {tasks.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border/60 p-4 text-center mt-1">
+          <div className="flex min-h-[120px] flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border/60 p-4 text-center mt-1">
             <p className="text-xs text-muted-foreground">Chưa có công việc</p>
             <p className="text-[11px] text-muted-foreground/70">{meta.hint}</p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             {tasks.map((task) => (
               <TaskCard
                 key={task.id}
