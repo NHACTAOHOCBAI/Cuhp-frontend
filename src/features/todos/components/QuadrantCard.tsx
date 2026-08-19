@@ -6,6 +6,10 @@
  */
 import { Plus } from "lucide-react"
 import { useDroppable } from "@dnd-kit/core"
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import type { TodoTask } from "@/types"
@@ -108,18 +112,23 @@ export function QuadrantCard({
             <p className="text-[11px] text-muted-foreground/70">{meta.hint}</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                dragId={`matrix:${task.id}`}
-                onToggle={onToggle}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
+          <SortableContext
+            items={tasks.map((task) => task.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-2">
+              {tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  dragId={task.id}
+                  onToggle={onToggle}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          </SortableContext>
         )}
       </div>
     </div>

@@ -6,7 +6,8 @@
  * checkbox, edit and delete controls stay clickable.
  */
 import { Check, Pencil, Trash2, Calendar, Clock, AlertTriangle, Hourglass } from "lucide-react"
-import { useDraggable } from "@dnd-kit/core"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
 import type { TodoTask } from "@/types"
 import { formatDueLabel, isDueToday, isOverdue } from "../utils/dates"
@@ -29,8 +30,17 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardProps) {
-  const { attributes, listeners, setNodeRef, isDragging } =
-    useDraggable({ id: dragId || task.id, data: { quadrant: task.quadrant } })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: dragId || task.id,
+    data: { quadrant: task.quadrant, taskId: task.id },
+  })
 
   const overdue = !task.completed && isOverdue(task.due_date)
   const dueToday = !task.completed && isDueToday(task.due_date)
@@ -41,7 +51,10 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
     <div
       ref={setNodeRef}
       style={{
-        // Lift the dragged card above its siblings while it is in flight.
+        // Lift the dragged card above its siblings while it is in flight,
+        // and let @dnd-kit drive its translate so reordering feels smooth.
+        transform: CSS.Transform.toString(transform),
+        transition,
         zIndex: isDragging ? 50 : undefined,
       }}
       className={cn(

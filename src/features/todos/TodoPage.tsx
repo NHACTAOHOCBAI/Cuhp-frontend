@@ -17,6 +17,11 @@ import {
 } from "@dnd-kit/core"
 import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core"
 import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import {
   BarChart3,
   LayoutGrid,
   Plus,
@@ -88,6 +93,7 @@ function formatDateLocal(d: Date) {
 
 const WEEKDAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]
 const formatDayName = (date: Date) => WEEKDAY_NAMES[date.getDay()]
+
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) {
@@ -352,8 +358,7 @@ export function TodoPage() {
   )
 
   const handleDragStart = (event: DragStartEvent) => {
-    const fullId = String(event.active.id)
-    const taskId = fullId.includes(":") ? fullId.split(":")[1] : fullId
+    const taskId = String(event.active.id)
     setActiveDragId(taskId)
   }
 
@@ -362,17 +367,25 @@ export function TodoPage() {
     const { active, over } = event
     if (!over) return
 
-    const fullActiveId = String(active.id)
-    const taskId = fullActiveId.includes(":") ? fullActiveId.split(":")[1] : fullActiveId
+    const taskId = String(active.id)
     const target = String(over.id)
     const task = tasks.find((t) => t.id === taskId)
     if (!task) return
+
+    // 0. Drop over another task card → reorder within / across containers.
+    // `over.data.current.taskId` is set by useSortable in TaskCard; if present,
+    // we know `over` is a task card and not an empty droppable container.
+    const overTaskId = (over.data.current?.taskId as string | undefined) ?? null
+    if (overTaskId && overTaskId !== taskId) {
+      handleTaskOverTask(task, overTaskId)
+      return
+    }
 
     // 1. Drop onto a specific date tag (e.g. "date:2026-08-18")
     if (target.startsWith("date:")) {
       const targetDate = target.split(":")[1]
       if (task.scheduled_date === targetDate) return
-      
+
       updateMut.mutate(
         {
           id: taskId,
@@ -462,6 +475,102 @@ export function TodoPage() {
       )
       return
     }
+  }
+
+  /**
+   * Reorder logic when the user drops a task on top of another task card.
+   *
+   * The three "list identities" we care about are:
+   *   1. The weekly inbox (quadrant === "inbox").
+   *   2. An Eisenhower quadrant (do / schedule / delegate / eliminate),
+   *      which may or may not also be visible in today's planner view.
+   *   3. Today's planner list, a denormalised view keyed by `scheduled_date`.
+   *
+   * We resolve the dragged task to its *source list* — the same UI list the
+   * user picked it up from — and the dropped-on task to its *target list*,
+   * then map the resulting pair to the simplest backend call.
+   */
+  const handleTaskOverTask = (task: TodoTask, overTaskId: string) => {
+    const overTask = tasks.find((t) => t.id === overTaskId)
+    if (!overTask) return
+
+    // Source list: prefer the planner view when the dragged task is scheduled
+    // on the currently selected date, otherwise fall back to its quadrant list.
+    const sourceList =
+      task.scheduled_date === selectedDate
+        ? plannerTasks
+        : task.quadrant === "inbox"
+          ? inboxTasks
+          : tasksByQuadrant.get(task.quadrant) ?? []
+    const targetList =
+      overTask.scheduled_date === selectedDate
+        ? plannerTasks
+        : overTask.quadrant === "inbox"
+          ? inboxTasks
+          : tasksByQuadrant.get(overTask.quadrant) ?? []
+
+    const oldIndex = sourceList.findIndex((t) => t.id === task.id)
+    const overIndex = targetList.findIndex((t) => t.id === overTaskId)
+    if (oldIndex === -1 || overIndex === -1) return
+
+    const sameList = sourceList === targetList
+    const sameSlot = sameList && oldIndex === overIndex
+    if (sameSlot) return
+
+    // Same-list reorder: figure out the final slot in the array, mirroring
+    // @dnd-kit's arrayMove semantics — moving down past N items is a shift
+    // of N-1, moving up is just `overIndex`.
+    let newIndex = overIndex
+    if (sameList && overIndex > oldIndex) {
+      const after = arrayMove(sourceList, oldIndex, overIndex)
+      newIndex = after.findIndex((t) => t.id === task.id)
+    }
+    if (sameList && newIndex === oldIndex) return
+
+    // Inbox reorders: clear scheduled_date if the task was scheduled, then
+    // assign a position via the move endpoint. Otherwise call updateMut to
+    // move the task into the inbox container.
+    const movingIntoInbox = overTask.quadrant === "inbox"
+    const movingIntoPlanner = overTask.scheduled_date === selectedDate
+
+    if (movingIntoInbox) {
+      updateMut.mutate({
+        id: task.id,
+        payload: { quadrant: "inbox", scheduled_date: null },
+      })
+      return
+    }
+
+    if (movingIntoPlanner) {
+      // The task now lives both in its quadrant and in today's planner.
+      // Keep the original quadrant if it's already a real one, otherwise
+      // land in the default "do" column so the move endpoint accepts it.
+      const targetQuadrant: TodoQuadrant =
+        task.quadrant === "inbox" ? "do" : task.quadrant
+      const insertIndex = sameList
+        ? newIndex
+        : Math.max(0, overIndex)
+      updateMut.mutate({
+        id: task.id,
+        payload: {
+          quadrant: targetQuadrant,
+          scheduled_date: selectedDate,
+        },
+      })
+      // Also send a position patch so the planner order matches `insertIndex`.
+      moveMut.mutate({
+        id: task.id,
+        payload: { quadrant: targetQuadrant, position: insertIndex },
+      })
+      return
+    }
+
+    // Default: cross-quadrant or same-quadrant reorder — the move endpoint
+    // handles renumbering for both quadrants server-side.
+    moveMut.mutate({
+      id: task.id,
+      payload: { quadrant: overTask.quadrant, position: newIndex },
+    })
   }
 
   const handleAddInboxSubmit = (e: React.FormEvent) => {
@@ -806,16 +915,21 @@ export function TodoPage() {
                             </div>
                           </div>
                         ) : (
-                          inboxTasks.map((task) => (
-                            <TaskCard
-                              key={task.id}
-                              task={task}
-                              dragId={`inbox:${task.id}`}
-                              onToggle={handleToggle}
-                              onEdit={openEdit}
-                              onDelete={handleDelete}
-                            />
-                          ))
+                          <SortableContext
+                            items={inboxTasks.map((task) => task.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            {inboxTasks.map((task) => (
+                              <TaskCard
+                                key={task.id}
+                                task={task}
+                                dragId={task.id}
+                                onToggle={handleToggle}
+                                onEdit={openEdit}
+                                onDelete={handleDelete}
+                              />
+                            ))}
+                          </SortableContext>
                         )}
                       </DroppableContainer>
                     </div>
@@ -1082,29 +1196,34 @@ export function TodoPage() {
                             </div>
                           </div>
                         ) : (
-                          plannerTasks.map((task) => {
-                            const qMeta = getQuadrant(task.quadrant)
-                            return (
-                              <div key={task.id} className="relative group/planner-card">
-                                <TaskCard
-                                  task={task}
-                                  dragId={`planner:${task.id}`}
-                                  onToggle={handleToggle}
-                                  onEdit={openEdit}
-                                  onDelete={handleDelete}
-                                />
-                                {/* Quadrant Badge overlay for quick context */}
-                                {task.quadrant !== "inbox" && (
-                                  <span className={cn(
-                                    "absolute bottom-1 right-2 pointer-events-none text-[8px] font-medium px-1 rounded shadow-none opacity-80",
-                                    qMeta.badge
-                                  )}>
-                                    {qMeta.label}
-                                  </span>
-                                )}
-                              </div>
-                            )
-                          })
+                          <SortableContext
+                            items={plannerTasks.map((task) => task.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            {plannerTasks.map((task) => {
+                              const qMeta = getQuadrant(task.quadrant)
+                              return (
+                                <div key={task.id} className="relative group/planner-card">
+                                  <TaskCard
+                                    task={task}
+                                    dragId={task.id}
+                                    onToggle={handleToggle}
+                                    onEdit={openEdit}
+                                    onDelete={handleDelete}
+                                  />
+                                  {/* Quadrant Badge overlay for quick context */}
+                                  {task.quadrant !== "inbox" && (
+                                    <span className={cn(
+                                      "absolute bottom-1 right-2 pointer-events-none text-[8px] font-medium px-1 rounded shadow-none opacity-80",
+                                      qMeta.badge
+                                    )}>
+                                      {qMeta.label}
+                                    </span>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </SortableContext>
                         )}
                       </DroppableContainer>
                     </div>
@@ -1118,7 +1237,7 @@ export function TodoPage() {
                     <div className={cn("w-72 rotate-1 cursor-grabbing shadow-2xl")}>
                       <TaskCard
                         task={activeDragTask}
-                        dragId={`overlay:${activeDragTask.id}`}
+                        dragId={`overlay-${activeDragTask.id}`}
                         onToggle={() => {}}
                         onEdit={() => {}}
                         onDelete={() => {}}
