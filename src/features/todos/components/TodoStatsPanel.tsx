@@ -3,17 +3,17 @@
  *
  * Rendered inside the "Thống kê" tab of the Todo page.
  */
-import { 
-  AlertTriangle, 
-  CheckCircle2, 
-  Target, 
-  Zap, 
-  Flame, 
-  ShieldCheck, 
-  Sparkles, 
-  Trophy, 
-  Crown, 
-  Lock 
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Target,
+  Zap,
+  Flame,
+  ShieldCheck,
+  Sparkles,
+  Trophy,
+  Crown,
+  Lock
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import {
@@ -208,7 +208,7 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
           <div className="z-10">
             <span className="text-[10px] uppercase font-bold tracking-wider text-primary">Tiến trình cá nhân</span>
             <h2 className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-2">
-              Level {level} 
+              Level {level}
               <span className="text-xs font-semibold text-muted-foreground">({getRankName(level)})</span>
             </h2>
             <p className="text-xs text-muted-foreground mt-1.5 leading-snug">
@@ -221,7 +221,7 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
               <span className="tabular-nums">{xp}/10 XP</span>
             </div>
             <div className="w-full h-3 bg-muted rounded-full overflow-hidden border border-border/50">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${xpPercentage}%` }}
               />
