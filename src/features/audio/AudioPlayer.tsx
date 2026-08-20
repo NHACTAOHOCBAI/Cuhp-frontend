@@ -266,6 +266,7 @@ export function AudioPlayer({
                   label: `${r}x`,
                 }))}
                 ariaLabel="Tốc độ phát"
+                position="above"
               />
             </div>
           </div>

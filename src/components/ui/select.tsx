@@ -21,6 +21,7 @@ export function Select({
   placeholder = "Chọn...",
   className,
   ariaLabel,
+  position = "below",
 }: {
   value: string
   onChange: (v: string) => void
@@ -28,6 +29,14 @@ export function Select({
   placeholder?: string
   className?: string
   ariaLabel?: string
+  /**
+   * Where the dropdown panel opens relative to the trigger.
+   * - "below" (default): panel sits below the trigger
+   * - "above": panel sits above the trigger — use when the trigger is
+   *   near the bottom of a clipped/overflow container so the panel
+   *   is not hidden behind sibling content.
+   */
+  position?: "below" | "above"
 }) {
   const [open, setOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState(0)
@@ -112,7 +121,10 @@ export function Select({
       {open && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95"
+          className={cn(
+            "absolute z-50 w-full overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+            position === "above" ? "bottom-full mb-1" : "mt-1",
+          )}
         >
           {options.map((opt, i) => {
             const isSelected = opt.value === value

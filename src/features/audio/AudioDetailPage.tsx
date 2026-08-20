@@ -722,7 +722,7 @@ export function AudioDetailPage() {
       {/* Split screen content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-2 lg:flex-1 lg:min-h-0 min-h-[400px] h-[550px] lg:h-auto items-start">
         {/* Left Side: Player */}
-        <Card className="flex flex-col h-fit border border-border bg-card shadow-none rounded-md overflow-hidden">
+        <Card className="flex flex-col h-fit border border-border bg-card shadow-none rounded-md">
           <CardHeader className="py-3 px-4 border-b border-border bg-muted/20">
             <CardTitle className="text-base font-semibold flex items-center gap-1.5">
               <Mic className="h-4 w-4 text-primary" /> Trình phát
