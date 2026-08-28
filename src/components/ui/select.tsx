@@ -21,6 +21,7 @@ export function Select({
   placeholder = "Chọn...",
   className,
   ariaLabel,
+  id,
   position = "below",
 }: {
   value: string
@@ -29,6 +30,8 @@ export function Select({
   placeholder?: string
   className?: string
   ariaLabel?: string
+  /** Forwarded to the trigger button so an external <label htmlFor> can target it. */
+  id?: string
   /**
    * Where the dropdown panel opens relative to the trigger.
    * - "below" (default): panel sits below the trigger
@@ -103,6 +106,7 @@ export function Select({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel}
+        id={id}
         onClick={() => setOpen((o) => !o)}
         className={cn(
           "flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",

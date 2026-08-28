@@ -50,9 +50,12 @@ export function DropdownMenu({ children }: { children: React.ReactNode }) {
 export function DropdownMenuTrigger({
   children,
   className,
+  onPointerDown,
 }: {
   children: React.ReactNode
   className?: string
+  /** Forwarded so callers can stop the dnd-kit drag listener from firing. */
+  onPointerDown?: React.PointerEventHandler<HTMLButtonElement>
 }) {
   const { open, setOpen, triggerRef } = useDropdownMenu()
   return (
@@ -60,6 +63,7 @@ export function DropdownMenuTrigger({
       ref={triggerRef as React.RefObject<HTMLButtonElement>}
       type="button"
       onClick={() => setOpen(!open)}
+      onPointerDown={onPointerDown}
       aria-haspopup="menu"
       aria-expanded={open}
       className={cn("outline-none", className)}

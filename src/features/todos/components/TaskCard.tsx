@@ -5,12 +5,13 @@
  * activated from a dedicated grip handle rather than the whole card, so the
  * checkbox, edit and delete controls stay clickable.
  */
-import { Check, Pencil, Trash2, Calendar, Clock, AlertTriangle, Hourglass } from "lucide-react"
+import { Check, Pencil, Calendar, Clock, AlertTriangle, Hourglass } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
-import type { TodoTask } from "@/types"
+import type { TodoQuadrant, TodoTask } from "@/types"
 import { formatDueLabel, isDueToday, isOverdue } from "../utils/dates"
+import { TaskActionsMenu } from "./TaskActionsMenu"
 
 function formatEstimatedTime(minutes: number): string {
   if (minutes < 60) {
@@ -27,9 +28,10 @@ interface TaskCardProps {
   onToggle: (task: TodoTask) => void
   onEdit: (task: TodoTask) => void
   onDelete: (task: TodoTask) => void
+  onMoveToQuadrant: (task: TodoTask, quadrant: TodoQuadrant) => void
 }
 
-export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({ task, dragId, onToggle, onEdit, onDelete, onMoveToQuadrant }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -47,6 +49,17 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
   const isScheduledOverdue = task.scheduled_date && task.due_date && task.scheduled_date > task.due_date
   const hasDeadlineWarning = !task.completed && (overdue || isScheduledOverdue)
 
+  // Screen-reader-only status copy. Keeps the colour signal but also announces
+  // the urgency so colour-blind and screen-reader users don't miss it.
+  const srStatus =
+    overdue
+      ? "Quá hạn"
+      : dueToday
+        ? "Đến hạn hôm nay"
+        : isScheduledOverdue
+          ? "Lịch trình vượt quá hạn chót"
+          : null
+
   return (
     <div
       ref={setNodeRef}
@@ -57,6 +70,11 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
         transition,
         zIndex: isDragging ? 50 : undefined,
       }}
+      aria-label={
+        srStatus
+          ? `${task.title} — ${srStatus}`
+          : task.title
+      }
       className={cn(
         "group relative flex items-start gap-2.5 rounded-xl border p-3 shadow-none transition-all duration-150 cursor-grab active:cursor-grabbing",
         hasDeadlineWarning
@@ -94,6 +112,7 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
           )}
         >
           {task.title}
+          {srStatus && <span className="sr-only">. {srStatus}.</span>}
         </p>
 
         {task.description ? (
@@ -109,31 +128,10 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
               Làm: {formatDueLabel(task.scheduled_date)}
             </span>
             {task.due_date && (
-              (() => {
-                const isTaskOverdue = task.scheduled_date > task.due_date;
-                return (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium leading-none border",
-                      isTaskOverdue
-                        ? "bg-rose-500 text-white border-rose-500 animate-pulse"
-                        : "bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100/50 dark:border-amber-900/30"
-                    )}
-                  >
-                    {isTaskOverdue ? (
-                      <>
-                        <AlertTriangle className="size-3 shrink-0" />
-                        Trễ hạn: {formatDueLabel(task.due_date)}
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="size-3 shrink-0 text-amber-500" />
-                        Hạn: {formatDueLabel(task.due_date)}
-                      </>
-                    )}
-                  </span>
-                );
-              })()
+              <DueBadge
+                scheduledDate={task.scheduled_date}
+                dueDate={task.due_date}
+              />
             )}
             {task.estimated_time && (
               <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 px-2.5 py-0.5 text-[10px] font-medium leading-none">
@@ -149,23 +147,11 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
               Chờ xếp lịch
             </span>
             {task.due_date && (
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium leading-none border",
-                  overdue
-                    ? "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50"
-                    : dueToday
-                      ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30"
-                      : "bg-slate-50 dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-slate-800"
-                )}
-              >
-                {overdue ? (
-                  <AlertTriangle className="size-3 shrink-0 text-rose-500" />
-                ) : (
-                  <Clock className="size-3 shrink-0 text-amber-500" />
-                )}
-                Hạn: {formatDueLabel(task.due_date)}
-              </span>
+              <UnscheduledDueBadge
+                dueDate={task.due_date}
+                overdue={overdue}
+                dueToday={dueToday}
+              />
             )}
             {task.estimated_time && (
               <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 px-2.5 py-0.5 text-[10px] font-medium leading-none">
@@ -177,32 +163,93 @@ export function TaskCard({ task, dragId, onToggle, onEdit, onDelete }: TaskCardP
         )}
       </div>
 
-      {/* Action rail: hidden until hover/focus to keep the matrix uncluttered,
-          but always reachable by keyboard via focus-within. */}
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      {/* Action rail: hidden on hover-capable pointers until hover/focus, but
+          always reachable on touch devices (which lack :hover) so the menu
+          stays discoverable on mobile. */}
+      <div className="flex shrink-0 items-center gap-0.5 transition-opacity opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation()
             onEdit(task)
           }}
+          onPointerDown={(e) => e.stopPropagation()}
           aria-label={`Sửa công việc: ${task.title}`}
-          className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+          className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
         >
           <Pencil className="size-3.5" />
         </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(task)
-          }}
-          aria-label={`Xoá công việc: ${task.title}`}
-          className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer"
-        >
-          <Trash2 className="size-3.5" />
-        </button>
+        <TaskActionsMenu
+          task={task}
+          onMoveToQuadrant={onMoveToQuadrant}
+          onDelete={onDelete}
+        />
       </div>
     </div>
+  )
+}
+
+/**
+ * Due-date chip for tasks that already have a scheduled date. Surfaces the
+ * "scheduled > due" mismatch as a prominent warning.
+ */
+function DueBadge({ scheduledDate, dueDate }: { scheduledDate: string; dueDate: string }) {
+  const isTaskOverdue = scheduledDate > dueDate
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium leading-none border",
+        isTaskOverdue
+          ? "bg-rose-500 text-white border-rose-500"
+          : "bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100/50 dark:border-amber-900/30"
+      )}
+    >
+      {isTaskOverdue ? (
+        <>
+          <AlertTriangle className="size-3 shrink-0" />
+          Trễ hạn: {formatDueLabel(dueDate)}
+          <span className="sr-only">. Lịch trình vượt quá hạn chót.</span>
+        </>
+      ) : (
+        <>
+          <Clock className="size-3 shrink-0 text-amber-500" />
+          Hạn: {formatDueLabel(dueDate)}
+        </>
+      )}
+    </span>
+  )
+}
+
+/**
+ * Due-date chip for unscheduled tasks — uses a soft tone, escalates to a
+ * rose "Quá hạn" pill (with non-color signal) when overdue.
+ */
+function UnscheduledDueBadge({
+  dueDate,
+  overdue,
+  dueToday,
+}: {
+  dueDate: string
+  overdue: boolean
+  dueToday: boolean
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-medium leading-none border",
+        overdue
+          ? "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/50"
+          : dueToday
+            ? "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30"
+            : "bg-slate-50 dark:bg-slate-900 text-slate-500 border border-slate-100 dark:border-slate-800"
+      )}
+    >
+      {overdue ? (
+        <AlertTriangle className="size-3 shrink-0 text-rose-500" />
+      ) : (
+        <Clock className="size-3 shrink-0 text-amber-500" />
+      )}
+      Hạn: {formatDueLabel(dueDate)}
+    </span>
   )
 }

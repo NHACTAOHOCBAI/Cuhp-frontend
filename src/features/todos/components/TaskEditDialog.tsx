@@ -79,150 +79,160 @@ export function TaskEditDialog({
     })
   }
 
+  // Earliest date the user can pick — prevents typing an absurd past year.
+  const minDate = todayISO()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>
-              {task ? "Sửa công việc" : "Thêm công việc mới"}
-            </DialogTitle>
-            <DialogDescription>
-              Chọn góc phần tư theo mức độ khẩn cấp và quan trọng của việc.
-            </DialogDescription>
-          </DialogHeader>
+        <form onSubmit={handleSubmit} aria-busy={saving}>
+          <fieldset disabled={saving} className="space-y-4 py-4 border-0 p-0 m-0">
+            <DialogHeader>
+              <DialogTitle>
+                {task ? "Sửa công việc" : "Thêm công việc mới"}
+              </DialogTitle>
+              <DialogDescription>
+                Chọn góc phần tư theo mức độ khẩn cấp và quan trọng của việc.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-1.5">
-              <label htmlFor="todo-title" className="text-sm font-medium">
-                Tên công việc <span className="text-destructive">*</span>
-              </label>
-              <Input
-                id="todo-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ví dụ: Hoàn thành báo cáo quý"
-                autoFocus
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="todo-desc" className="text-sm font-medium">
-                Mô tả chi tiết
-              </label>
-              <textarea
-                id="todo-desc"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                placeholder="Ghi chú thêm (không bắt buộc)"
-                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <span className="text-sm font-medium">Góc phần tư</span>
-              <Select
-                value={quadrant}
-                onChange={(v) => setQuadrant(v as TodoQuadrant)}
-                options={[...QUADRANT_OPTIONS]}
-                ariaLabel="Chọn góc phần tư Eisenhower"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="todo-estimated" className="text-sm font-medium">
-                Thời gian ước tính (phút)
-              </label>
-              <Input
-                id="todo-estimated"
-                type="number"
-                min="0"
-                value={estimatedTime}
-                onChange={(e) => setEstimatedTime(e.target.value)}
-                placeholder="Ví dụ: 30, 45, 90... (không bắt buộc)"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor="todo-due" className="text-sm font-medium">
-                Hạn chót (Deadline)
-              </label>
-              <div className="flex items-center gap-2">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="todo-title" className="text-sm font-medium">
+                  Tên công việc <span className="text-destructive">*</span>
+                </label>
                 <Input
-                  id="todo-due"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
+                  id="todo-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Ví dụ: Hoàn thành báo cáo quý"
+                  autoFocus
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => setDueDate(todayISO())}
-                >
-                  Hôm nay
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => setDueDate("")}
-                  disabled={!dueDate}
-                >
-                  Xoá hạn
-                </Button>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="todo-desc" className="text-sm font-medium">
+                  Mô tả chi tiết
+                </label>
+                <textarea
+                  id="todo-desc"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  placeholder="Ghi chú thêm (không bắt buộc)"
+                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="todo-quadrant" className="text-sm font-medium">
+                  Góc phần tư
+                </label>
+                <Select
+                  id="todo-quadrant"
+                  value={quadrant}
+                  onChange={(v) => setQuadrant(v as TodoQuadrant)}
+                  options={[...QUADRANT_OPTIONS]}
+                  ariaLabel="Chọn góc phần tư Eisenhower"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="todo-estimated" className="text-sm font-medium">
+                  Thời gian ước tính (phút)
+                </label>
+                <Input
+                  id="todo-estimated"
+                  type="number"
+                  min="0"
+                  value={estimatedTime}
+                  onChange={(e) => setEstimatedTime(e.target.value)}
+                  placeholder="Ví dụ: 30, 45, 90... (không bắt buộc)"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="todo-due" className="text-sm font-medium">
+                  Hạn chót (Deadline)
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="todo-due"
+                    type="date"
+                    min={minDate}
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setDueDate(todayISO())}
+                  >
+                    Hôm nay
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setDueDate("")}
+                    disabled={!dueDate}
+                  >
+                    Xoá hạn
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="todo-scheduled" className="text-sm font-medium">
+                  Ngày lập lịch làm việc
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="todo-scheduled"
+                    type="date"
+                    min={minDate}
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setScheduledDate(todayISO())}
+                  >
+                    Hôm nay
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setScheduledDate("")}
+                    disabled={!scheduledDate}
+                  >
+                    Xoá lịch
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="todo-scheduled" className="text-sm font-medium">
-                Ngày lập lịch làm việc
-              </label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="todo-scheduled"
-                  type="date"
-                  value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => setScheduledDate(todayISO())}
-                >
-                  Hôm nay
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => setScheduledDate("")}
-                  disabled={!scheduledDate}
-                >
-                  Xoá lịch
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Huỷ
-            </Button>
-            <Button type="submit" disabled={!canSubmit}>
-              {saving ? "Đang lưu..." : task ? "Lưu thay đổi" : "Thêm công việc"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Huỷ
+              </Button>
+              <Button type="submit" disabled={!canSubmit}>
+                {saving ? "Đang lưu..." : task ? "Lưu thay đổi" : "Thêm công việc"}
+              </Button>
+            </DialogFooter>
+          </fieldset>
         </form>
       </DialogContent>
     </Dialog>

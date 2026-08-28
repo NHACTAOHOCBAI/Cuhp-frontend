@@ -92,6 +92,15 @@ function formatDateLocal(d: Date) {
 }
 
 const WEEKDAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]
+const WEEKDAY_FULL_NAMES = [
+  "Chủ nhật",
+  "Thứ hai",
+  "Thứ ba",
+  "Thứ tư",
+  "Thứ năm",
+  "Thứ sáu",
+  "Thứ bảy",
+]
 const formatDayName = (date: Date) => WEEKDAY_NAMES[date.getDay()]
 
 
@@ -138,6 +147,52 @@ function DroppableContainer({ id, className, activeClassName, children }: Droppa
       className={cn(className, isOver && activeClassName)}
     >
       {children}
+    </div>
+  )
+}
+
+/**
+ * Compact "Hoàn thành N/M" footer with a coloured progress bar. Sits at the
+ * bottom of the Inbox and Planner columns. Hidden when there are no tasks
+ * (the empty state already communicates the situation).
+ */
+function LaneProgress({
+  completed,
+  total,
+  barClass,
+  accentClass,
+  label = "Tiến độ hoàn thành",
+}: {
+  completed: number
+  total: number
+  barClass: string
+  accentClass: string
+  label?: string
+}) {
+  if (total === 0) return null
+  const percent = Math.round((completed / total) * 100)
+  return (
+    <div
+      className="mt-1 flex items-center gap-2 border-t border-border/40 pt-2 shrink-0"
+      aria-label={`${label}: ${completed}/${total} việc (${percent}%)`}
+    >
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/60">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500 ease-out",
+            barClass
+          )}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <span
+        className={cn(
+          "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums",
+          accentClass
+        )}
+      >
+        {completed}/{total}
+      </span>
     </div>
   )
 }
@@ -279,7 +334,7 @@ export function TodoPage() {
   )
 
   const { data, isLoading } = useTodosQuery(listParams)
-  const { data: stats, isLoading: statsLoading } = useTodoStatsQuery()
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useTodoStatsQuery()
 
   const createMut = useCreateTodo()
   const updateMut = useUpdateTodo()
@@ -694,6 +749,50 @@ export function TodoPage() {
     })
   }
 
+  /**
+   * Move a task to a different quadrant via the dropdown menu (no drag).
+   * Reuses the same optimistic + toast UX as the drag path so the two
+   * entry points share a single source of truth for user feedback.
+   */
+  const handleMoveToQuadrant = (task: TodoTask, quadrant: TodoQuadrant) => {
+    if (task.quadrant === quadrant) return
+
+    if (quadrant === "inbox") {
+      updateMut.mutate(
+        {
+          id: task.id,
+          payload: { quadrant: "inbox", scheduled_date: null },
+        },
+        {
+          onSuccess: () => toast.success("Đã trả công việc về Hộp việc tuần."),
+          onError: (err) =>
+            toast.error(
+              err instanceof Error ? err.message : "Chuyển về Inbox thất bại."
+            ),
+        }
+      )
+      return
+    }
+
+    moveMut.mutate(
+      {
+        id: task.id,
+        payload: {
+          quadrant,
+          position: tasksByQuadrant.get(quadrant)?.length ?? 0,
+        },
+      },
+      {
+        onSuccess: () =>
+          toast.success(`Đã xếp vào cột "${getQuadrant(quadrant).label}"`),
+        onError: (err) =>
+          toast.error(
+            err instanceof Error ? err.message : "Chuyển công việc thất bại."
+          ),
+      }
+    )
+  }
+
   const handleDelete = async (task: TodoTask) => {
     const ok = await confirm({
       title: "Xoá công việc?",
@@ -773,7 +872,7 @@ export function TodoPage() {
               onClick={() => openCreate("inbox")}
               className="gap-1.5 cursor-pointer shrink-0"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="size-4" />
               Thêm việc mới
             </Button>
           </div>
@@ -812,7 +911,7 @@ export function TodoPage() {
                     }}
                     className={cn(
                       "shrink-0 transition-[width,min-width,max-width] duration-300 ease-in-out",
-                      isInboxExpanded ? "lg:block" : "lg:block"
+                      "lg:block"
                     )}
                   >
                   <DroppableContainer
@@ -835,7 +934,7 @@ export function TodoPage() {
                           variant="ghost"
                           size="icon"
                           onClick={toggleInbox}
-                          title="Mở rộng Hộp việc tuần"
+                          aria-label="Mở rộng Hộp việc tuần"
                           className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-slate-500/10"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -843,7 +942,7 @@ export function TodoPage() {
                         <div className="p-1.5 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400">
                           <Inbox className="size-4" />
                         </div>
-                        <span className="text-xs font-semibold text-muted-foreground tracking-wider [writing-mode:vertical-lr] rotate-180 select-none whitespace-nowrap">
+                        <span className="text-xs font-semibold text-muted-foreground tracking-wider [writing-mode:vertical-lr] select-none whitespace-nowrap">
                           Hộp việc tuần
                         </span>
                       </div>
@@ -877,7 +976,7 @@ export function TodoPage() {
                             variant="ghost"
                             size="icon"
                             onClick={toggleInbox}
-                            title="Thu gọn"
+                            aria-label="Thu gọn Hộp việc tuần"
                             className="h-7 w-7 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-slate-500/10"
                           >
                             <ChevronLeft className="h-4 w-4" />
@@ -891,7 +990,8 @@ export function TodoPage() {
                           value={newInboxTitle}
                           onChange={(e) => setNewInboxTitle(e.target.value)}
                           placeholder="Thêm việc nhanh... (Enter)"
-                          className="h-9 text-xs focus-visible:ring-slate-400 shadow-none"
+                          aria-label="Thêm nhanh công việc vào Hộp việc tuần"
+                          className="h-9 text-xs focus-visible:ring-ring shadow-none"
                         />
                         <Button type="submit" size="icon" className="h-9 w-9 shrink-0 bg-slate-600 hover:bg-slate-700 text-white cursor-pointer shadow-none">
                           <Plus className="size-4" />
@@ -927,11 +1027,21 @@ export function TodoPage() {
                                 onToggle={handleToggle}
                                 onEdit={openEdit}
                                 onDelete={handleDelete}
+                                onMoveToQuadrant={handleMoveToQuadrant}
                               />
                             ))}
                           </SortableContext>
                         )}
                       </DroppableContainer>
+
+                      <LaneProgress
+                        completed={
+                          inboxTasks.length - inboxTasks.filter((t) => !t.completed).length
+                        }
+                        total={inboxTasks.length}
+                        barClass="bg-slate-500"
+                        accentClass="bg-slate-500/15 text-slate-600 dark:text-slate-400"
+                      />
                     </div>
                   </DroppableContainer>
                   </div>
@@ -973,6 +1083,7 @@ export function TodoPage() {
                           onToggle={handleToggle}
                           onEdit={openEdit}
                           onDelete={handleDelete}
+                          onMoveToQuadrant={handleMoveToQuadrant}
                         />
                       ))}
                     </div>
@@ -1020,7 +1131,7 @@ export function TodoPage() {
                           variant="ghost"
                           size="icon"
                           onClick={togglePlanner}
-                          title="Mở rộng Lịch trình ngày"
+                          aria-label="Mở rộng Lịch trình ngày"
                           className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-primary/10"
                         >
                           <ChevronLeft className="h-4 w-4" />
@@ -1028,7 +1139,7 @@ export function TodoPage() {
                         <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
                           <CalendarDays className="size-4" />
                         </div>
-                        <span className="text-xs font-semibold text-muted-foreground tracking-wider [writing-mode:vertical-lr] rotate-180 select-none whitespace-nowrap">
+                        <span className="text-xs font-semibold text-muted-foreground tracking-wider [writing-mode:vertical-lr] select-none whitespace-nowrap">
                           Lịch trình ngày
                         </span>
                       </div>
@@ -1046,7 +1157,7 @@ export function TodoPage() {
                     )}>
                       {/* Header with Navigation */}
                       <div className="flex flex-col gap-2.5 pb-3">
-                        <div className="flex flex-row items-center justify-between space-y-0 pb-1">
+                        <div className="flex flex-row items-center justify-between pb-1">
                           <div className="flex flex-col gap-0.5 min-w-0">
                             <span className="text-sm font-semibold text-foreground leading-none">
                               Lịch trình ngày
@@ -1069,7 +1180,7 @@ export function TodoPage() {
                               variant="ghost"
                               size="icon"
                               onClick={togglePlanner}
-                              title="Thu gọn"
+                              aria-label="Thu gọn Lịch trình ngày"
                               className="h-7 w-7 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-primary/10"
                             >
                               <ChevronRight className="h-4 w-4" />
@@ -1082,7 +1193,7 @@ export function TodoPage() {
                             variant="outline"
                             size="sm"
                             onClick={handleGoToday}
-                            title="Quay về hôm nay"
+                            aria-label="Quay về hôm nay"
                             className="gap-1 h-7 px-2 cursor-pointer shadow-none text-[11px] font-bold"
                           >
                             <CalendarDays className="h-3.5 w-3.5" />
@@ -1094,7 +1205,7 @@ export function TodoPage() {
                               size="icon"
                               className="h-7 w-7 rounded-sm shadow-none cursor-pointer text-muted-foreground hover:text-foreground"
                               onClick={handlePrevWeek}
-                              title="Tuần trước"
+                              aria-label="Tuần trước"
                             >
                               <ChevronLeft className="h-3.5 w-3.5" />
                             </Button>
@@ -1104,7 +1215,7 @@ export function TodoPage() {
                               size="icon"
                               className="h-7 w-7 rounded-sm shadow-none cursor-pointer text-muted-foreground hover:text-foreground"
                               onClick={handleNextWeek}
-                              title="Tuần sau"
+                              aria-label="Tuần sau"
                             >
                               <ChevronRight className="h-3.5 w-3.5" />
                             </Button>
@@ -1129,6 +1240,8 @@ export function TodoPage() {
                                 <button
                                   type="button"
                                   onClick={() => setSelectedDate(dateStr)}
+                                  aria-label={`${WEEKDAY_FULL_NAMES[day.getDay()]} ${day.getDate()} tháng ${day.getMonth() + 1}${openCountOnDay > 0 ? `, ${openCountOnDay} việc đang mở` : ""}${isSelected ? ", đang chọn" : ""}`}
+                                  aria-pressed={isSelected}
                                   className={cn(
                                     "group flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg border transition-all duration-150 cursor-pointer select-none w-full",
                                     isSelected
@@ -1150,10 +1263,10 @@ export function TodoPage() {
                                     {day.getDate()}
                                   </span>
                                   {openCountOnDay > 0 && (
-                                    <span className={cn(
-                                      "absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full text-[8px] font-bold shadow-none",
-                                      isSelected 
-                                        ? "bg-background text-primary" 
+                                    <span aria-hidden className={cn(
+                                      "pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[9px] font-bold shadow-none",
+                                      isSelected
+                                        ? "bg-background text-primary"
                                         : "bg-primary text-primary-foreground"
                                     )}>
                                       {openCountOnDay}
@@ -1172,7 +1285,8 @@ export function TodoPage() {
                           value={newPlannerTitle}
                           onChange={(e) => setNewPlannerTitle(e.target.value)}
                           placeholder="Thêm nhanh việc cho ngày này..."
-                          className="h-9 text-xs focus-visible:ring-primary shadow-none"
+                          aria-label={`Thêm nhanh công việc cho ngày ${selectedDate}`}
+                          className="h-9 text-xs focus-visible:ring-ring shadow-none"
                         />
                         <Button type="submit" size="icon" className="h-9 w-9 shrink-0 bg-primary hover:bg-primary/95 text-primary-foreground cursor-pointer shadow-none">
                           <Plus className="size-4" />
@@ -1210,6 +1324,7 @@ export function TodoPage() {
                                     onToggle={handleToggle}
                                     onEdit={openEdit}
                                     onDelete={handleDelete}
+                                    onMoveToQuadrant={handleMoveToQuadrant}
                                   />
                                   {/* Quadrant Badge overlay for quick context */}
                                   {task.quadrant !== "inbox" && (
@@ -1226,6 +1341,17 @@ export function TodoPage() {
                           </SortableContext>
                         )}
                       </DroppableContainer>
+
+                      <LaneProgress
+                        completed={
+                          plannerTasks.length -
+                          plannerTasks.filter((t) => !t.completed).length
+                        }
+                        total={plannerTasks.length}
+                        barClass="bg-primary"
+                        accentClass="bg-primary/15 text-primary"
+                        label={`Tiến độ ngày ${selectedDate}`}
+                      />
                     </div>
                   </DroppableContainer>
                   </div>
@@ -1234,13 +1360,14 @@ export function TodoPage() {
                 {/* Follows the cursor during dragging */}
                 <DragOverlay>
                   {activeDragTask ? (
-                    <div className={cn("w-72 rotate-1 cursor-grabbing shadow-2xl")}>
+                    <div aria-hidden className={cn("w-72 rotate-1 cursor-grabbing shadow-2xl")}>
                       <TaskCard
                         task={activeDragTask}
                         dragId={`overlay-${activeDragTask.id}`}
                         onToggle={() => {}}
                         onEdit={() => {}}
                         onDelete={() => {}}
+                        onMoveToQuadrant={() => {}}
                       />
                     </div>
                   ) : null}
@@ -1253,9 +1380,19 @@ export function TodoPage() {
         ) : stats ? (
           <TodoStatsPanel stats={stats} />
         ) : (
-          <p className="text-sm text-muted-foreground">
-            Chưa tải được dữ liệu thống kê.
-          </p>
+          <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border/80 bg-card/40 p-6">
+            <p className="text-sm text-muted-foreground">
+              Chưa tải được dữ liệu thống kê.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetchStats()}
+              className="cursor-pointer"
+            >
+              Thử lại
+            </Button>
+          </div>
         )}
       </div>
 

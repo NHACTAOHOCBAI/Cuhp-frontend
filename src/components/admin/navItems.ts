@@ -8,6 +8,7 @@ import {
   ListChecks,
   GraduationCap,
   Settings,
+  CalendarCheck,
   type LucideIcon,
 } from "lucide-react"
 
@@ -28,13 +29,13 @@ export interface NavLeaf {
 export type NavEntry =
   | { kind: "leaf"; item: NavLeaf }
   | {
-      kind: "group"
-      id: string
-      label: string
-      icon: LucideIcon
-      hub?: NavLeaf
-      children: NavLeaf[]
-    }
+    kind: "group"
+    id: string
+    label: string
+    icon: LucideIcon
+    hub?: NavLeaf
+    children: NavLeaf[]
+  }
 
 export const navEntries: NavEntry[] = [
   {
@@ -100,6 +101,20 @@ export const navEntries: NavEntry[] = [
         label: "Quản lý công việc",
         icon: ListChecks,
         match: /^\/admin\/todo(\/|$)/,
+      },
+    ],
+  },
+  {
+    kind: "group",
+    id: "habits",
+    label: "Thói quen",
+    icon: CalendarCheck,
+    children: [
+      {
+        to: "/admin/habits",
+        label: "Theo dõi thói quen",
+        icon: CalendarCheck,
+        match: /^\/admin\/habits(\/|$)/,
       },
     ],
   },

@@ -49,7 +49,7 @@ function StatTile({ label, value, hint, icon: Icon, tone = "default" }: StatTile
               : "bg-primary/10 text-primary"
           )}
         >
-          <Icon className="size-4.5" />
+          <Icon className="size-[1.125rem]" />
         </span>
         <div className="min-w-0">
           <p className="text-xs text-muted-foreground">{label}</p>
@@ -65,11 +65,17 @@ function CircularProgress({ percentage, label }: { percentage: number; label: st
   const radius = 38
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (Math.min(100, Math.max(0, percentage)) / 100) * circumference
+  const clamped = Math.min(100, Math.max(0, percentage))
 
   return (
     <div className="flex flex-col items-center justify-center p-4 bg-card rounded-2xl border border-border/80">
       <div className="relative size-24">
-        <svg className="size-full -rotate-90">
+        <svg
+          className="size-full -rotate-90"
+          role="img"
+          aria-label={`${label}: ${clamped}%`}
+        >
+          <title>{`${label}: ${clamped}%`}</title>
           {/* Background circle */}
           <circle
             cx="48"
@@ -91,10 +97,10 @@ function CircularProgress({ percentage, label }: { percentage: number; label: st
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-xl font-bold leading-none tabular-nums">{percentage}%</span>
+          <span className="text-xl font-bold leading-none tabular-nums">{clamped}%</span>
         </div>
       </div>
-      <p className="text-xs font-bold text-foreground mt-3.5 text-center leading-none">{label}</p>
+      <p className="text-xs font-semibold text-foreground mt-3.5 text-center leading-none">{label}</p>
     </div>
   )
 }
@@ -220,7 +226,14 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
               <span className="text-muted-foreground">Điểm kinh nghiệm (XP)</span>
               <span className="tabular-nums">{xp}/10 XP</span>
             </div>
-            <div className="w-full h-3 bg-muted rounded-full overflow-hidden border border-border/50">
+            <div
+              className="w-full h-3 bg-muted rounded-full overflow-hidden border border-border/50"
+              role="progressbar"
+              aria-label="Tiến trình điểm kinh nghiệm lên cấp"
+              aria-valuenow={xp}
+              aria-valuemin={0}
+              aria-valuemax={10}
+            >
               <div
                 className="h-full bg-gradient-to-r from-primary to-indigo-500 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${xpPercentage}%` }}
@@ -272,7 +285,7 @@ export function TodoStatsPanel({ stats }: { stats: TodoStats }) {
                     "flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors duration-300",
                     ach.unlocked ? ach.color : "bg-muted border-muted-foreground/10 text-muted-foreground"
                   )}>
-                    {ach.unlocked ? <Icon className="size-4.5" /> : <Lock className="size-4 text-muted-foreground/60" />}
+                    {ach.unlocked ? <Icon className="size-[1.125rem]" /> : <Lock className="size-4 text-muted-foreground/60" />}
                   </div>
                   <div className="min-w-0">
                     <h4 className={cn("text-xs font-bold leading-snug", ach.unlocked ? "text-foreground" : "text-muted-foreground")}>{ach.title}</h4>
