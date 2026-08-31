@@ -1,6 +1,6 @@
 import type { TodoQuadrant, TodoTask } from "@/types"
 
-/** Scope of the "Hôm nay / Tuần này / Tất cả" filter. */
+/** Scope of the "Today / This Week / All" filter. */
 export type TodoScope = "today" | "week" | "all"
 
 export interface TodoListParams {

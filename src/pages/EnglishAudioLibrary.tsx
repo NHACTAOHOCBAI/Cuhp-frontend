@@ -25,17 +25,17 @@ export default function EnglishAudioLibrary() {
 
   // Category filters mapping (matching Stitch design labels)
   const categoryFilters = [
-    { label: "Tất cả", value: undefined },
+    { label: "All", value: undefined },
     { label: "Podcast", value: "general" },
-    { label: "Hội thoại", value: "conversation" },
-    { label: "Tin tức", value: "business" },
+    { label: "Conversation", value: "conversation" },
+    { label: "News", value: "business" },
   ]
 
   // Estimate audio track stats
   const estimateTrackStats = (title: string, id: string) => {
     const seed = title.length + id.length
     if (title.toLowerCase().includes("slow living")) {
-      return { duration: "04:30", categoryLabel: "Hội thoại", questionsCount: 6 }
+      return { duration: "04:30", categoryLabel: "Conversation", questionsCount: 6 }
     }
     if (title.toLowerCase().includes("routine")) {
       return { duration: "06:15", categoryLabel: "Podcast", questionsCount: 8 }
@@ -43,7 +43,7 @@ export default function EnglishAudioLibrary() {
     const mins = 3 + (seed % 4)
     const secs = 10 + (seed % 50)
     const duration = `0${mins}:${secs < 10 ? "0" + secs : secs}`
-    const categoryLabel = seed % 2 === 0 ? "Podcast" : "Hội thoại"
+    const categoryLabel = seed % 2 === 0 ? "Podcast" : "Conversation"
     const questionsCount = 4 + (seed % 6)
     return { duration, categoryLabel, questionsCount }
   }
@@ -67,10 +67,10 @@ export default function EnglishAudioLibrary() {
       {/* Page Header */}
       <header className="mt-4 mb-6">
         <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">
-          Thư viện bài nghe
+          Listening Library
         </h1>
         <p className="font-outfit font-normal text-[16px] text-[#706065]">
-          Nâng cao kỹ năng nghe với các bài tập shadowing thiết kế chuyên biệt.
+          Boost your listening skills with carefully designed shadowing exercises.
         </p>
       </header>
 
@@ -81,7 +81,7 @@ export default function EnglishAudioLibrary() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#817479] h-5 w-5" />
           <input
             type="text"
-            placeholder="Tìm kiếm bài nghe..."
+            placeholder="Search tracks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-[12px] py-3 pl-12 pr-4 focus:outline-none focus:border-[#EFBCD5] transition-colors text-[#1f1a1d] text-sm"
@@ -126,7 +126,7 @@ export default function EnglishAudioLibrary() {
       ) : !listResponse?.items || listResponse.items.length === 0 ? (
         <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px] text-[#706065]">
           <Headphones className="h-12 w-12 text-zinc-300 stroke-[1.25] mx-auto mb-3" />
-          <p className="font-outfit text-sm font-medium">Không tìm thấy bài nghe nào phù hợp.</p>
+          <p className="font-outfit text-sm font-medium">No matching tracks found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -137,15 +137,15 @@ export default function EnglishAudioLibrary() {
             // Setup level badge style matching Stitch
             const levelLabel =
               track.level === "beginner"
-                ? "Dễ"
+                ? "Easy"
                 : track.level === "intermediate"
-                ? "Trung bình"
-                : "Khó"
+                ? "Medium"
+                : "Hard"
 
             const levelColorClass =
-              levelLabel === "Dễ"
+              levelLabel === "Easy"
                 ? "bg-[#bad2a5]/20 text-[#506440] border-[#bad2a5]/30"
-                : levelLabel === "Trung bình"
+                : levelLabel === "Medium"
                 ? "bg-[#f2dde2] text-[#6a5a5f] border-[#f2dde2]/30"
                 : "bg-[#EFBCD5]/20 text-[#70495e] border-[#EFBCD5]/30"
 
@@ -182,7 +182,7 @@ export default function EnglishAudioLibrary() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Mic className="h-4 w-4 stroke-[1.8]" />
-                      <span>{stats.questionsCount} câu hỏi shadowing</span>
+                      <span>{stats.questionsCount} shadowing sentences</span>
                     </div>
                   </div>
 
@@ -208,7 +208,7 @@ export default function EnglishAudioLibrary() {
                   <div className="pt-4 border-t border-[#E5DFE2]/70 flex flex-col gap-3">
                     <div>
                       <div className="flex justify-between font-mono text-[12px] font-medium text-zinc-700 mb-1">
-                        <span>Đã hoàn thành</span>
+                        <span>Completed</span>
                         <span>{progress}%</span>
                       </div>
                       <div className="h-2 w-full bg-[#E5DFE2] rounded-full overflow-hidden">
@@ -225,7 +225,7 @@ export default function EnglishAudioLibrary() {
                         className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#fcf1f5] transition-all flex items-center justify-center gap-2 active:scale-98"
                       >
                         <RotateCcw className="h-5 w-5 stroke-[1.8]" />
-                        <span>Luyện Shadowing</span>
+                        <span>Practice Shadowing</span>
                       </button>
                     ) : (
                       <button
@@ -233,7 +233,7 @@ export default function EnglishAudioLibrary() {
                         className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#ebb8d1] transition-all flex items-center justify-center gap-2 active:scale-98"
                       >
                         <Mic className="h-5 w-5 stroke-[1.8]" />
-                        <span>Luyện Shadowing</span>
+                        <span>Practice Shadowing</span>
                       </button>
                     )}
                   </div>

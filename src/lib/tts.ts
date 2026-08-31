@@ -1,19 +1,19 @@
 /**
- * Phát âm từ vựng tiếng Anh bằng Web Speech API có sẵn trong trình duyệt.
- * @param word Từ hoặc cụm từ cần phát âm.
- * @param lang Mã ngôn ngữ (mặc định: en-US).
+ * Pronounce English vocabulary using the browser's built-in Web Speech API.
+ * @param word The word or phrase to pronounce.
+ * @param lang Language code (default: en-US).
  */
 export function speakWord(word: string, lang = "en-US") {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    // Huỷ bỏ bất kỳ phiên âm nào đang chạy để tránh đè âm thanh
+    // Cancel any ongoing speech session to avoid audio overlap
     window.speechSynthesis.cancel()
 
     const utterance = new SpeechSynthesisUtterance(word)
     utterance.lang = lang
-    utterance.rate = 0.95 // Tốc độ đọc vừa phải giúp người học dễ nghe
+    utterance.rate = 0.95 // Moderate reading speed helps learners listen clearly
 
     window.speechSynthesis.speak(utterance)
   } else {
-    console.warn("Trình duyệt này không hỗ trợ API Text-to-Speech.")
+    console.warn("This browser does not support the Text-to-Speech API.")
   }
 }

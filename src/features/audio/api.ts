@@ -102,7 +102,7 @@ export function uploadAudioWithProgress(
         try {
           resolve(JSON.parse(xhr.responseText) as AudioTrack)
         } catch {
-          reject(new Error("Phản hồi từ server không hợp lệ."))
+          reject(new Error("Invalid response from server."))
         }
       } else {
         let detail = `Upload failed: ${xhr.status}`
@@ -117,8 +117,8 @@ export function uploadAudioWithProgress(
         reject(new Error(detail))
       }
     }
-    xhr.onerror = () => reject(new Error("Lỗi mạng. Vui lòng thử lại."))
-    xhr.onabort = () => reject(new Error("Upload đã bị huỷ."))
+    xhr.onerror = () => reject(new Error("Network error. Please try again."))
+    xhr.onabort = () => reject(new Error("Upload was canceled."))
 
     xhr.open("POST", `${API_BASE}/upload`)
     if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`)

@@ -98,7 +98,7 @@ export default function EnglishShadowingDetail() {
       setIsRecording(false)
       const score = Math.floor(88 + Math.random() * 11) // score between 88 and 98
       setAccuracyScore(score)
-      toast.success(`Ghi âm hoàn tất! Độ chính xác đạt ${score}%`)
+      toast.success(`Recording complete! Accuracy reached ${score}%`)
 
       // Move to next sentence if available
       if (activeSentenceIndex < sentences.length - 1) {
@@ -108,12 +108,12 @@ export default function EnglishShadowingDetail() {
         if (id) {
           localStorage.setItem(`audio_progress_${id}`, "100")
         }
-        toast.success("Chúc mừng! Bạn đã hoàn thành bài luyện tập Shadowing hôm nay.")
+        toast.success("Congrats! You've finished today's shadowing session.")
       }
     } else {
       // Start recording
       setIsRecording(true)
-      toast.info("Đang ghi âm... Hãy nói theo giọng điệu người bản xứ.")
+      toast.info("Recording... Speak with the native speaker's rhythm.")
     }
   }
 
@@ -137,7 +137,7 @@ export default function EnglishShadowingDetail() {
           to="/english/listening"
           className="font-outfit text-sm text-[#706065] hover:text-[#EFBCD5] transition-colors inline-block mb-2 font-semibold"
         >
-          ← Thư viện bài nghe
+          ← Listening Library
         </Link>
         <h1 className="font-sora text-[32px] font-bold text-[#1f1a1d] leading-tight mb-1">
           {trackTitle}

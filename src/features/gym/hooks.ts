@@ -152,7 +152,7 @@ export function useDeleteExercise() {
 
 /**
  * Copy all exercises on a single day forward to the same weekday in the next
- * N weeks. Used by the "Áp dụng tiếp" dropdown in the day detail header.
+ * N weeks. Used by the "Apply Forward" dropdown in the day detail header.
  */
 export function useCopyDayForward() {
   const { token } = useAuth()

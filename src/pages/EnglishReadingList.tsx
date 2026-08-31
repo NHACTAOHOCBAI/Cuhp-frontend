@@ -25,10 +25,10 @@ export default function EnglishReadingList() {
 
   // Level filter buttons mapping (due to Stitch mockup labels)
   const levelFilters = [
-    { label: "Tất cả", value: undefined },
-    { label: "Dễ", value: "A1" },
-    { label: "Trung bình", value: "B1" },
-    { label: "Khó", value: "C1" },
+    { label: "All", value: undefined },
+    { label: "Easy", value: "A1" },
+    { label: "Medium", value: "B1" },
+    { label: "Hard", value: "C1" },
   ]
 
   // Estimate words, read time, and vocabulary count based on a string
@@ -72,10 +72,10 @@ export default function EnglishReadingList() {
       {/* Page Header */}
       <header className="mt-4 mb-6">
         <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">
-          Thư viện bài đọc
+          Reading Library
         </h1>
         <p className="font-outfit font-normal text-[16px] text-[#706065]">
-          Khám phá và rèn luyện kỹ năng đọc hiểu của bạn
+          Explore and practice your reading comprehension
         </p>
       </header>
 
@@ -86,7 +86,7 @@ export default function EnglishReadingList() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#817479] h-5 w-5" />
           <input
             type="text"
-            placeholder="Tìm kiếm bài viết..."
+            placeholder="Search passages..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-[12px] py-3 pl-12 pr-4 focus:outline-none focus:border-[#EFBCD5] transition-colors text-[#1f1a1d] text-sm"
@@ -131,7 +131,7 @@ export default function EnglishReadingList() {
       ) : !listResponse?.items || listResponse.items.length === 0 ? (
         <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px] text-[#706065]">
           <BookOpen className="h-12 w-12 text-zinc-300 stroke-[1.25] mx-auto mb-3" />
-          <p className="font-outfit text-sm font-medium">Không tìm thấy bài viết nào phù hợp.</p>
+          <p className="font-outfit text-sm font-medium">No matching passages found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -142,21 +142,21 @@ export default function EnglishReadingList() {
             // Setup difficulty label color matching Stitch
             const levelLabel =
               passage.level === "A1" || passage.level === "A2"
-                ? "Dễ"
+                ? "Easy"
                 : passage.level === "B1" || passage.level === "B2"
-                ? "Trung bình"
-                : "Khó"
+                ? "Medium"
+                : "Hard"
 
             const levelColorClass =
-              levelLabel === "Dễ"
+              levelLabel === "Easy"
                 ? "bg-[#bad2a5]/20 text-[#506440]"
-                : levelLabel === "Trung bình"
+                : levelLabel === "Medium"
                 ? "bg-[#f2dde2] text-[#6a5a5f]"
                 : "bg-[#EFBCD5]/20 text-[#70495e]"
 
             // Setup progress text matching Stitch
             const progressText =
-              progress === 100 ? "Hoàn thành" : progress > 0 ? "Đang đọc" : "Chưa đọc"
+              progress === 100 ? "Completed" : progress > 0 ? "Reading" : "Not started"
             
             const progressTextColorClass =
               progress === 100 ? "text-[#EFBCD5]" : "text-[#4f4449]"
@@ -188,13 +188,13 @@ export default function EnglishReadingList() {
                   {/* Mono text stats block */}
                   <div className="font-mono text-[12px] font-medium text-[#4f4449] flex items-center gap-2 flex-wrap">
                     <BookOpen className="h-4.5 w-4.5 stroke-[1.8]" />
-                    <span>{stats.words} từ</span>
+                    <span>{stats.words} words</span>
                     <span className="text-zinc-300">•</span>
                     <Clock className="h-4.5 w-4.5 stroke-[1.8]" />
-                    <span>{stats.minutes} phút đọc</span>
+                    <span>{stats.minutes} min read</span>
                     <span className="text-zinc-300">•</span>
                     <Languages className="h-4.5 w-4.5 stroke-[1.8]" />
-                    <span>{stats.newWords} từ mới</span>
+                    <span>{stats.newWords} new words</span>
                   </div>
 
                   {/* Horizontal progress bar */}
@@ -218,7 +218,7 @@ export default function EnglishReadingList() {
                       className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#fcf1f5] transition-colors flex items-center justify-center gap-2"
                     >
                       <Languages className="h-5 w-5 stroke-[1.8]" />
-                      <span>Đọc song ngữ</span>
+                      <span>Read Bilingual</span>
                     </button>
                   ) : progress > 0 ? (
                     <button
@@ -226,7 +226,7 @@ export default function EnglishReadingList() {
                       className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#ebb8d1] transition-colors flex items-center justify-center gap-2"
                     >
                       <Languages className="h-5 w-5 stroke-[1.8]" />
-                      <span>Tiếp tục đọc</span>
+                      <span>Continue Reading</span>
                     </button>
                   ) : (
                     <button
@@ -234,7 +234,7 @@ export default function EnglishReadingList() {
                       className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#ebb8d1] transition-colors flex items-center justify-center gap-2"
                     >
                       <Languages className="h-5 w-5 stroke-[1.8]" />
-                      <span>Đọc song ngữ</span>
+                      <span>Read Bilingual</span>
                     </button>
                   )}
                 </div>

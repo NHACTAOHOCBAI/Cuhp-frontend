@@ -35,9 +35,9 @@ export interface QuadrantMeta {
 
 export const INBOX_META: QuadrantMeta = {
   key: "inbox",
-  label: "Hộp việc tuần này",
-  rule: "Chưa phân loại",
-  hint: "Nhập nhanh các việc trong tuần vào đây rồi phân loại sau.",
+  label: "This Week's Inbox",
+  rule: "Not categorized yet",
+  hint: "Quickly capture tasks for the week here, then categorize them later.",
   icon: Inbox,
   badge: "bg-slate-500/10 text-slate-500 border border-slate-500/20 dark:text-slate-400 dark:border-slate-500/30",
   dot: "bg-slate-500",
@@ -50,9 +50,9 @@ export const INBOX_META: QuadrantMeta = {
 export const QUADRANTS: QuadrantMeta[] = [
   {
     key: "do",
-    label: "Làm ngay",
-    rule: "Khẩn cấp + Quan trọng",
-    hint: "Xử lý ngay hôm nay, đừng trì hoãn.",
+    label: "Do First",
+    rule: "Urgent + Important",
+    hint: "Handle it today, do not procrastinate.",
     icon: Zap,
     badge: "bg-rose-500/10 text-rose-500 border border-rose-500/20",
     dot: "bg-rose-500",
@@ -63,9 +63,9 @@ export const QUADRANTS: QuadrantMeta[] = [
   },
   {
     key: "schedule",
-    label: "Lên lịch",
-    rule: "Quan trọng, không khẩn cấp",
-    hint: "Đặt lịch cụ thể — đây là nơi tạo ra giá trị dài hạn.",
+    label: "Schedule",
+    rule: "Important, Not Urgent",
+    hint: "Set a specific time — this is where long-term value is created.",
     icon: CalendarClock,
     badge: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
     dot: "bg-blue-500",
@@ -76,9 +76,9 @@ export const QUADRANTS: QuadrantMeta[] = [
   },
   {
     key: "delegate",
-    label: "Ủy thác",
-    rule: "Khẩn cấp, không quan trọng",
-    hint: "Giao cho người khác hoặc rút gọn tối đa thời gian.",
+    label: "Delegate",
+    rule: "Urgent, Not Important",
+    hint: "Hand it off to someone else or minimize the time spent on it.",
     icon: Send,
     badge: "bg-amber-600/10 text-amber-600 border border-amber-600/20",
     dot: "bg-amber-600",
@@ -89,9 +89,9 @@ export const QUADRANTS: QuadrantMeta[] = [
   },
   {
     key: "eliminate",
-    label: "Loại bỏ",
-    rule: "Không khẩn cấp, không quan trọng",
-    hint: "Cân nhắc bỏ hẳn để lấy lại thời gian.",
+    label: "Eliminate",
+    rule: "Not Urgent, Not Important",
+    hint: "Consider dropping it entirely to reclaim your time.",
     icon: CircleSlash,
     badge: "bg-violet-500/10 text-violet-500 border border-violet-500/20",
     dot: "bg-violet-500",
@@ -118,7 +118,7 @@ export const QUADRANT_OPTIONS = ALL_QUADRANTS.map((q) => ({
 }))
 
 export const SCOPE_OPTIONS = [
-  { value: "today", label: "Hôm nay" },
-  { value: "week", label: "Tuần này" },
-  { value: "all", label: "Tất cả" },
+  { value: "today", label: "Today" },
+  { value: "week", label: "This Week" },
+  { value: "all", label: "All" },
 ] as const

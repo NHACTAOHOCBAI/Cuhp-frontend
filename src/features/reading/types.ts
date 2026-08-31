@@ -82,20 +82,20 @@ export interface ReadingCommentCreate {
 }
 
 export const READING_LEVELS = [
-  { value: "A1", label: "A1 - Cơ bản" },
-  { value: "A2", label: "A2 - Sơ cấp" },
-  { value: "B1", label: "B1 - Trung cấp" },
-  { value: "B2", label: "B2 - Trung cao cấp" },
-  { value: "C1", label: "C1 - Cao cấp" },
-  { value: "C2", label: "C2 - Thành thạo" },
+  { value: "A1", label: "A1 - Beginner" },
+  { value: "A2", label: "A2 - Elementary" },
+  { value: "B1", label: "B1 - Intermediate" },
+  { value: "B2", label: "B2 - Upper Intermediate" },
+  { value: "C1", label: "C1 - Advanced" },
+  { value: "C2", label: "C2 - Proficient" },
 ] as const
 
 export const READING_CATEGORIES = [
-  { value: "General", label: "Đời sống hàng ngày" },
-  { value: "Business", label: "Kinh doanh & Công sở" },
-  { value: "Science", label: "Khoa học & Đời sống" },
-  { value: "Literature", label: "Văn học & Nghệ thuật" },
-  { value: "News", label: "Tin tức & Thời sự" },
-  { value: "Exam", label: "Luyện thi (IELTS, TOEFL...)" },
-  { value: "Other", label: "Khác" },
+  { value: "General", label: "Daily Life" },
+  { value: "Business", label: "Business & Office" },
+  { value: "Science", label: "Science & Life" },
+  { value: "Literature", label: "Literature & Arts" },
+  { value: "News", label: "News & Current Affairs" },
+  { value: "Exam", label: "Exam Prep (IELTS, TOEFL...)" },
+  { value: "Other", label: "Other" },
 ] as const

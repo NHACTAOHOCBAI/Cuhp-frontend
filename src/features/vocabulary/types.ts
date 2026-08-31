@@ -1,15 +1,15 @@
 import type { VocabularyItem } from "@/types"
 
 export const WORD_TYPES = [
-  { value: "noun", label: "Danh từ (Noun)" },
-  { value: "verb", label: "Động từ (Verb)" },
-  { value: "adjective", label: "Tính từ (Adjective)" },
-  { value: "adverb", label: "Trạng từ (Adverb)" },
-  { value: "pronoun", label: "Đại từ (Pronoun)" },
-  { value: "preposition", label: "Giới từ (Preposition)" },
-  { value: "conjunction", label: "Liên từ (Conjunction)" },
-  { value: "interjection", label: "Thán từ (Interjection)" },
-  { value: "other", label: "Khác (Other)" },
+  { value: "noun", label: "Noun" },
+  { value: "verb", label: "Verb" },
+  { value: "adjective", label: "Adjective" },
+  { value: "adverb", label: "Adverb" },
+  { value: "pronoun", label: "Pronoun" },
+  { value: "preposition", label: "Preposition" },
+  { value: "conjunction", label: "Conjunction" },
+  { value: "interjection", label: "Interjection" },
+  { value: "other", label: "Other" },
 ] as const
 
 export type WordType = (typeof WORD_TYPES)[number]["value"]

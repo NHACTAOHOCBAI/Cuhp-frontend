@@ -75,7 +75,7 @@ export default function EnglishReadingDetail() {
       const data = await lookupVocabularyWord(word, token)
       setLookupData(data)
     } catch (err) {
-      toast.error("Không thể tra cứu từ điển lúc này.")
+      toast.error("Unable to look up the dictionary right now.")
     } finally {
       setLookupLoading(false)
     }
@@ -88,21 +88,21 @@ export default function EnglishReadingDetail() {
     createVocabMutation.mutate(
       {
         word: lookupData.word,
-        meaning: lookupData.meaning || "Nghĩa chưa xác định",
+        meaning: lookupData.meaning || "Meaning not set",
         pronunciation: lookupData.pronunciation || null,
         word_type: lookupData.word_type || null,
-        notes: "Được lưu từ bài đọc: " + (passage?.title || ""),
+        notes: "Saved from reading: " + (passage?.title || ""),
         context_sentence: null,
       },
       {
         onSuccess: () => {
-          toast.success(`Đã lưu từ "${lookupData.word}" vào Hộp 1 (SRS)!`)
+          toast.success(`Saved "${lookupData.word}" to Box 1 (SRS)!`)
           setLookupWord(null)
           setLookupData(null)
           setPopupPos(null)
         },
         onError: (err) => {
-          toast.error(`Lỗi lưu từ vựng: ${err.message}`)
+          toast.error(`Failed to save vocabulary: ${err.message}`)
         },
       }
     )
@@ -127,11 +127,11 @@ export default function EnglishReadingDetail() {
       { translation_content: translationText },
       {
         onSuccess: () => {
-          toast.success("Đã lưu bản thực hành dịch bài của bạn!")
+          toast.success("Your translation practice has been saved!")
           localStorage.setItem(`passage_progress_${id}`, "100")
         },
         onError: (err) => {
-          toast.error(`Lỗi lưu bản dịch: ${err.message}`)
+          toast.error(`Failed to save translation: ${err.message}`)
         },
       }
     )
@@ -173,9 +173,9 @@ export default function EnglishReadingDetail() {
 
   // Vocabulary highlight in sidebar
   const highlightWords = [
-    { word: "Serendipity", ipa: "/ˌserənˈdipədē/", meaning: "Sự tình cờ may mắn" },
-    { word: "Mindfulness", ipa: "/ˈmīn(d)fəlnəs/", meaning: "Sự chánh niệm" },
-    { word: "Tranquility", ipa: "/traNGˈkwilədē/", meaning: "Sự tĩnh lặng" },
+    { word: "Serendipity", ipa: "/ˌserənˈdipədē/", meaning: "Pleasant surprise discovery" },
+    { word: "Mindfulness", ipa: "/ˈmīn(d)fəlnəs/", meaning: "Quality of being aware" },
+    { word: "Tranquility", ipa: "/traNGˈkwilədē/", meaning: "State of calmness" },
   ]
 
   if (isPassageLoading) {
@@ -191,9 +191,9 @@ export default function EnglishReadingDetail() {
   if (!passage) {
     return (
       <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px]">
-        <p className="font-outfit text-sm font-medium text-[#706065]">Không tìm thấy bài viết này.</p>
+        <p className="font-outfit text-sm font-medium text-[#706065]">This passage was not found.</p>
         <Link to="/english/reading" className="mt-4 text-xs font-bold text-[#EFBCD5] hover:underline">
-          Quay lại thư viện bài đọc
+          Back to reading library
         </Link>
       </div>
     )
@@ -207,7 +207,7 @@ export default function EnglishReadingDetail() {
           to="/english/reading"
           className="font-outfit text-sm text-[#706065] hover:text-[#EFBCD5] transition-colors flex items-center gap-1.5 mb-2 font-semibold"
         >
-          <ArrowLeft className="h-4 w-4" /> Thư viện bài đọc
+          <ArrowLeft className="h-4 w-4" /> Reading Library
         </Link>
         <h1 className="font-sora font-bold text-[32px] text-[#201B1E] mb-1">{passage.title}</h1>
         <div className="font-mono text-xs font-bold text-[#70495e] uppercase tracking-wider">
@@ -220,7 +220,7 @@ export default function EnglishReadingDetail() {
         {/* Left Column: English Reader */}
         <section className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col h-[600px] overflow-hidden">
           <h3 className="font-sora font-bold text-lg text-[#1f1a1d] mb-4 pb-3 border-b border-[#E5DFE2]/70">
-            Văn bản tiếng Anh (Click vào từ để dịch)
+            English Text (Click a word to translate)
           </h3>
           <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-zinc-800 text-[16px] leading-[1.7] font-outfit select-text hide-scrollbar">
             {passage.content.split("\n\n").map((para, idx) => (
@@ -236,20 +236,20 @@ export default function EnglishReadingDetail() {
             <div className="pb-4 border-b border-[#E5DFE2] flex justify-between items-center mb-4">
               <span className="font-sora font-bold text-sm text-[#706065] flex items-center gap-2">
                 <Languages className="h-4.5 w-4.5 text-[#EFBCD5]" />
-                Thực hành dịch bài
+                Translation Practice
               </span>
               <button
                 onClick={handleSaveTranslation}
                 className="text-[#7b5268] hover:text-[#EFBCD5] p-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-bold font-mono"
-                title="Lưu bản dịch"
+                title="Save translation"
               >
-                <Save className="h-4 w-4" /> Lưu bản dịch
+                <Save className="h-4 w-4" /> Save Translation
               </button>
             </div>
             <textarea
               value={translationText}
               onChange={handleTranslationChange}
-              placeholder="Nhập bản dịch tiếng Việt của bạn tại đây để đối chiếu và lưu tiến trình học..."
+              placeholder="Type your translation here to compare and save your learning progress..."
               className="w-full flex-grow p-4 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all resize-none font-outfit leading-relaxed"
             />
           </div>
@@ -257,7 +257,7 @@ export default function EnglishReadingDetail() {
           {/* Key Vocabulary Highlights Panel */}
           <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0">
             <h3 className="font-sora font-bold text-[16px] text-[#201B1E] mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EFBCD5]" /> Từ vựng cốt lõi trong bài
+              <span className="w-1.5 h-1.5 rounded-full bg-[#EFBCD5]" /> Key Vocabulary in Passage
             </h3>
             <ul className="space-y-3 font-outfit">
               {highlightWords.map((item, idx) => (
@@ -291,7 +291,7 @@ export default function EnglishReadingDetail() {
         >
           {lookupLoading ? (
             <div className="flex items-center justify-center py-4 text-xs font-mono text-[#706065] animate-pulse">
-              Đang tra cứu từ điển...
+              Looking up dictionary...
             </div>
           ) : lookupData ? (
             <div className="space-y-3">
@@ -311,17 +311,17 @@ export default function EnglishReadingDetail() {
                 )}
               </div>
               <p className="font-sora text-sm font-semibold text-[#201B1E] leading-relaxed">
-                {lookupData.meaning || "Không tìm thấy nghĩa tiếng Việt"}
+                {lookupData.meaning || "No definition found"}
               </p>
               <button
                 onClick={handleSaveWord}
                 className="w-full bg-[#EFBCD5] text-[#201B1E] font-sora font-bold text-xs py-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-sm border border-[#ffd8ea]"
               >
-                <Check className="h-3.5 w-3.5 stroke-[3px]" /> Lưu vào SRS
+                <Check className="h-3.5 w-3.5 stroke-[3px]" /> Save to SRS
               </button>
             </div>
           ) : (
-            <div className="text-xs font-medium text-red-500 py-2">Không tìm thấy định nghĩa.</div>
+            <div className="text-xs font-medium text-red-500 py-2">No definition found.</div>
           )}
         </div>
       )}

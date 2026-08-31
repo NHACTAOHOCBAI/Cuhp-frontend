@@ -69,9 +69,9 @@ export default function EnglishVocabularies() {
       {
         onSuccess: () => {
           if (known) {
-            toast.success(`Tuyệt vời! Đã thuộc từ "${currentWord.word}".`)
+            toast.success(`Great! You knew "${currentWord.word}".`)
           } else {
-            toast.info(`Đã lưu. Từ "${currentWord.word}" được chuyển về Hộp 1 để ôn lại ngày mai.`)
+            toast.info(`Saved. "${currentWord.word}" was moved back to Box 1 for review tomorrow.`)
           }
 
           // Reset reveal meaning state
@@ -80,7 +80,7 @@ export default function EnglishVocabularies() {
           setCurrentCardIndex((prev) => prev + 1)
         },
         onError: (err) => {
-          toast.error(`Lỗi ôn tập từ vựng: ${err.message}`)
+          toast.error(`Vocabulary review error: ${err.message}`)
         },
       }
     )
@@ -108,31 +108,31 @@ export default function EnglishVocabularies() {
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
               <span className="text-[14px] text-[#706065] font-medium">Box 1 (Daily)</span>
               <span className="text-[14px] font-bold text-[#EFBCD5]">
-                {isAllLoading ? "..." : `${boxCounts[1]} từ`}
+                {isAllLoading ? "..." : `${boxCounts[1]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
               <span className="text-[14px] text-[#706065] font-medium">Box 2 (2 Days)</span>
               <span className="text-[14px] font-semibold text-[#1f1a1d]">
-                {isAllLoading ? "..." : `${boxCounts[2]} từ`}
+                {isAllLoading ? "..." : `${boxCounts[2]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
               <span className="text-[14px] text-[#706065] font-medium">Box 3 (1 Week)</span>
               <span className="text-[14px] font-semibold text-[#1f1a1d]">
-                {isAllLoading ? "..." : `${boxCounts[3]} từ`}
+                {isAllLoading ? "..." : `${boxCounts[3]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
               <span className="text-[14px] text-[#706065] font-medium">Box 4 (1 Month)</span>
               <span className="text-[14px] font-semibold text-[#1f1a1d]">
-                {isAllLoading ? "..." : `${boxCounts[4]} từ`}
+                {isAllLoading ? "..." : `${boxCounts[4]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[14px] text-[#706065] font-medium">Box 5 (Mastered)</span>
               <span className="text-[14px] font-semibold text-[#1f1a1d]">
-                {isAllLoading ? "..." : `${boxCounts[5]} từ`}
+                {isAllLoading ? "..." : `${boxCounts[5]} words`}
               </span>
             </div>
           </div>
@@ -154,16 +154,16 @@ export default function EnglishVocabularies() {
                 </div>
               </div>
               <h3 className="font-sora font-bold text-2xl text-[#1f1a1d] mb-2">
-                Tuyệt vời!
+                Excellent!
               </h3>
               <p className="font-outfit text-sm text-[#706065] max-w-sm mb-6">
-                Hôm nay bạn đã ôn tập hết các từ vựng đến hạn. Hãy tiếp tục duy trì streak nhé!
+                You've reviewed all due words for today. Keep your streak going!
               </p>
               <button
                 onClick={() => navigate("/")}
                 className="px-6 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm"
               >
-                Quay lại Hub
+                Back to Hub
               </button>
             </div>
           ) : (
@@ -185,7 +185,7 @@ export default function EnglishVocabularies() {
                     {/* Word Card */}
                     <div className="mb-6">
                       <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4]">
-                        Hộp {wordItem.box_number || 1}
+                        Box {wordItem.box_number || 1}
                       </span>
                       <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] mt-4 tracking-tight">
                         {wordItem.word}
@@ -215,7 +215,7 @@ export default function EnglishVocabularies() {
                         )}
                         {wordItem.notes && (
                           <p className="text-[12px] font-mono text-[#7b5268] bg-[#fcf1f5]/55 p-2 rounded-lg border border-[#ffd8ea]/50">
-                            Ghi chú: {wordItem.notes}
+                            Notes: {wordItem.notes}
                           </p>
                         )}
                       </div>
@@ -224,7 +224,7 @@ export default function EnglishVocabularies() {
                         onClick={() => setRevealMeaning(true)}
                         className="mx-auto mt-4 px-6 py-2.5 bg-[#fcf1f5] text-[#7b5268] border border-[#d2c2c8] rounded-xl font-sora font-semibold text-xs hover:bg-[#EFBCD5]/20 active:scale-95 transition-all"
                       >
-                        Hiển thị nghĩa
+                        Show meaning
                       </button>
                     )}
                   </div>
@@ -236,14 +236,14 @@ export default function EnglishVocabularies() {
                       className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] text-[#706065] font-sora text-[15px] font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <X className="h-4.5 w-4.5 text-red-500 stroke-[2.5px]" />
-                      <span>Quên</span>
+                      <span>Forgot</span>
                     </button>
                     <button
                       onClick={() => handleReview(true)}
                       className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-[15px] font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
                     >
                       <Check className="h-4.5 w-4.5 text-[#201B1E] stroke-[3px]" />
-                      <span>Nhớ</span>
+                      <span>Remembered</span>
                     </button>
                   </div>
                 </div>

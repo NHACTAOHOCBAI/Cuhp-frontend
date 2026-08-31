@@ -140,7 +140,7 @@ export default function Habits() {
     return currentMonday.getTime() === weekStart.getTime()
   }, [weekStart])
 
-  // Format week switcher text: "Tuần này: 31/08 - 06/09"
+  // Format week switcher text: "This Week: 31/08 - 06/09"
   const getWeekSwitcherText = () => {
     const startStr = `${String(weekDates[0].getDate()).padStart(2, "0")}/${String(
       weekDates[0].getMonth() + 1
