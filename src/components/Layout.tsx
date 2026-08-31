@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
-import { LayoutDashboard, Dumbbell, Languages, CheckSquare, LogOut, Menu, User as UserIcon } from "lucide-react"
+import { LayoutDashboard, Dumbbell, Languages, CheckSquare, LogOut, Menu, User as UserIcon, Flame } from "lucide-react"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -18,6 +18,7 @@ export default function Layout({ children }: LayoutProps) {
     { label: "Gym", path: "/gym", icon: Dumbbell },
     { label: "English", path: "/english", icon: Languages },
     { label: "Tasks", path: "/todo", icon: CheckSquare },
+    { label: "Habits", path: "/habits", icon: Flame },
   ]
 
   const handleLogout = async () => {
@@ -43,7 +44,7 @@ export default function Layout({ children }: LayoutProps) {
                 const isActive =
                   item.path === "/"
                     ? location.pathname === "/"
-                    : location.pathname.startsWith(item.path)
+                    : location.pathname.startsWith(item.path) || (item.path === "/todo" && location.pathname.startsWith("/habits"))
                 return (
                   <Link
                     key={item.path}
@@ -113,7 +114,7 @@ export default function Layout({ children }: LayoutProps) {
                 const isActive =
                   item.path === "/"
                     ? location.pathname === "/"
-                    : location.pathname.startsWith(item.path)
+                    : location.pathname.startsWith(item.path) || (item.path === "/todo" && location.pathname.startsWith("/habits"))
                 const Icon = item.icon
                 return (
                   <Link
@@ -156,7 +157,7 @@ export default function Layout({ children }: LayoutProps) {
             const isActive =
               item.path === "/"
                 ? location.pathname === "/"
-                : location.pathname.startsWith(item.path)
+                : location.pathname.startsWith(item.path) || (item.path === "/todo" && location.pathname.startsWith("/habits"))
             const Icon = item.icon
             return (
               <li key={item.path} className="flex-1">

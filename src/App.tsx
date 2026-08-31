@@ -13,7 +13,7 @@ import EnglishReadingDetail from "@/pages/EnglishReadingDetail"
 import EnglishAudioLibrary from "@/pages/EnglishAudioLibrary"
 import EnglishShadowingDetail from "@/pages/EnglishShadowingDetail"
 import Tasks from "@/pages/Tasks"
-
+import Habits from "@/pages/Habits"
 
 export default function App() {
   return (
@@ -70,6 +70,16 @@ export default function App() {
               <ProtectedRoute>
                 <Layout>
                   <Tasks />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/habits"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Habits />
                 </Layout>
               </ProtectedRoute>
             }
