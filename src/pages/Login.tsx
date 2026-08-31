@@ -38,7 +38,7 @@ export default function Login() {
       })
       authLogin(data.token, data.user)
     } catch (err: any) {
-      setError(err.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.")
+      setError(err.message || "Login failed. Please check your credentials.")
     } finally {
       setLoading(false)
     }
@@ -55,7 +55,7 @@ export default function Login() {
             src="https://lh3.googleusercontent.com/aida/AEtjO1XNZHMv5HYlxg6fKteaS5hw4xol086fNr_IXdyEOo35-n7dyMRU7NFF4DlVu5y7uHM4nrD-qVLItN9oHcn2_PoG-yNfmkoWMF8cCpHnvvmp9jKDH_mT7izGNi0rMI168pAFUFpwz3CUk1zZkHUh5Wlj5UsblPkrCX58D1rgIml18QFa2qQsd50SaK3yMRaM1YJlbV863u26637abTNFIsyfdo1QF-3lq5vj1NLuHbUAeFBqHhHaWpN2Q92q"
           />
           <h1 className="font-sora font-bold text-2xl text-[#1f1a1d]">Cuhp Portal</h1>
-          <p className="text-sm text-[#7b5268]">Đăng nhập để vào thế giới bình yên của bạn</p>
+          <p className="text-sm text-[#7b5268]">Sign in to enter your world of serenity</p>
         </div>
 
         {error && (
@@ -67,7 +67,7 @@ export default function Login() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[#7b5268] uppercase tracking-wider font-mono">
-              Tên đăng nhập
+              Username
             </label>
             <input
               type="text"
@@ -75,13 +75,13 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all font-outfit"
-              placeholder="Nhập tên đăng nhập"
+              placeholder="Enter your username"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-[#7b5268] uppercase tracking-wider font-mono">
-              Mật khẩu
+              Password
             </label>
             <input
               type="password"
@@ -89,7 +89,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all font-outfit"
-              placeholder="Nhập mật khẩu"
+              placeholder="Enter your password"
             />
           </div>
 
@@ -98,13 +98,13 @@ export default function Login() {
             disabled={loading}
             className="w-full py-3.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
-            {loading ? "Đang kết nối..." : "Đăng nhập"}
+            {loading ? "Connecting..." : "Sign In"}
           </button>
         </form>
 
         <div className="text-center">
           <p className="text-xs text-[#7b5268]">
-            Tài khoản mặc định: <span className="font-mono bg-[#fcf1f5] px-1 py-0.5 rounded">admin</span> / <span className="font-mono bg-[#fcf1f5] px-1 py-0.5 rounded">admin</span>
+            Default account: <span className="font-mono bg-[#fcf1f5] px-1 py-0.5 rounded">admin</span> / <span className="font-mono bg-[#fcf1f5] px-1 py-0.5 rounded">admin</span>
           </p>
         </div>
       </div>

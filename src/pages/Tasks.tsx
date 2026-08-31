@@ -92,10 +92,10 @@ export default function Tasks() {
         })
       }
       localStorage.setItem(`task_hour_${taskId}`, hour)
-      toast.success(`Đã xếp lịch công việc vào lúc ${hour}`)
+      toast.success(`Scheduled task at ${hour}`)
     } else {
       localStorage.removeItem(`task_hour_${taskId}`)
-      toast.info("Đã xóa công việc khỏi lịch trình ngày")
+      toast.info("Removed task from today's schedule")
     }
     setSchedulingTaskId(null)
   }
@@ -104,7 +104,7 @@ export default function Tasks() {
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTitle.trim()) {
-      toast.error("Vui lòng nhập tiêu đề công việc.")
+      toast.error("Please enter a task title.")
       return
     }
 
@@ -116,13 +116,13 @@ export default function Tasks() {
       },
       {
         onSuccess: () => {
-          toast.success("Đã thêm công việc mới thành công!")
+          toast.success("Task added successfully!")
           setIsModalOpen(false)
           setNewTitle("")
           setNewDesc("")
         },
         onError: (err) => {
-          toast.error(`Lỗi tạo công việc: ${err.message}`)
+          toast.error(`Failed to create task: ${err.message}`)
         },
       }
     )
@@ -133,7 +133,7 @@ export default function Tasks() {
     deleteTodoMutation.mutate(id, {
       onSuccess: () => {
         localStorage.removeItem(`task_hour_${id}`)
-        toast.success("Đã xóa công việc.")
+        toast.success("Task deleted.")
       },
     })
   }
@@ -241,7 +241,7 @@ export default function Tasks() {
                                 onClick={() => handleScheduleTask(task.id, null)}
                                 className="w-full text-left px-2 py-1.5 hover:bg-red-50 text-red-600 rounded font-semibold border-t border-zinc-100"
                               >
-                                Xóa khỏi lịch
+                                Remove from schedule
                               </button>
                             )}
                           </div>
@@ -339,7 +339,7 @@ export default function Tasks() {
                                 onClick={() => handleScheduleTask(task.id, null)}
                                 className="w-full text-left px-2 py-1.5 hover:bg-red-50 text-red-600 rounded font-semibold border-t border-zinc-100"
                               >
-                                Xóa khỏi lịch
+                                Remove from schedule
                               </button>
                             )}
                           </div>
@@ -515,7 +515,7 @@ export default function Tasks() {
                         <button
                           onClick={() => handleScheduleTask(task.id, null)}
                           className="p-1 text-[#706065] hover:text-red-500 rounded-full hover:bg-zinc-100 transition-colors"
-                          title="Gỡ lịch trình"
+                          title="Remove from schedule"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -543,7 +543,7 @@ export default function Tasks() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#E5DFE2]">
-              <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">Thêm công việc mới</h3>
+              <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">New Task</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1.5 text-[#706065] hover:text-[#EFBCD5] rounded-full hover:bg-zinc-50"
@@ -555,42 +555,42 @@ export default function Tasks() {
             <form onSubmit={handleCreateTask} className="space-y-4 font-outfit">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
-                  Tiêu đề
+                  Title
                 </label>
                 <input
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Nhập tiêu đề công việc..."
+                  placeholder="Enter task title..."
                   className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d]"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
-                  Mô tả (Không bắt buộc)
+                  Description (Optional)
                 </label>
                 <textarea
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Nhập chi tiết mô tả công việc..."
+                  placeholder="Enter task details..."
                   className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d] resize-none h-20"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
-                  Ma trận Eisenhower
+                  Eisenhower Matrix
                 </label>
                 <select
                   value={newQuadrant}
                   onChange={(e) => setNewQuadrant(e.target.value as TodoQuadrant)}
                   className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d]"
                 >
-                  <option value="do">Do First (Khẩn cấp & Quan trọng)</option>
-                  <option value="schedule">Schedule (Không khẩn cấp & Quan trọng)</option>
-                  <option value="delegate">Delegate (Khẩn cấp & Không quan trọng)</option>
-                  <option value="eliminate">Eliminate (Không khẩn cấp & Không quan trọng)</option>
+                  <option value="do">Do First (Urgent & Important)</option>
+                  <option value="schedule">Schedule (Not Urgent & Important)</option>
+                  <option value="delegate">Delegate (Urgent & Not Important)</option>
+                  <option value="eliminate">Eliminate (Not Urgent & Not Important)</option>
                 </select>
               </div>
 
@@ -600,14 +600,14 @@ export default function Tasks() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-2.5 border border-[#E5DFE2] text-[#706065] rounded-xl font-sora font-semibold text-xs hover:bg-zinc-50 active:scale-95 transition-all"
                 >
-                  Hủy bỏ
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createTodoMutation.isPending}
                   className="flex-1 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm border border-[#ffd8ea]"
                 >
-                  {createTodoMutation.isPending ? "Đang lưu..." : "Thêm công việc"}
+                  {createTodoMutation.isPending ? "Saving..." : "Add Task"}
                 </button>
               </div>
             </form>

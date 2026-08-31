@@ -107,7 +107,7 @@ export default function Habits() {
       },
       {
         onSuccess: () => {
-          toast.success("Đã cập nhật tiến độ thói quen!")
+          toast.success("Habit progress updated!")
         },
       }
     )
@@ -148,7 +148,7 @@ export default function Habits() {
     const endStr = `${String(weekDates[6].getDate()).padStart(2, "0")}/${String(
       weekDates[6].getMonth() + 1
     ).padStart(2, "0")}`
-    return `${isCurrentWeek ? "Tuần này" : "Thời gian"}: ${startStr} - ${endStr}`
+    return `${isCurrentWeek ? "This Week" : "Period"}: ${startStr} - ${endStr}`
   }
 
   // Modal State for New Habit
@@ -159,7 +159,7 @@ export default function Habits() {
   const handleCreateHabit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!habitName.trim()) {
-      toast.error("Vui lòng nhập tên thói quen.")
+      toast.error("Please enter a habit name.")
       return
     }
 
@@ -173,7 +173,7 @@ export default function Habits() {
       },
       {
         onSuccess: () => {
-          toast.success("Đã thêm thói quen mới!")
+          toast.success("New habit added!")
           setIsModalOpen(false)
           setHabitName("")
           setHabitDesc("")
@@ -183,10 +183,10 @@ export default function Habits() {
   }
 
   const handleDeleteHabit = (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa thói quen này và toàn bộ lịch sử không?")) {
+    if (confirm("Are you sure you want to delete this habit and all its history?")) {
       deleteHabitMutation.mutate(id, {
         onSuccess: () => {
-          toast.success("Đã xóa thói quen.")
+          toast.success("Habit deleted.")
         },
       })
     }
@@ -279,10 +279,10 @@ export default function Habits() {
       {/* Page Header */}
       <header className="mb-[24px]">
         <h1 className="font-sora text-[32px] font-bold text-[#1f1a1d] mb-1.5 tracking-tight">
-          Theo dõi thói quen
+          Habit Tracker
         </h1>
         <p className="font-outfit text-[16px] text-[#706065] font-normal">
-          Kiến tạo thói quen tốt mỗi ngày
+          Build good habits every day
         </p>
       </header>
 
@@ -298,7 +298,7 @@ export default function Habits() {
               <button
                 onClick={handlePrevWeek}
                 className="text-[#706065] hover:text-[#EFBCD5] transition-colors p-1"
-                aria-label="Tuần trước"
+                aria-label="Previous week"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -308,7 +308,7 @@ export default function Habits() {
               <button
                 onClick={handleNextWeek}
                 className="text-[#706065] hover:text-[#EFBCD5] transition-colors p-1"
-                aria-label="Tuần sau"
+                aria-label="Next week"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -320,10 +320,10 @@ export default function Habits() {
                 <thead>
                   <tr className="border-b border-[#E5DFE2]/40">
                     <th className="py-2.5 px-4 font-sora text-xs font-semibold text-transparent w-[40%]">
-                      Thói quen
+                      Habit
                     </th>
                     {weekDates.map((_, idx) => {
-                      const daysMap = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]
+                      const daysMap = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                       return (
                         <th
                           key={idx}
@@ -339,7 +339,7 @@ export default function Habits() {
                   {habits.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-8 text-center text-[#706065] font-outfit text-sm">
-                        Chưa có thói quen nào. Hãy nhấn nút "+ Thêm thói quen" bên dưới!
+                        No habits yet. Click the "+ Add Habit" button below to start!
                       </td>
                     </tr>
                   ) : (
@@ -358,7 +358,7 @@ export default function Habits() {
                               <button
                                 onClick={() => handleDeleteHabit(habit.id)}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-zinc-400 hover:text-red-500 mr-2"
-                                title="Xóa thói quen"
+                                title="Delete habit"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -401,7 +401,7 @@ export default function Habits() {
                 className="flex items-center gap-1 text-[13px] font-sora font-semibold text-[#EFBCD5] hover:text-[#7b5268] transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                <span>Thêm thói quen</span>
+                <span>Add habit</span>
               </button>
             </div>
           </div>
@@ -449,7 +449,7 @@ export default function Habits() {
                             {!isEmpty && (
                               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 bg-[#1f1a1d] text-white text-[10px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap">
                                 <span>{dateStr}</span>
-                                <span>Hoàn thành: {heatmapCompletionMap[dateStr] || 0}</span>
+                                <span>Completed: {heatmapCompletionMap[dateStr] || 0}</span>
                               </div>
                             )}
                           </div>
@@ -483,10 +483,10 @@ export default function Habits() {
             </div>
             <div className="flex-grow min-w-0">
               <h4 className="font-sora font-bold text-[16px] text-[#1f1a1d]">
-                Phong độ tháng 8
+                August Progress
               </h4>
               <p className="text-xs text-[#706065] mt-0.5">
-                Thành công <strong>{stats.activeDays}</strong>/<strong>{stats.totalDays}</strong> ngày trong tháng 8
+                Completed <strong>{stats.activeDays}</strong>/<strong>{stats.totalDays}</strong> days in August
               </p>
               
               {/* Progress bar */}
@@ -563,7 +563,7 @@ export default function Habits() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#E5DFE2]">
-              <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">Tạo thói quen mới</h3>
+              <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">Create New Habit</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1.5 text-[#706065] hover:text-[#EFBCD5] rounded-full hover:bg-zinc-50"
@@ -575,25 +575,25 @@ export default function Habits() {
             <form onSubmit={handleCreateHabit} className="space-y-4 font-outfit">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
-                  Tên thói quen
+                  Habit Name
                 </label>
                 <input
                   type="text"
                   value={habitName}
                   onChange={(e) => setHabitName(e.target.value)}
-                  placeholder="Ví dụ: Uống 2L nước, Học 15 từ vựng..."
+                  placeholder="e.g. Drink 2L water, Learn 15 new words..."
                   className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d]"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
-                  Mô tả (Không bắt buộc)
+                  Description (Optional)
                 </label>
                 <textarea
                   value={habitDesc}
                   onChange={(e) => setHabitDesc(e.target.value)}
-                  placeholder="Mô tả ngắn gọn về thói quen..."
+                  placeholder="A short description of the habit..."
                   className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d] resize-none h-20"
                 />
               </div>
@@ -604,14 +604,14 @@ export default function Habits() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-2.5 border border-[#E5DFE2] text-[#706065] rounded-xl font-sora font-semibold text-xs hover:bg-zinc-50 active:scale-95 transition-all"
                 >
-                  Hủy bỏ
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createHabitMutation.isPending}
                   className="flex-1 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm border border-[#ffd8ea]"
                 >
-                  {createHabitMutation.isPending ? "Đang lưu..." : "Tạo thói quen"}
+                  {createHabitMutation.isPending ? "Saving..." : "Create Habit"}
                 </button>
               </div>
             </form>

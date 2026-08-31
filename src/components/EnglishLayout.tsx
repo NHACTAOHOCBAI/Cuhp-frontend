@@ -70,7 +70,7 @@ export default function EnglishLayout() {
               onClick={handleRestartSession}
               className="w-full py-2.5 bg-[#fcf1f5] text-[#7b5268] font-sora text-[15px] rounded-[24px] font-bold hover:bg-[#EFBCD5]/20 transition-colors border border-[#d2c2c8]"
             >
-              Đặt lại phiên ôn
+              Reset review session
             </button>
           </div>
         )}

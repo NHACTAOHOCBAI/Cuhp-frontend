@@ -162,13 +162,13 @@ export default function Gym() {
         onSuccess: (res) => {
           queryClient.invalidateQueries({ queryKey: ["gym", "exercises"] })
           toast.success(
-            `Đã sao chép ${res.created} bài tập sang tuần sau! ${
-              res.skipped_days ? `(Bỏ qua ${res.skipped_days} ngày đã có dữ liệu)` : ""
+            `Copied ${res.created} exercises to next week! ${
+              res.skipped_days ? `(Skipped ${res.skipped_days} days with existing data)` : ""
             }`
           )
         },
         onError: (err) => {
-          toast.error(`Lỗi sao chép lịch tập: ${err.message}`)
+          toast.error(`Failed to copy workout: ${err.message}`)
         },
       }
     )
@@ -178,7 +178,7 @@ export default function Gym() {
   const handleAddExercise = (e: React.FormEvent) => {
     e.preventDefault()
     if (!exerciseName.trim()) {
-      toast.error("Vui lòng nhập tên bài tập.")
+      toast.error("Please enter an exercise name.")
       return
     }
 
@@ -195,7 +195,7 @@ export default function Gym() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["gym", "exercises"] })
-          toast.success("Đã thêm bài tập mới!")
+          toast.success("Added new exercise!")
           setShowAddModal(false)
           setExerciseName("")
           // Reset default values
@@ -204,18 +204,18 @@ export default function Gym() {
           setWeightKg(60)
         },
         onError: (err) => {
-          toast.error(`Lỗi: ${err.message}`)
+          toast.error(`Error: ${err.message}`)
         },
       }
     )
   }
 
   const handleDeleteExercise = (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa bài tập này?")) {
+    if (confirm("Are you sure you want to delete this exercise?")) {
       deleteExerciseMutation.mutate(id, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["gym", "exercises"] })
-          toast.success("Đã xóa bài tập.")
+          toast.success("Exercise deleted.")
         },
       })
     }
@@ -273,7 +273,7 @@ export default function Gym() {
           <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-sora text-xl font-bold text-[#201B1E] capitalize">
-                {currentMonth.toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
+                {currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
               </h2>
               <div className="flex gap-2">
                 <button
@@ -336,7 +336,7 @@ export default function Gym() {
               <div className="space-y-1">
                 <h2 className="font-sora text-xl font-bold text-[#201B1E]">
                   {selectedDateStr === new Date().toLocaleDateString("sv-SE")
-                    ? "Hôm nay"
+                    ? "Today"
                     : selectedDateStr}
                 </h2>
                 <p className="text-xs text-[#706065] font-medium font-mono uppercase tracking-wider">
@@ -350,7 +350,7 @@ export default function Gym() {
                   disabled={!exercises || exercises.length === 0}
                   className="bg-[#fcf1f5] text-[#7b5268] border border-[#d2c2c8] text-xs font-bold py-2 px-4 rounded-xl hover:bg-[#EFBCD5]/20 active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  Áp dụng tiếp
+                  Apply Forward
                 </button>
               </div>
             </div>
@@ -364,7 +364,7 @@ export default function Gym() {
             ) : !exercises || exercises.length === 0 ? (
               <div className="text-center py-12 text-[#706065] flex flex-col items-center justify-center">
                 <Dumbbell className="h-12 w-12 text-zinc-300 stroke-[1.25px] mb-3" />
-                <p className="text-sm font-medium">Chưa có bài tập nào được lên lịch cho ngày này.</p>
+                <p className="text-sm font-medium">No exercises scheduled for this day.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -372,10 +372,10 @@ export default function Gym() {
                   <thead>
                     <tr className="border-b border-[#E5DFE2] text-[#706065] text-xs uppercase tracking-wider font-mono">
                       <th className="py-3 px-2 font-medium w-8"></th>
-                      <th className="py-3 px-2 font-medium">Bài tập</th>
+                      <th className="py-3 px-2 font-medium">Exercise</th>
                       <th className="py-3 px-2 font-medium text-center">Sets</th>
                       <th className="py-3 px-2 font-medium text-center">Reps</th>
-                      <th className="py-3 px-2 font-medium text-right">Khối lượng</th>
+                      <th className="py-3 px-2 font-medium text-right">Weight</th>
                       <th className="py-3 px-2 font-medium text-center w-12"></th>
                     </tr>
                   </thead>
@@ -419,7 +419,7 @@ export default function Gym() {
                           <button
                             onClick={() => handleDeleteExercise(ex.id)}
                             className="text-zinc-300 hover:text-red-500 transition-colors p-1"
-                            title="Xóa bài tập"
+                            title="Delete exercise"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -436,7 +436,7 @@ export default function Gym() {
                 onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-2 px-5 py-2.5 bg-[#EFBCD5] text-[#201B1E] text-sm font-sora font-bold rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-sm"
               >
-                <Plus className="h-4 w-4 stroke-[3px]" /> Thêm bài tập
+                <Plus className="h-4 w-4 stroke-[3px]" /> Add Exercise
               </button>
             </div>
           </div>
@@ -447,7 +447,7 @@ export default function Gym() {
           {/* Consistency Card */}
           <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col items-center">
             <h3 className="font-sora font-bold text-xl text-[#201B1E] self-start mb-6">
-              Sự đều đặn
+              Consistency
             </h3>
             <div className="relative w-48 h-48 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 160 160">
@@ -476,7 +476,7 @@ export default function Gym() {
                   {consistencyPercent}%
                 </span>
                 <span className="font-mono text-[11px] text-[#706065] mt-0.5">
-                  {completedDays} trên {totalDays} ngày
+                  {completedDays} of {totalDays} days
                 </span>
               </div>
             </div>
@@ -484,12 +484,12 @@ export default function Gym() {
 
           {/* Weekly Volume Card */}
           <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)]">
-            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Thể tích tuần</h3>
+            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Weekly Volume</h3>
             <div className="flex items-end justify-between h-40 px-2 font-mono text-[11px] text-[#706065]">
               {stats?.weekly_volume.map((day, idx) => {
                 const maxVol = Math.max(...stats.weekly_volume.map((d) => d.volume), 100)
                 const heightPercent = Math.max(Math.round((day.volume / maxVol) * 100), 5)
-                const weekday = new Date(day.date).toLocaleDateString("vi-VN", { weekday: "short" })
+                const weekday = new Date(day.date).toLocaleDateString("en-US", { weekday: "short" })
 
                 return (
                   <div key={idx} className="flex flex-col items-center gap-2 w-full">
@@ -514,11 +514,11 @@ export default function Gym() {
 
           {/* Estimated 1RM Card */}
           <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)]">
-            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Ước tính 1RM</h3>
+            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Estimated 1RM</h3>
             <div className="space-y-5 font-outfit">
               <div>
                 <div className="flex justify-between mb-2 text-sm font-semibold">
-                  <span className="text-[#201B1E]">Gánh đùi (Squat)</span>
+                  <span className="text-[#201B1E]">Squat</span>
                   <span className="font-mono text-sm font-bold text-[#7b5268]">
                     {personalRecords.squat} kg
                   </span>
@@ -533,7 +533,7 @@ export default function Gym() {
 
               <div>
                 <div className="flex justify-between mb-2 text-sm font-semibold">
-                  <span className="text-[#201B1E]">Đẩy ngực (Bench Press)</span>
+                  <span className="text-[#201B1E]">Bench Press</span>
                   <span className="font-mono text-sm font-bold text-[#7b5268]">
                     {personalRecords.bench} kg
                   </span>
@@ -548,7 +548,7 @@ export default function Gym() {
 
               <div>
                 <div className="flex justify-between mb-2 text-sm font-semibold">
-                  <span className="text-[#201B1E]">Kéo lưng (Deadlift)</span>
+                  <span className="text-[#201B1E]">Deadlift</span>
                   <span className="font-mono text-sm font-bold text-[#7b5268]">
                     {personalRecords.deadlift} kg
                   </span>
@@ -570,19 +570,19 @@ export default function Gym() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-6">
           <div className="bg-white border border-[#E5DFE2] rounded-[24px] w-full max-w-md p-6 shadow-[0_10px_40px_-5px_rgba(239,188,213,0.3)] animate-in zoom-in-95">
             <h3 className="font-sora font-bold text-[20px] text-[#201B1E] mb-6">
-              Thêm bài tập mới
+              Add New Exercise
             </h3>
 
             <form onSubmit={handleAddExercise} className="space-y-4 font-outfit">
               {/* Exercise Name Input */}
               <div className="space-y-1.5">
                 <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
-                  Tên bài tập
+                  Exercise Name
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Bench Press, Squat, Lat Pulldown..."
+                  placeholder="e.g. Bench Press, Squat, Lat Pulldown..."
                   value={exerciseName}
                   onChange={(e) => setExerciseName(e.target.value)}
                   className="w-full px-4 py-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all"
@@ -592,14 +592,14 @@ export default function Gym() {
               {/* Category Dropdown */}
               <div className="space-y-1.5">
                 <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
-                  Nhóm cơ tập luyện
+                  Muscle Group
                 </label>
                 <select
                   value={selectedCategoryId}
                   onChange={(e) => setSelectedCategoryId(e.target.value)}
                   className="w-full px-4 py-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all"
                 >
-                  <option value="">-- Chọn phân loại nhóm cơ --</option>
+                  <option value="">-- Select muscle group --</option>
                   {categories?.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -612,7 +612,7 @@ export default function Gym() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
-                    Số Sets
+                    Sets
                   </label>
                   <input
                     type="number"
@@ -627,7 +627,7 @@ export default function Gym() {
 
                 <div className="space-y-1.5">
                   <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
-                    Số Reps / Set
+                    Reps / Set
                   </label>
                   <input
                     type="number"
@@ -644,7 +644,7 @@ export default function Gym() {
               {/* Weight input */}
               <div className="space-y-1.5">
                 <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
-                  Khối lượng (kg)
+                  Weight (kg)
                 </label>
                 <input
                   type="number"
@@ -664,13 +664,13 @@ export default function Gym() {
                   onClick={() => setShowAddModal(false)}
                   className="flex-1 py-3 border border-[#E5DFE2] text-[#706065] font-sora font-semibold text-sm rounded-xl hover:bg-zinc-50 active:scale-95 transition-all"
                 >
-                  Hủy bỏ
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-3 bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all"
                 >
-                  Thêm bài tập
+                  Add Exercise
                 </button>
               </div>
             </form>

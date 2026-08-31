@@ -62,14 +62,14 @@ export default function Hub() {
   const gymCategoryName = React.useMemo(() => {
     if (!gymExercises || gymExercises.length === 0) return null
     // Return category name from first exercise or default
-    return gymExercises[0].category?.name || "Luyện tập"
+    return gymExercises[0].category?.name || "Workout"
   }, [gymExercises])
 
   // Calculate gym duration or completed/total count
   const gymProgressText = React.useMemo(() => {
-    if (!gymExercises || gymExercises.length === 0) return "Nghỉ ngơi"
+    if (!gymExercises || gymExercises.length === 0) return "Rest Day"
     const completed = gymExercises.filter((e) => e.completed).length
-    return `${completed}/${gymExercises.length} Bài tập`
+    return `${completed}/${gymExercises.length} Exercises`
   }, [gymExercises])
 
   // Circular progress ring calculation
@@ -106,17 +106,17 @@ export default function Hub() {
             <div className="flex items-center justify-center md:justify-start gap-2 text-[#7b5268]">
               <Flame className="h-8 w-8 text-[#EFBCD5] fill-[#EFBCD5]" />
               <h2 className="font-sora font-bold text-[32px] text-[#1f1a1d] tracking-tight">
-                Streak: {user?.current_streak ?? 0} Ngày
+                Streak: {user?.current_streak ?? 0} Days
               </h2>
             </div>
 
             <div className="bg-[#fcf1f5] rounded-2xl p-4 border border-[#d2c2c8] w-full max-w-md mx-auto md:mx-0">
               <div className="flex justify-between items-center mb-2 font-mono text-[13px] text-[#7b5268] font-medium">
-                <span>Mục tiêu học từ vựng hôm nay</span>
-                <span>{targetPercent}% Hoàn thành</span>
+                <span>Daily vocabulary goal</span>
+                <span>{targetPercent}% Completed</span>
               </div>
               <p className="font-sora text-[18px] font-bold text-[#1f1a1d]">
-                {completedTarget} / {totalTarget} từ vựng
+                {completedTarget} / {totalTarget} words
               </p>
               {/* Slim animated progress bar */}
               <div className="w-full h-2.5 bg-[#eae0e4] rounded-full mt-3 overflow-hidden">
@@ -133,7 +133,7 @@ export default function Hub() {
         <div className="glass-card md:col-span-4 flex flex-col justify-center items-center bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] hover:translate-y-[-2px] hover:shadow-[0_15px_35px_-5px_rgba(239,188,213,0.25)] transition-all duration-300">
           <div className="flex items-center gap-2 w-full mb-6">
             <TrendingUp className="h-5 w-5 text-[#7b5268]" />
-            <h3 className="font-sora font-semibold text-[20px] text-[#4f4449]">Hoạt động</h3>
+            <h3 className="font-sora font-semibold text-[20px] text-[#4f4449]">Activity</h3>
           </div>
 
           <div className="relative w-48 h-48 flex items-center justify-center">
@@ -165,7 +165,7 @@ export default function Hub() {
               <span className="font-sora text-[32px] font-bold text-[#1f1a1d]">
                 {targetPercent}%
               </span>
-              <span className="font-mono text-xs text-[#7b5268] mt-0.5">mục tiêu</span>
+              <span className="font-mono text-xs text-[#7b5268] mt-0.5">of goal</span>
             </div>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function Hub() {
             <div className="flex items-center gap-3 text-[#EFBCD5]">
               <Dumbbell className="h-6 w-6 stroke-[2.5px]" />
               <h3 className="font-sora font-semibold text-[20px] text-[#1f1a1d] truncate max-w-[160px]">
-                {gymCategoryName || "Lịch tập Gym"}
+                {gymCategoryName || "Gym Schedule"}
               </h3>
             </div>
             <span className="font-mono text-[12px] bg-[#f2dde2] text-[#7b5268] px-3 py-1 rounded-full font-medium">
@@ -193,12 +193,12 @@ export default function Hub() {
           ) : !gymExercises || gymExercises.length === 0 ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center text-[#7b5268] py-8">
               <Dumbbell className="h-10 w-10 text-zinc-300 stroke-[1.5px] mb-2" />
-              <p className="text-sm font-medium">Hôm nay không có lịch tập</p>
+              <p className="text-sm font-medium">No workouts scheduled today</p>
               <Link
                 to="/gym"
                 className="mt-4 text-xs font-bold text-[#EFBCD5] flex items-center gap-1 hover:underline"
               >
-                <span>Tạo buổi tập mới</span>
+                <span>Create a new session</span>
                 <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -221,7 +221,7 @@ export default function Hub() {
                 to="/gym"
                 className="mt-4 text-xs font-bold text-[#7b5268] hover:text-[#EFBCD5] flex items-center gap-1 self-end transition-colors"
               >
-                <span>Xem chi tiết buổi tập</span>
+                <span>View session details</span>
                 <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>
@@ -241,10 +241,10 @@ export default function Hub() {
           <div className="flex-grow flex flex-col justify-between">
             <div className="text-center pt-4">
               <p className="font-mono text-xs text-[#7b5268] uppercase tracking-wider mb-1">
-                Từ vựng Leitner cần ôn tập
+                Leitner cards due for review
               </p>
               <h4 className="font-sora font-bold text-[28px] text-[#1f1a1d]">
-                {isVocabLoading ? "..." : `${vocabResponse?.total ?? 0} thẻ`}
+                {isVocabLoading ? "..." : `${vocabResponse?.total ?? 0} cards`}
               </h4>
             </div>
 
@@ -253,17 +253,17 @@ export default function Hub() {
                 onClick={() => navigate("/english")}
                 className="bg-[#efbcd5] text-[#201B1E] w-full py-3 rounded-2xl font-sora text-[15px] font-bold hover:opacity-90 active:scale-[0.98] transition-all border border-[#ffd8ea] flex items-center justify-center gap-2 shadow-sm"
               >
-                <span>Bắt đầu ôn tập</span>
+                <span>Start Review</span>
                 <Play className="h-4 w-4 fill-[#201B1E]" />
               </button>
 
               <div className="flex items-center justify-center gap-3 text-xs font-medium text-[#7b5268]">
                 <Link to="/english/reading" className="hover:text-[#EFBCD5] hover:underline">
-                  Luyện đọc
+                  Reading
                 </Link>
                 <span className="w-1.5 h-1.5 bg-[#E5DFE2] rounded-full"></span>
                 <Link to="/english/audio" className="hover:text-[#EFBCD5] hover:underline">
-                  Luyện nghe
+                  Listening
                 </Link>
               </div>
             </div>
@@ -275,12 +275,12 @@ export default function Hub() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3 text-[#7b5268]">
               <CheckSquare className="h-6 w-6" />
-              <h3 className="font-sora font-semibold text-[20px] text-[#1f1a1d]">Công việc ưu tiên</h3>
+              <h3 className="font-sora font-semibold text-[20px] text-[#1f1a1d]">Priority Tasks</h3>
             </div>
             <button
               onClick={() => navigate("/todo")}
               className="text-[#EFBCD5] hover:bg-[#fcf1f5] p-1.5 rounded-full border border-transparent hover:border-[#eae0e4] transition-all active:scale-90"
-              title="Thêm công việc"
+              title="Add task"
             >
               <Plus className="h-5 w-5 stroke-[2.5px]" />
             </button>
@@ -295,12 +295,12 @@ export default function Hub() {
           ) : priorityTasks.length === 0 ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center text-[#7b5268] py-8">
               <CheckSquare className="h-10 w-10 text-zinc-300 stroke-[1.5px] mb-2" />
-              <p className="text-sm font-medium">Tất cả công việc đã hoàn thành!</p>
+              <p className="text-sm font-medium">All tasks completed!</p>
               <Link
                 to="/todo"
                 className="mt-4 text-xs font-bold text-[#EFBCD5] flex items-center gap-1 hover:underline"
               >
-                <span>Xem bảng công việc</span>
+                <span>View task board</span>
                 <ChevronRight className="h-3 w-3" />
               </Link>
             </div>
@@ -338,7 +338,7 @@ export default function Hub() {
                 to="/todo"
                 className="mt-4 text-xs font-bold text-[#7b5268] hover:text-[#EFBCD5] flex items-center gap-1 self-end transition-colors"
               >
-                <span>Xem chi tiết kế hoạch</span>
+                <span>View plan details</span>
                 <ChevronRight className="h-3.5 w-3.5" />
               </Link>
             </div>

@@ -44,12 +44,12 @@ export default function Layout({ children }: LayoutProps) {
                 const isActive =
                   item.path === "/"
                     ? location.pathname === "/"
-                    : location.pathname.startsWith(item.path) || (item.path === "/todo" && location.pathname.startsWith("/habits"))
+                    : location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`relative font-sora text-[16px] h-full flex items-center transition-colors duration-200 active:scale-95 transition-transform ${
+                    className={`relative font-sora text-[16px] h-full flex items-center justify-center min-w-[64px] transition-colors duration-200 ${
                       isActive
                         ? "text-[#EFBCD5] font-bold"
                         : "text-[#706065] hover:text-[#EFBCD5] font-normal"
@@ -70,7 +70,7 @@ export default function Layout({ children }: LayoutProps) {
                 <button
                   onClick={handleLogout}
                   className="p-1 text-[#EFBCD5] hover:bg-[#F4ECEF] hover:text-[#7b5268] rounded-full transition-colors flex items-center justify-center"
-                  title="Đăng xuất"
+                  title="Sign out"
                 >
                   <UserIcon className="h-7 w-7 stroke-[1.5]" />
                 </button>
@@ -139,7 +139,7 @@ export default function Layout({ children }: LayoutProps) {
               className="mt-auto flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#F4ECEF] text-[#7b5268] font-bold hover:bg-[#EFBCD5]/30 transition-colors"
             >
               <LogOut className="h-5 w-5" />
-              <span>Đăng xuất</span>
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
