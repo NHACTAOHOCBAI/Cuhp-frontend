@@ -1,25 +1,23 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom"
 import { AuthProvider } from "@/hooks/useAuth"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
+import Layout from "@/components/Layout"
+import Hub from "@/pages/Hub"
+import Login from "@/pages/Login"
 
-function ReconstructionPage() {
+function FeaturePlaceholderPage({ name }: { name: string }) {
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-50 p-6 text-center dark:bg-zinc-950">
-      <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-        Workspace Ready for New UI
-      </h1>
-      <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-        All old UI code, custom components, and views have been wiped out.
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-6 bg-white border border-[#E5DFE2] rounded-[24px] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] max-w-lg mx-auto">
+      <h1 className="font-sora font-bold text-2xl text-[#1f1a1d] tracking-tight">{name}</h1>
+      <p className="mt-2 text-sm text-[#7b5268] max-w-md">
+        Trang này đang trong quá trình tái cấu trúc theo bộ giao diện chuẩn hóa mới. 
       </p>
-      <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Preserved Structures:</h2>
-        <ul className="mt-2 list-disc pl-5 text-xs text-zinc-600 dark:text-zinc-400 space-y-1">
-          <li>Tech Stack: React 19, Vite, Tailwind CSS v4, React Router 7</li>
-          <li>Auth Logic: <code>useAuth</code> context</li>
-          <li>API Helper: <code>apiFetch</code></li>
-          <li>Types: <code>src/types.ts</code></li>
-          <li>Features directories: <code>audio</code>, <code>gym</code>, <code>habits</code>, <code>reading</code>, <code>todos</code>, <code>vocabulary</code></li>
-        </ul>
-      </div>
+      <Link
+        to="/"
+        className="mt-6 px-6 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm"
+      >
+        Quay lại trang chủ (Hub)
+      </Link>
     </div>
   )
 }
@@ -29,7 +27,52 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<ReconstructionPage />} />
+          {/* Public login page */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Protected Portal routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Hub />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gym"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FeaturePlaceholderPage name="Gym Tracker" />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/english"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FeaturePlaceholderPage name="English Hub" />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/todo"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <FeaturePlaceholderPage name="Tasks" />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch-all redirects */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
