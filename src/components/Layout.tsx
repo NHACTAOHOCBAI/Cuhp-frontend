@@ -29,7 +29,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen flex flex-col bg-[#FCFAF7] font-outfit text-[#1f1a1d] antialiased">
       {/* Top Navbar */}
       <header className="bg-[#FFFFFF] fixed w-full top-0 border-b border-[#E5DFE2] z-50 h-[72px] flex items-center">
-        <div className="flex justify-between items-center w-full px-[24px] max-w-[1280px] mx-auto h-full">
+        <div className="flex justify-between items-center w-full px-[48px] h-full">
           {/* Logo Brand Text */}
           <Link to="/" className="flex items-center">
             <span className="font-sora font-bold text-[28px] text-[#EFBCD5] tracking-tight">Cuhp</span>
@@ -145,7 +145,7 @@ export default function Layout({ children }: LayoutProps) {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-grow w-full max-w-[1280px] mx-auto px-[24px] pb-[80px] pt-[24px] mt-[92px]">
+      <main className="flex-grow w-full px-[48px] pb-[80px] pt-[24px] mt-[92px]">
         {children}
       </main>
 

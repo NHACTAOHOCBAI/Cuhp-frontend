@@ -200,7 +200,7 @@ export default function EnglishReadingDetail() {
   }
 
   return (
-    <div className="space-y-6 max-w-[1280px] mx-auto w-full relative">
+    <div className="space-y-6 w-full relative">
       {/* Page Header */}
       <header className="mb-[24px]">
         <Link
