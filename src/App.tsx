@@ -8,6 +8,8 @@ import Gym from "@/pages/Gym"
 import EnglishLayout from "@/components/EnglishLayout"
 import EnglishVocabularies from "@/pages/EnglishVocabularies"
 import EnglishAnalytics from "@/pages/EnglishAnalytics"
+import EnglishReadingList from "@/pages/EnglishReadingList"
+import EnglishReadingDetail from "@/pages/EnglishReadingDetail"
 
 function FeaturePlaceholderPage({ name }: { name: string }) {
   return (
@@ -69,10 +71,8 @@ export default function App() {
           >
             <Route index element={<Navigate to="vocabularies" replace />} />
             <Route path="vocabularies" element={<EnglishVocabularies />} />
-            <Route
-              path="reading"
-              element={<FeaturePlaceholderPage name="English Reading List" />}
-            />
+            <Route path="reading" element={<EnglishReadingList />} />
+            <Route path="reading/:id" element={<EnglishReadingDetail />} />
             <Route
               path="listening"
               element={<FeaturePlaceholderPage name="English Listening List" />}
