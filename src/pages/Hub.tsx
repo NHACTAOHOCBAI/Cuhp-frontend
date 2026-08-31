@@ -81,7 +81,7 @@ export default function Hub() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <header className="mt-[48px] mb-[24px]">
+      <header className="mt-4 mb-6">
         <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">The Hub</h1>
         <p className="font-outfit font-normal text-[16px] text-[#706065]">
           Welcome back to your structured serenity.

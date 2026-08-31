@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import Layout from "@/components/Layout"
 import Hub from "@/pages/Hub"
 import Login from "@/pages/Login"
+import Gym from "@/pages/Gym"
 
 function FeaturePlaceholderPage({ name }: { name: string }) {
   return (
@@ -46,7 +47,7 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  <FeaturePlaceholderPage name="Gym Tracker" />
+                  <Gym />
                 </Layout>
               </ProtectedRoute>
             }
