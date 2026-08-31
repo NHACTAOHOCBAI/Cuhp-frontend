@@ -139,10 +139,10 @@ export default function EnglishShadowingDetail() {
         >
           ← Listening Library
         </Link>
-        <h1 className="font-sora text-[32px] font-bold text-[#1f1a1d] leading-tight mb-1">
+        <h1 className="font-sora text-3xl font-bold text-[#1f1a1d] leading-tight mb-1">
           {trackTitle}
         </h1>
-        <p className="font-outfit text-[16px] text-[#7b5268] font-medium">
+        <p className="font-outfit text-base text-[#7b5268] font-semibold">
           Track {track?.id ? track.id.slice(-2) : "04"} • Intermediate • {formatTime(duration)}
         </p>
       </header>
@@ -177,7 +177,7 @@ export default function EnglishShadowingDetail() {
                   style={{ width: `${(currentTime / duration) * 100}%` }}
                 />
               </div>
-              <div className="flex justify-between items-center text-[14px] text-[#706065] font-mono">
+              <div className="flex justify-between items-center text-sm text-[#706065] font-mono">
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
@@ -220,10 +220,10 @@ export default function EnglishShadowingDetail() {
               />
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-[12px] text-[#EFBCD5] uppercase tracking-wider mb-1 font-bold">
+              <span className="text-xs text-[#EFBCD5] uppercase tracking-wider mb-1 font-bold">
                 Focus Tip
               </span>
-              <p className="text-sm font-medium text-[#1f1a1d]">
+              <p className="text-sm font-semibold text-[#1f1a1d]">
                 "Take a deep breath and match the speaker's rhythm."
               </p>
             </div>
@@ -245,7 +245,7 @@ export default function EnglishShadowingDetail() {
             </div>
 
             {/* Sentences Transcript Scroller */}
-            <div className="flex-grow overflow-y-auto pr-2 space-y-4 text-[18px] font-outfit text-[#4f4449] leading-relaxed select-text hide-scrollbar pb-16">
+            <div className="flex-grow overflow-y-auto pr-2 space-y-4 text-lg font-outfit text-[#4f4449] leading-relaxed select-text hide-scrollbar pb-16">
               {sentences.map((sentence, idx) => {
                 const isActive = idx === activeSentenceIndex
                 return (
@@ -289,7 +289,7 @@ export default function EnglishShadowingDetail() {
               >
                 <Mic className="h-7 w-7 stroke-[2.25]" />
               </button>
-              <span className="text-[12px] text-[#706065] font-semibold">
+              <span className="text-xs text-[#706065] font-semibold">
                 {isRecording ? "Tap to stop recording" : "Tap to start shadowing"}
               </span>
             </div>

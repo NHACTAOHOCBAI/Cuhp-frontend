@@ -278,10 +278,10 @@ export default function Habits() {
     <div className="space-y-6">
       {/* Page Header */}
       <header className="mb-[24px]">
-        <h1 className="font-sora text-[32px] font-bold text-[#1f1a1d] mb-1.5 tracking-tight">
+        <h1 className="font-sora text-3xl font-bold text-[#1f1a1d] mb-1.5 tracking-tight">
           Habit Tracker
         </h1>
-        <p className="font-outfit text-[16px] text-[#706065] font-normal">
+        <p className="font-outfit text-base text-[#706065] font-normal">
           Build good habits every day
         </p>
       </header>
@@ -327,7 +327,7 @@ export default function Habits() {
                       return (
                         <th
                           key={idx}
-                          className="py-2.5 px-1 font-sora text-[12px] font-bold text-center text-[#706065] w-[8.5%]"
+                          className="py-2.5 px-1 font-sora text-xs font-bold text-center text-[#706065] w-[8.5%]"
                         >
                           {daysMap[idx]}
                         </th>
@@ -352,7 +352,7 @@ export default function Habits() {
                           {/* Habit Title */}
                           <td className="py-4 px-4 align-middle">
                             <div className="flex justify-between items-center w-full">
-                              <span className="font-outfit text-[15px] font-semibold text-[#1f1a1d] truncate max-w-[200px]" title={habit.name}>
+                              <span className="font-outfit text-base font-semibold text-[#1f1a1d] truncate max-w-[200px]" title={habit.name}>
                                 {habit.name}
                               </span>
                               <button
@@ -381,7 +381,7 @@ export default function Habits() {
                                       : "border-[#d2c2c8] bg-white text-transparent hover:border-[#EFBCD5]"
                                   }`}
                                 >
-                                  {completed && <span className="text-[12px] font-bold">✓</span>}
+                                  {completed && <span className="text-xs font-bold">✓</span>}
                                 </button>
                               </td>
                             )
@@ -398,7 +398,7 @@ export default function Habits() {
             <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1 text-[13px] font-sora font-semibold text-[#EFBCD5] hover:text-[#7b5268] transition-colors"
+                className="flex items-center gap-1 text-sm font-sora font-semibold text-[#EFBCD5] hover:text-[#7b5268] transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add habit</span>
@@ -408,7 +408,7 @@ export default function Habits() {
 
           {/* Long-term Consistency Heatmap Card */}
           <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6 font-outfit">
-            <h3 className="font-sora font-bold text-[20px] text-[#1f1a1d] mb-6 flex items-center gap-2">
+            <h3 className="font-sora font-bold text-xl text-[#1f1a1d] mb-6 flex items-center gap-2">
               <Calendar className="h-5.5 w-5.5 text-[#7b5268]" /> Long-term Consistency
             </h3>
 
@@ -424,7 +424,7 @@ export default function Habits() {
               {/* Grid rows */}
               <div className="flex gap-2">
                 {/* Y-axis Labels */}
-                <div className="flex flex-col justify-between h-[105px] font-sora text-[11px] text-[#706065] w-6 pr-2 py-0.5 select-none">
+                <div className="flex flex-col justify-between h-[105px] font-sora text-xs text-[#706065] w-6 pr-2 py-0.5 select-none">
                   <span></span>
                   <span>W</span>
                   <span></span>
@@ -447,7 +447,7 @@ export default function Habits() {
                             )}`}
                           >
                             {!isEmpty && (
-                              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 bg-[#1f1a1d] text-white text-[10px] px-1.5 py-0.5 rounded shadow-md whitespace-nowrap">
+                              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 bg-[#1f1a1d] text-white text-xs px-1.5 py-0.5 rounded shadow-md whitespace-nowrap">
                                 <span>{dateStr}</span>
                                 <span>Completed: {heatmapCompletionMap[dateStr] || 0}</span>
                               </div>
@@ -482,7 +482,7 @@ export default function Habits() {
               <Star className="h-6 w-6 fill-[#7b5268]/20" />
             </div>
             <div className="flex-grow min-w-0">
-              <h4 className="font-sora font-bold text-[16px] text-[#1f1a1d]">
+              <h4 className="font-sora font-bold text-base text-[#1f1a1d]">
                 August Progress
               </h4>
               <p className="text-xs text-[#706065] mt-0.5">
@@ -545,7 +545,7 @@ export default function Habits() {
               </svg>
 
               {/* Float tooltip over milestone */}
-              <div className="absolute right-0 top-3 z-30 bg-[#1f1a1d] text-white font-sora font-semibold text-[11px] px-2.5 py-1.5 rounded-lg shadow-md flex items-center gap-1 select-none">
+              <div className="absolute right-0 top-3 z-30 bg-[#1f1a1d] text-white font-sora font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-md flex items-center gap-1 select-none">
                 <span>15 days streak!</span>
                 {/* Downward triangle arrow */}
                 <div className="absolute bottom-[-4px] right-6 w-2 h-2 bg-[#1f1a1d] rotate-45" />

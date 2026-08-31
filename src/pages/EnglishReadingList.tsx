@@ -71,10 +71,10 @@ export default function EnglishReadingList() {
     <div className="space-y-6">
       {/* Page Header */}
       <header className="mt-4 mb-6">
-        <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">
+        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
           Reading Library
         </h1>
-        <p className="font-outfit font-normal text-[16px] text-[#706065]">
+        <p className="font-outfit font-normal text-base text-[#706065]">
           Explore and practice your reading comprehension
         </p>
       </header>
@@ -94,7 +94,7 @@ export default function EnglishReadingList() {
         </div>
 
         {/* Level Filters (Stitch Pills style) */}
-        <div className="flex flex-wrap gap-3 font-mono text-[14px] font-medium">
+        <div className="flex flex-wrap gap-3 font-mono text-sm font-semibold">
           {levelFilters.map((lvl) => {
             const isSelected = selectedLevel === lvl.value
             return (
@@ -131,7 +131,7 @@ export default function EnglishReadingList() {
       ) : !listResponse?.items || listResponse.items.length === 0 ? (
         <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px] text-[#706065]">
           <BookOpen className="h-12 w-12 text-zinc-300 stroke-[1.25] mx-auto mb-3" />
-          <p className="font-outfit text-sm font-medium">No matching passages found.</p>
+          <p className="font-outfit text-sm font-semibold">No matching passages found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,7 +169,7 @@ export default function EnglishReadingList() {
                 {/* Top Difficulty badge & Bookmark icon */}
                 <div className="flex justify-between items-start">
                   <span
-                    className={`px-3 py-1 rounded-full font-mono text-[12px] font-medium ${levelColorClass}`}
+                    className={`px-3 py-1 rounded-full font-mono text-xs font-semibold ${levelColorClass}`}
                   >
                     {levelLabel}
                   </span>
@@ -179,14 +179,14 @@ export default function EnglishReadingList() {
                 </div>
 
                 {/* Title */}
-                <h2 className="font-sora text-[24px] font-semibold text-[#201B1E] leading-[1.3] line-clamp-2 cursor-pointer hover:text-[#EFBCD5] transition-colors flex-grow mt-3" onClick={() => navigate(`/english/reading/${passage.id}`)}>
+                <h2 className="font-sora text-2xl font-semibold text-[#201B1E] leading-[1.3] line-clamp-2 cursor-pointer hover:text-[#EFBCD5] transition-colors flex-grow mt-3" onClick={() => navigate(`/english/reading/${passage.id}`)}>
                   {passage.title}
                 </h2>
 
                 {/* Stats and actions column aligned at bottom */}
                 <div className="space-y-4 mt-auto">
                   {/* Mono text stats block */}
-                  <div className="font-mono text-[12px] font-medium text-[#4f4449] flex items-center gap-2 flex-wrap">
+                  <div className="font-mono text-xs font-semibold text-[#4f4449] flex items-center gap-2 flex-wrap">
                     <BookOpen className="h-4.5 w-4.5 stroke-[1.8]" />
                     <span>{stats.words} words</span>
                     <span className="text-zinc-300">•</span>
@@ -199,7 +199,7 @@ export default function EnglishReadingList() {
 
                   {/* Horizontal progress bar */}
                   <div>
-                    <div className={`flex justify-between font-mono text-[12px] font-medium mb-1 ${progressTextColorClass}`}>
+                    <div className={`flex justify-between font-mono text-xs font-semibold mb-1 ${progressTextColorClass}`}>
                       <span>{progressText}</span>
                       <span>{progress}%</span>
                     </div>
@@ -215,7 +215,7 @@ export default function EnglishReadingList() {
                   {progress === 100 ? (
                     <button
                       onClick={() => navigate(`/english/reading/${passage.id}`)}
-                      className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#fcf1f5] transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-base hover:bg-[#fcf1f5] transition-colors flex items-center justify-center gap-2"
                     >
                       <Languages className="h-5 w-5 stroke-[1.8]" />
                       <span>Read Bilingual</span>
@@ -223,7 +223,7 @@ export default function EnglishReadingList() {
                   ) : progress > 0 ? (
                     <button
                       onClick={() => navigate(`/english/reading/${passage.id}`)}
-                      className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#ebb8d1] transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-base hover:bg-[#ebb8d1] transition-colors flex items-center justify-center gap-2"
                     >
                       <Languages className="h-5 w-5 stroke-[1.8]" />
                       <span>Continue Reading</span>
@@ -231,7 +231,7 @@ export default function EnglishReadingList() {
                   ) : (
                     <button
                       onClick={() => navigate(`/english/reading/${passage.id}`)}
-                      className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#ebb8d1] transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-base hover:bg-[#ebb8d1] transition-colors flex items-center justify-center gap-2"
                     >
                       <Languages className="h-5 w-5 stroke-[1.8]" />
                       <span>Read Bilingual</span>

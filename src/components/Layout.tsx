@@ -33,7 +33,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex justify-between items-center w-full px-[48px] h-full">
           {/* Logo Brand Text */}
           <Link to="/" className="flex items-center">
-            <span className="font-sora font-bold text-[28px] text-[#EFBCD5] tracking-tight">Cuhp</span>
+            <span className="font-sora font-bold text-2xl text-[#EFBCD5] tracking-tight">Cuhp</span>
           </Link>
 
           {/* Grouped links and actions on the right */}
@@ -49,7 +49,7 @@ export default function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`relative font-sora text-[16px] h-full flex items-center justify-center min-w-[64px] transition-colors duration-200 ${
+                    className={`relative font-sora text-base h-full flex items-center justify-center min-w-[64px] transition-colors duration-200 ${
                       isActive
                         ? "text-[#EFBCD5] font-bold"
                         : "text-[#706065] hover:text-[#EFBCD5] font-normal"
@@ -168,7 +168,7 @@ export default function Layout({ children }: LayoutProps) {
                   }`}
                 >
                   <Icon className={`h-6 w-6 ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
-                  <span className="text-[10px] mt-1 font-mono">{item.label}</span>
+                  <span className="text-xs mt-1 font-mono">{item.label}</span>
                 </Link>
               </li>
             )

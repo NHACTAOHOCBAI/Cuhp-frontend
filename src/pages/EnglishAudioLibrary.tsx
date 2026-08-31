@@ -66,10 +66,10 @@ export default function EnglishAudioLibrary() {
     <div className="space-y-6">
       {/* Page Header */}
       <header className="mt-4 mb-6">
-        <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">
+        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
           Listening Library
         </h1>
-        <p className="font-outfit font-normal text-[16px] text-[#706065]">
+        <p className="font-outfit font-normal text-base text-[#706065]">
           Boost your listening skills with carefully designed shadowing exercises.
         </p>
       </header>
@@ -89,7 +89,7 @@ export default function EnglishAudioLibrary() {
         </div>
 
         {/* Category Filters (Stitch style pills) */}
-        <div className="flex flex-wrap gap-3 font-mono text-[14px] font-medium">
+        <div className="flex flex-wrap gap-3 font-mono text-sm font-semibold">
           {categoryFilters.map((cat) => {
             const isSelected = selectedCategory === cat.value
             return (
@@ -126,7 +126,7 @@ export default function EnglishAudioLibrary() {
       ) : !listResponse?.items || listResponse.items.length === 0 ? (
         <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px] text-[#706065]">
           <Headphones className="h-12 w-12 text-zinc-300 stroke-[1.25] mx-auto mb-3" />
-          <p className="font-outfit text-sm font-medium">No matching tracks found.</p>
+          <p className="font-outfit text-sm font-semibold">No matching tracks found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -157,7 +157,7 @@ export default function EnglishAudioLibrary() {
                 {/* Top Difficulty badge & Bookmark button */}
                 <div className="flex justify-between items-start">
                   <span
-                    className={`px-3 py-1 rounded-full font-mono text-[12px] font-medium border ${levelColorClass}`}
+                    className={`px-3 py-1 rounded-full font-mono text-xs font-semibold border ${levelColorClass}`}
                   >
                     {levelLabel}
                   </span>
@@ -167,13 +167,13 @@ export default function EnglishAudioLibrary() {
                 </div>
 
                 {/* Title */}
-                <h2 className="font-sora text-[24px] font-semibold text-[#201B1E] leading-[1.3] line-clamp-2 cursor-pointer hover:text-[#EFBCD5] transition-colors flex-grow mt-3" onClick={() => navigate(`/english/listening/${track.id}`)}>
+                <h2 className="font-sora text-2xl font-semibold text-[#201B1E] leading-[1.3] line-clamp-2 cursor-pointer hover:text-[#EFBCD5] transition-colors flex-grow mt-3" onClick={() => navigate(`/english/listening/${track.id}`)}>
                   {track.title}
                 </h2>
 
                 {/* Details Meta */}
                 <div className="space-y-4">
-                  <div className="font-mono text-[12px] font-medium text-[#4f4449] space-y-1">
+                  <div className="font-mono text-xs font-semibold text-[#4f4449] space-y-1">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 stroke-[1.8]" />
                       <span>{stats.duration}</span>
@@ -207,7 +207,7 @@ export default function EnglishAudioLibrary() {
                   {/* Progress slide & Action button */}
                   <div className="pt-4 border-t border-[#E5DFE2]/70 flex flex-col gap-3">
                     <div>
-                      <div className="flex justify-between font-mono text-[12px] font-medium text-zinc-700 mb-1">
+                      <div className="flex justify-between font-mono text-xs font-semibold text-zinc-700 mb-1">
                         <span>Completed</span>
                         <span>{progress}%</span>
                       </div>
@@ -222,7 +222,7 @@ export default function EnglishAudioLibrary() {
                     {progress === 100 ? (
                       <button
                         onClick={() => navigate(`/english/listening/${track.id}`)}
-                        className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#fcf1f5] transition-all flex items-center justify-center gap-2 active:scale-98"
+                        className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-base hover:bg-[#fcf1f5] transition-all flex items-center justify-center gap-2 active:scale-98"
                       >
                         <RotateCcw className="h-5 w-5 stroke-[1.8]" />
                         <span>Practice Shadowing</span>
@@ -230,7 +230,7 @@ export default function EnglishAudioLibrary() {
                     ) : (
                       <button
                         onClick={() => navigate(`/english/listening/${track.id}`)}
-                        className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] hover:bg-[#ebb8d1] transition-all flex items-center justify-center gap-2 active:scale-98"
+                        className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-base hover:bg-[#ebb8d1] transition-all flex items-center justify-center gap-2 active:scale-98"
                       >
                         <Mic className="h-5 w-5 stroke-[1.8]" />
                         <span>Practice Shadowing</span>

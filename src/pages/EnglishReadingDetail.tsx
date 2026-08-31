@@ -163,7 +163,7 @@ export default function EnglishReadingDetail() {
         <span
           key={idx}
           onClick={(e) => handleWordClick(e, cleanWord)}
-          className="hover:bg-[#EFBCD5]/35 hover:text-[#7b5268] cursor-pointer px-0.5 rounded transition-all inline-block font-medium"
+          className="hover:bg-[#EFBCD5]/35 hover:text-[#7b5268] cursor-pointer px-0.5 rounded transition-all inline-block font-semibold"
         >
           {chunk}
         </span>
@@ -191,7 +191,7 @@ export default function EnglishReadingDetail() {
   if (!passage) {
     return (
       <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px]">
-        <p className="font-outfit text-sm font-medium text-[#706065]">This passage was not found.</p>
+        <p className="font-outfit text-sm font-semibold text-[#706065]">This passage was not found.</p>
         <Link to="/english/reading" className="mt-4 text-xs font-bold text-[#EFBCD5] hover:underline">
           Back to reading library
         </Link>
@@ -209,7 +209,7 @@ export default function EnglishReadingDetail() {
         >
           <ArrowLeft className="h-4 w-4" /> Reading Library
         </Link>
-        <h1 className="font-sora font-bold text-[32px] text-[#201B1E] mb-1">{passage.title}</h1>
+        <h1 className="font-sora font-bold text-3xl text-[#201B1E] mb-1">{passage.title}</h1>
         <div className="font-mono text-xs font-bold text-[#70495e] uppercase tracking-wider">
           {passage.level ? `${passage.level} Level` : "General English"} • 5 min read
         </div>
@@ -222,7 +222,7 @@ export default function EnglishReadingDetail() {
           <h3 className="font-sora font-bold text-lg text-[#1f1a1d] mb-4 pb-3 border-b border-[#E5DFE2]/70">
             English Text (Click a word to translate)
           </h3>
-          <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-zinc-800 text-[16px] leading-[1.7] font-outfit select-text hide-scrollbar">
+          <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-zinc-800 text-base leading-[1.7] font-outfit select-text hide-scrollbar">
             {passage.content.split("\n\n").map((para, idx) => (
               <p key={idx}>{renderInteractiveText(para)}</p>
             ))}
@@ -256,7 +256,7 @@ export default function EnglishReadingDetail() {
 
           {/* Key Vocabulary Highlights Panel */}
           <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0">
-            <h3 className="font-sora font-bold text-[16px] text-[#201B1E] mb-4 flex items-center gap-2">
+            <h3 className="font-sora font-bold text-base text-[#201B1E] mb-4 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#EFBCD5]" /> Key Vocabulary in Passage
             </h3>
             <ul className="space-y-3 font-outfit">
@@ -267,8 +267,8 @@ export default function EnglishReadingDetail() {
                   className="flex justify-between items-center p-2.5 hover:bg-[#fcf1f5] rounded-xl cursor-pointer transition-colors border-b border-[#E5DFE2]/40 last:border-0 pb-3"
                 >
                   <div>
-                    <span className="font-bold text-[15px] text-[#1f1a1d]">{item.word}</span>
-                    <span className="font-mono text-xs text-[#706065] ml-2 font-medium">
+                    <span className="font-bold text-base text-[#1f1a1d]">{item.word}</span>
+                    <span className="font-mono text-xs text-[#706065] ml-2 font-semibold">
                       {item.ipa}
                     </span>
                   </div>
@@ -296,7 +296,7 @@ export default function EnglishReadingDetail() {
           ) : lookupData ? (
             <div className="space-y-3">
               <div>
-                <h4 className="font-sora font-bold text-[18px] text-[#1f1a1d]">
+                <h4 className="font-sora font-bold text-lg text-[#1f1a1d]">
                   {lookupData.word}
                 </h4>
                 {lookupData.pronunciation && (
@@ -305,7 +305,7 @@ export default function EnglishReadingDetail() {
                   </p>
                 )}
                 {lookupData.word_type && (
-                  <span className="text-[10px] font-bold uppercase font-mono text-[#706065]/50 mt-0.5 block">
+                  <span className="text-xs font-bold uppercase font-mono text-[#706065]/50 mt-0.5 block">
                     ({lookupData.word_type})
                   </span>
                 )}
@@ -321,7 +321,7 @@ export default function EnglishReadingDetail() {
               </button>
             </div>
           ) : (
-            <div className="text-xs font-medium text-red-500 py-2">No definition found.</div>
+            <div className="text-xs font-semibold text-red-500 py-2">No definition found.</div>
           )}
         </div>
       )}

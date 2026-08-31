@@ -82,8 +82,8 @@ export default function Hub() {
     <div className="space-y-8">
       {/* Page Header */}
       <header className="mt-4 mb-6">
-        <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">The Hub</h1>
-        <p className="font-outfit font-normal text-[16px] text-[#706065]">
+        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">The Hub</h1>
+        <p className="font-outfit font-normal text-base text-[#706065]">
           Welcome back to your structured serenity.
         </p>
       </header>
@@ -105,17 +105,17 @@ export default function Hub() {
           <div className="flex-grow text-center md:text-left space-y-4 w-full">
             <div className="flex items-center justify-center md:justify-start gap-2 text-[#7b5268]">
               <Flame className="h-8 w-8 text-[#EFBCD5] fill-[#EFBCD5]" />
-              <h2 className="font-sora font-bold text-[32px] text-[#1f1a1d] tracking-tight">
+              <h2 className="font-sora font-bold text-3xl text-[#1f1a1d] tracking-tight">
                 Streak: {user?.current_streak ?? 0} Days
               </h2>
             </div>
 
             <div className="bg-[#fcf1f5] rounded-2xl p-4 border border-[#d2c2c8] w-full max-w-md mx-auto md:mx-0">
-              <div className="flex justify-between items-center mb-2 font-mono text-[13px] text-[#7b5268] font-medium">
+              <div className="flex justify-between items-center mb-2 font-mono text-sm text-[#7b5268] font-semibold">
                 <span>Daily vocabulary goal</span>
                 <span>{targetPercent}% Completed</span>
               </div>
-              <p className="font-sora text-[18px] font-bold text-[#1f1a1d]">
+              <p className="font-sora text-lg font-bold text-[#1f1a1d]">
                 {completedTarget} / {totalTarget} words
               </p>
               {/* Slim animated progress bar */}
@@ -133,7 +133,7 @@ export default function Hub() {
         <div className="glass-card md:col-span-4 flex flex-col justify-center items-center bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] hover:translate-y-[-2px] hover:shadow-[0_15px_35px_-5px_rgba(239,188,213,0.25)] transition-all duration-300">
           <div className="flex items-center gap-2 w-full mb-6">
             <TrendingUp className="h-5 w-5 text-[#7b5268]" />
-            <h3 className="font-sora font-semibold text-[20px] text-[#4f4449]">Activity</h3>
+            <h3 className="font-sora font-semibold text-xl text-[#4f4449]">Activity</h3>
           </div>
 
           <div className="relative w-48 h-48 flex items-center justify-center">
@@ -162,7 +162,7 @@ export default function Hub() {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center text-center">
-              <span className="font-sora text-[32px] font-bold text-[#1f1a1d]">
+              <span className="font-sora text-3xl font-bold text-[#1f1a1d]">
                 {targetPercent}%
               </span>
               <span className="font-mono text-xs text-[#7b5268] mt-0.5">of goal</span>
@@ -175,11 +175,11 @@ export default function Hub() {
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-3 text-[#EFBCD5]">
               <Dumbbell className="h-6 w-6 stroke-[2.5px]" />
-              <h3 className="font-sora font-semibold text-[20px] text-[#1f1a1d] truncate max-w-[160px]">
+              <h3 className="font-sora font-semibold text-xl text-[#1f1a1d] truncate max-w-[160px]">
                 {gymCategoryName || "Gym Schedule"}
               </h3>
             </div>
-            <span className="font-mono text-[12px] bg-[#f2dde2] text-[#7b5268] px-3 py-1 rounded-full font-medium">
+            <span className="font-mono text-xs bg-[#f2dde2] text-[#7b5268] px-3 py-1 rounded-full font-semibold">
               {gymProgressText}
             </span>
           </div>
@@ -193,7 +193,7 @@ export default function Hub() {
           ) : !gymExercises || gymExercises.length === 0 ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center text-[#7b5268] py-8">
               <Dumbbell className="h-10 w-10 text-zinc-300 stroke-[1.5px] mb-2" />
-              <p className="text-sm font-medium">No workouts scheduled today</p>
+              <p className="text-sm font-semibold">No workouts scheduled today</p>
               <Link
                 to="/gym"
                 className="mt-4 text-xs font-bold text-[#EFBCD5] flex items-center gap-1 hover:underline"
@@ -210,7 +210,7 @@ export default function Hub() {
                     key={ex.id}
                     className="flex items-center justify-between pb-3 border-b border-[#eae0e4]/80 last:border-0 last:pb-0"
                   >
-                    <span className="font-outfit text-sm text-[#1f1a1d] font-medium">{ex.name}</span>
+                    <span className="font-outfit text-sm text-[#1f1a1d] font-semibold">{ex.name}</span>
                     <span className="font-mono text-xs text-[#7b5268] bg-[#fcf1f5] px-2 py-1 rounded-md border border-[#eae0e4]/50">
                       {ex.sets}x{ex.reps} {ex.weight ? `(${ex.weight}kg)` : ""}
                     </span>
@@ -235,7 +235,7 @@ export default function Hub() {
 
           <div className="flex items-center gap-3 text-[#7b5268] mb-6 z-10">
             <Languages className="h-6 w-6" />
-            <h3 className="font-sora font-semibold text-[20px] text-[#1f1a1d]">English Hub</h3>
+            <h3 className="font-sora font-semibold text-xl text-[#1f1a1d]">English Hub</h3>
           </div>
 
           <div className="flex-grow flex flex-col justify-between">
@@ -243,7 +243,7 @@ export default function Hub() {
               <p className="font-mono text-xs text-[#7b5268] uppercase tracking-wider mb-1">
                 Leitner cards due for review
               </p>
-              <h4 className="font-sora font-bold text-[28px] text-[#1f1a1d]">
+              <h4 className="font-sora font-bold text-2xl text-[#1f1a1d]">
                 {isVocabLoading ? "..." : `${vocabResponse?.total ?? 0} cards`}
               </h4>
             </div>
@@ -251,13 +251,13 @@ export default function Hub() {
             <div className="space-y-4">
               <button
                 onClick={() => navigate("/english")}
-                className="bg-[#efbcd5] text-[#201B1E] w-full py-3 rounded-2xl font-sora text-[15px] font-bold hover:opacity-90 active:scale-[0.98] transition-all border border-[#ffd8ea] flex items-center justify-center gap-2 shadow-sm"
+                className="bg-[#efbcd5] text-[#201B1E] w-full py-3 rounded-2xl font-sora text-base font-bold hover:opacity-90 active:scale-[0.98] transition-all border border-[#ffd8ea] flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Start Review</span>
                 <Play className="h-4 w-4 fill-[#201B1E]" />
               </button>
 
-              <div className="flex items-center justify-center gap-3 text-xs font-medium text-[#7b5268]">
+              <div className="flex items-center justify-center gap-3 text-xs font-semibold text-[#7b5268]">
                 <Link to="/english/reading" className="hover:text-[#EFBCD5] hover:underline">
                   Reading
                 </Link>
@@ -275,7 +275,7 @@ export default function Hub() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3 text-[#7b5268]">
               <CheckSquare className="h-6 w-6" />
-              <h3 className="font-sora font-semibold text-[20px] text-[#1f1a1d]">Priority Tasks</h3>
+              <h3 className="font-sora font-semibold text-xl text-[#1f1a1d]">Priority Tasks</h3>
             </div>
             <button
               onClick={() => navigate("/todo")}
@@ -295,7 +295,7 @@ export default function Hub() {
           ) : priorityTasks.length === 0 ? (
             <div className="flex-grow flex flex-col items-center justify-center text-center text-[#7b5268] py-8">
               <CheckSquare className="h-10 w-10 text-zinc-300 stroke-[1.5px] mb-2" />
-              <p className="text-sm font-medium">All tasks completed!</p>
+              <p className="text-sm font-semibold">All tasks completed!</p>
               <Link
                 to="/todo"
                 className="mt-4 text-xs font-bold text-[#EFBCD5] flex items-center gap-1 hover:underline"

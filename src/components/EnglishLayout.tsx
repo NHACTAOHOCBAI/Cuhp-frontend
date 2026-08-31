@@ -24,8 +24,8 @@ export default function EnglishLayout() {
       {/* SideNavBar (Desktop Aside Layout) */}
       <aside className="w-full md:w-64 flex flex-col border-r border-[#E5DFE2] md:sticky md:top-[120px] flex-shrink-0 md:pr-[24px] gap-[8px] pb-6 md:pb-0">
         <div className="mb-[24px]">
-          <h2 className="font-sora text-[24px] font-bold text-[#EFBCD5] tracking-tight">English Hub</h2>
-          <p className="font-outfit text-[12px] text-[#706065] mt-1">Level: Upper Intermediate</p>
+          <h2 className="font-sora text-2xl font-bold text-[#EFBCD5] tracking-tight">English Hub</h2>
+          <p className="font-outfit text-xs text-[#706065] mt-1">Level: Upper Intermediate</p>
         </div>
 
         <nav className="flex flex-col gap-1.5 flex-grow">
@@ -38,10 +38,10 @@ export default function EnglishLayout() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="flex items-center gap-[12px] px-[12px] py-2.5 rounded-xl text-left text-[#706065] hover:bg-[#F6EBEF] hover:text-[#EFBCD5] transition-all font-medium"
+                  className="flex items-center gap-[12px] px-[12px] py-2.5 rounded-xl text-left text-[#706065] hover:bg-[#F6EBEF] hover:text-[#EFBCD5] transition-all font-semibold"
                 >
                   <Icon className="h-5 w-5" />
-                  <span className="font-outfit text-[14px]">{item.label}</span>
+                  <span className="font-outfit text-sm">{item.label}</span>
                 </Link>
               )
             }
@@ -53,11 +53,11 @@ export default function EnglishLayout() {
                 className={`flex items-center gap-[12px] px-[12px] py-2.5 rounded-xl text-left transition-all ${
                   isActive
                     ? "bg-[#fcf1f5] text-[#7b5268] font-bold border-l-4 border-[#EFBCD5]"
-                    : "text-[#706065] hover:bg-[#F6EBEF] hover:text-[#EFBCD5] font-medium"
+                    : "text-[#706065] hover:bg-[#F6EBEF] hover:text-[#EFBCD5] font-semibold"
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                <span className="font-outfit text-[14px]">{item.label}</span>
+                <span className="font-outfit text-sm">{item.label}</span>
               </Link>
             )
           })}
@@ -68,7 +68,7 @@ export default function EnglishLayout() {
           <div className="mt-8 pt-[24px] border-t border-[#E5DFE2]">
             <button
               onClick={handleRestartSession}
-              className="w-full py-2.5 bg-[#fcf1f5] text-[#7b5268] font-sora text-[15px] rounded-[24px] font-bold hover:bg-[#EFBCD5]/20 transition-colors border border-[#d2c2c8]"
+              className="w-full py-2.5 bg-[#fcf1f5] text-[#7b5268] font-sora text-base rounded-[24px] font-bold hover:bg-[#EFBCD5]/20 transition-colors border border-[#d2c2c8]"
             >
               Reset review session
             </button>

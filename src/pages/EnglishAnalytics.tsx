@@ -14,10 +14,10 @@ export default function EnglishAnalytics() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="font-sora font-bold text-[32px] text-[#1f1a1d] tracking-tight">
+        <h1 className="font-sora font-bold text-3xl text-[#1f1a1d] tracking-tight">
           English Hub Analytics
         </h1>
-        <p className="font-outfit text-[16px] text-[#706065] mt-1">
+        <p className="font-outfit text-base text-[#706065] mt-1">
           Your learning progress statistics
         </p>
       </div>
@@ -45,7 +45,7 @@ export default function EnglishAnalytics() {
 
         <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col justify-center items-center text-center">
           <BookMarked className="h-12 w-12 text-[#EFBCD5] stroke-[1.25] mb-3 animate-pulse" />
-          <p className="text-sm font-medium text-[#706065]">
+          <p className="text-sm font-semibold text-[#706065]">
             Your Leitner system is running smoothly to strengthen long-term memory.
           </p>
         </div>

@@ -143,16 +143,16 @@ export default function Tasks() {
       {/* Page Header */}
       <header className="mb-[24px] flex justify-between items-end">
         <div>
-          <h1 className="font-sora text-[32px] font-bold text-[#1f1a1d] mb-2 tracking-tight">
+          <h1 className="font-sora text-3xl font-bold text-[#1f1a1d] mb-2 tracking-tight">
             Task Matrix
           </h1>
-          <p className="font-outfit text-[16px] text-[#706065] font-normal">
+          <p className="font-outfit text-base text-[#706065] font-normal">
             Prioritize and manage your focus.
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-1.5 bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-[16px] px-6 py-2.5 rounded-[24px] hover:shadow-[0_10px_30px_-5px_rgba(239,188,213,0.3)] transition-all active:scale-95 border border-[#ffd8ea]"
+          className="flex items-center gap-1.5 bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-base px-6 py-2.5 rounded-[24px] hover:shadow-[0_10px_30px_-5px_rgba(239,188,213,0.3)] transition-all active:scale-95 border border-[#ffd8ea]"
         >
           <Plus className="h-5 w-5" />
           <span>New Task</span>
@@ -171,9 +171,9 @@ export default function Tasks() {
             >
               <div className="flex items-center gap-3">
                 <AlertCircle className="h-6 w-6 text-[#EFBCD5]" />
-                <span className="font-sora text-[24px] text-[#1f1a1d] font-semibold">
+                <span className="font-sora text-2xl text-[#1f1a1d] font-semibold">
                   Do First{" "}
-                  <span className="text-[#706065] text-[16px] font-normal ml-2">
+                  <span className="text-[#706065] text-base font-normal ml-2">
                     (Urgent & Important)
                   </span>
                 </span>
@@ -204,7 +204,7 @@ export default function Tasks() {
                         className="w-5 h-5 rounded border-[#d2c2c8] text-[#EFBCD5] focus:ring-[#EFBCD5] bg-white cursor-pointer"
                       />
                       <span
-                        className={`font-outfit text-[16px] flex-1 ${
+                        className={`font-outfit text-base flex-1 ${
                           task.completed ? "line-through text-[#706065]/60" : "text-[#1f1a1d]"
                         }`}
                       >
@@ -269,9 +269,9 @@ export default function Tasks() {
             >
               <div className="flex items-center gap-3">
                 <Calendar className="h-6 w-6 text-[#706065]" />
-                <span className="font-sora text-[24px] text-[#1f1a1d] font-semibold">
+                <span className="font-sora text-2xl text-[#1f1a1d] font-semibold">
                   Schedule{" "}
-                  <span className="text-[#706065] text-[16px] font-normal ml-2">
+                  <span className="text-[#706065] text-base font-normal ml-2">
                     (Important, Not Urgent)
                   </span>
                 </span>
@@ -302,7 +302,7 @@ export default function Tasks() {
                         className="w-5 h-5 rounded border-[#d2c2c8] text-[#EFBCD5] focus:ring-[#EFBCD5] bg-white cursor-pointer"
                       />
                       <span
-                        className={`font-outfit text-[16px] flex-1 ${
+                        className={`font-outfit text-base flex-1 ${
                           task.completed ? "line-through text-[#706065]/60" : "text-[#1f1a1d]"
                         }`}
                       >
@@ -367,9 +367,9 @@ export default function Tasks() {
             >
               <div className="flex items-center gap-3">
                 <UserPlus className="h-6 w-6 text-[#706065]" />
-                <span className="font-sora text-[24px] text-[#1f1a1d] font-semibold">
+                <span className="font-sora text-2xl text-[#1f1a1d] font-semibold">
                   Delegate{" "}
-                  <span className="text-[#706065] text-[16px] font-normal ml-2">
+                  <span className="text-[#706065] text-base font-normal ml-2">
                     (Urgent, Not Important)
                   </span>
                 </span>
@@ -400,7 +400,7 @@ export default function Tasks() {
                         className="w-5 h-5 rounded border-[#d2c2c8] text-[#EFBCD5] focus:ring-[#EFBCD5] bg-white cursor-pointer"
                       />
                       <span
-                        className={`font-outfit text-[16px] flex-1 ${
+                        className={`font-outfit text-base flex-1 ${
                           task.completed ? "line-through text-[#706065]/60" : "text-[#1f1a1d]"
                         }`}
                       >
@@ -427,9 +427,9 @@ export default function Tasks() {
             >
               <div className="flex items-center gap-3">
                 <Trash2 className="h-6 w-6 text-[#706065]" />
-                <span className="font-sora text-[24px] text-[#1f1a1d] font-semibold">
+                <span className="font-sora text-2xl text-[#1f1a1d] font-semibold">
                   Eliminate{" "}
-                  <span className="text-[#706065] text-[16px] font-normal ml-2">
+                  <span className="text-[#706065] text-base font-normal ml-2">
                     (Not Urgent, Not Important)
                   </span>
                 </span>
@@ -460,7 +460,7 @@ export default function Tasks() {
                         className="w-5 h-5 rounded border-[#d2c2c8] text-[#EFBCD5] focus:ring-[#EFBCD5] bg-white cursor-pointer"
                       />
                       <span
-                        className={`font-outfit text-[16px] flex-1 ${
+                        className={`font-outfit text-base flex-1 ${
                           task.completed ? "line-through text-[#706065]/60" : "text-[#1f1a1d]"
                         }`}
                       >
@@ -483,7 +483,7 @@ export default function Tasks() {
         {/* Right Column: Daily Planner Timeline */}
         <div className="lg:col-span-5 relative">
           <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-[24px] sticky top-[120px] font-outfit">
-            <h2 className="font-sora text-[24px] font-bold text-[#1f1a1d] mb-[24px]">
+            <h2 className="font-sora text-2xl font-bold text-[#1f1a1d] mb-[24px]">
               Daily Planner
             </h2>
             <div className="relative pl-[60px] flex flex-col gap-[36px] before:absolute before:left-[45px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#E5DFE2]">
@@ -491,7 +491,7 @@ export default function Tasks() {
                 const task = getTaskForHour(hour)
                 return (
                   <div key={hour} className="relative">
-                    <span className="absolute left-[-60px] top-0.5 font-mono text-[12px] text-[#706065] w-[40px] text-right">
+                    <span className="absolute left-[-60px] top-0.5 font-mono text-xs text-[#706065] w-[40px] text-right">
                       {hour}
                     </span>
                     <div
@@ -503,11 +503,11 @@ export default function Tasks() {
                     {task ? (
                       <div className="bg-[#fcf1f5]/70 text-[#201B1E] rounded-[12px] p-3.5 border border-[#E5DFE2] cursor-pointer hover:shadow-md transition-shadow relative -top-2 flex justify-between items-center">
                         <div>
-                          <span className="font-sora text-[15px] font-bold block">
+                          <span className="font-sora text-base font-bold block">
                             {task.title}
                           </span>
                           {task.description && (
-                            <span className="text-[12px] text-[#706065] block mt-0.5">
+                            <span className="text-xs text-[#706065] block mt-0.5">
                               {task.description}
                             </span>
                           )}

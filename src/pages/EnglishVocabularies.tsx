@@ -90,10 +90,10 @@ export default function EnglishVocabularies() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="font-sora font-bold text-[32px] text-[#1f1a1d] tracking-tight">
+        <h1 className="font-sora font-bold text-3xl text-[#1f1a1d] tracking-tight">
           Vocabulary Review
         </h1>
-        <p className="font-outfit text-[16px] text-[#706065] mt-1">
+        <p className="font-outfit text-base text-[#706065] mt-1">
           Daily Leitner System Session
         </p>
       </div>
@@ -102,36 +102,36 @@ export default function EnglishVocabularies() {
         {/* SRS Sidebar Box Counts */}
         <div className="w-full lg:w-64 flex flex-col gap-[8px] flex-shrink-0">
           <div className="bg-white rounded-[24px] p-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col gap-[12px] w-full font-outfit">
-            <h3 className="font-sora text-[18px] font-bold text-[#1f1a1d] mb-[12px]">
+            <h3 className="font-sora text-lg font-bold text-[#1f1a1d] mb-[12px]">
               SRS Status
             </h3>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
-              <span className="text-[14px] text-[#706065] font-medium">Box 1 (Daily)</span>
-              <span className="text-[14px] font-bold text-[#EFBCD5]">
+              <span className="text-sm text-[#706065] font-semibold">Box 1 (Daily)</span>
+              <span className="text-sm font-bold text-[#EFBCD5]">
                 {isAllLoading ? "..." : `${boxCounts[1]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
-              <span className="text-[14px] text-[#706065] font-medium">Box 2 (2 Days)</span>
-              <span className="text-[14px] font-semibold text-[#1f1a1d]">
+              <span className="text-sm text-[#706065] font-semibold">Box 2 (2 Days)</span>
+              <span className="text-sm font-semibold text-[#1f1a1d]">
                 {isAllLoading ? "..." : `${boxCounts[2]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
-              <span className="text-[14px] text-[#706065] font-medium">Box 3 (1 Week)</span>
-              <span className="text-[14px] font-semibold text-[#1f1a1d]">
+              <span className="text-sm text-[#706065] font-semibold">Box 3 (1 Week)</span>
+              <span className="text-sm font-semibold text-[#1f1a1d]">
                 {isAllLoading ? "..." : `${boxCounts[3]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center pb-[12px] border-b border-[#E5DFE2]/70">
-              <span className="text-[14px] text-[#706065] font-medium">Box 4 (1 Month)</span>
-              <span className="text-[14px] font-semibold text-[#1f1a1d]">
+              <span className="text-sm text-[#706065] font-semibold">Box 4 (1 Month)</span>
+              <span className="text-sm font-semibold text-[#1f1a1d]">
                 {isAllLoading ? "..." : `${boxCounts[4]} words`}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-[14px] text-[#706065] font-medium">Box 5 (Mastered)</span>
-              <span className="text-[14px] font-semibold text-[#1f1a1d]">
+              <span className="text-sm text-[#706065] font-semibold">Box 5 (Mastered)</span>
+              <span className="text-sm font-semibold text-[#1f1a1d]">
                 {isAllLoading ? "..." : `${boxCounts[5]} words`}
               </span>
             </div>
@@ -196,7 +196,7 @@ export default function EnglishVocabularies() {
                         </p>
                       )}
                       {wordItem.word_type && (
-                        <span className="text-[11px] font-bold uppercase font-mono text-[#706065]/60 block mt-1">
+                        <span className="text-xs font-bold uppercase font-mono text-[#706065]/60 block mt-1">
                           ({wordItem.word_type})
                         </span>
                       )}
@@ -205,7 +205,7 @@ export default function EnglishVocabularies() {
                     {/* Revealed Meaning Area */}
                     {revealMeaning ? (
                       <div className="space-y-4 max-w-md mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <p className="font-sora text-[18px] text-[#201B1E] font-semibold leading-relaxed">
+                        <p className="font-sora text-lg text-[#201B1E] font-semibold leading-relaxed">
                           {wordItem.meaning}
                         </p>
                         {wordItem.context_sentence && (
@@ -214,7 +214,7 @@ export default function EnglishVocabularies() {
                           </p>
                         )}
                         {wordItem.notes && (
-                          <p className="text-[12px] font-mono text-[#7b5268] bg-[#fcf1f5]/55 p-2 rounded-lg border border-[#ffd8ea]/50">
+                          <p className="text-xs font-mono text-[#7b5268] bg-[#fcf1f5]/55 p-2 rounded-lg border border-[#ffd8ea]/50">
                             Notes: {wordItem.notes}
                           </p>
                         )}
@@ -233,14 +233,14 @@ export default function EnglishVocabularies() {
                   <div className="flex gap-[24px] w-full justify-center mt-6">
                     <button
                       onClick={() => handleReview(false)}
-                      className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] text-[#706065] font-sora text-[15px] font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] text-[#706065] font-sora text-base font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <X className="h-4.5 w-4.5 text-red-500 stroke-[2.5px]" />
                       <span>Forgot</span>
                     </button>
                     <button
                       onClick={() => handleReview(true)}
-                      className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-[15px] font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
+                      className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-base font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
                     >
                       <Check className="h-4.5 w-4.5 text-[#201B1E] stroke-[3px]" />
                       <span>Remembered</span>

@@ -257,10 +257,10 @@ export default function Gym() {
   return (
     <div className="space-y-8">
       <header className="mt-4 mb-6">
-        <h1 className="font-sora font-bold text-[32px] mb-2 text-[#201B1E] tracking-tight">
+        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
           Training Log
         </h1>
-        <p className="font-outfit font-normal text-[16px] text-[#706065]">
+        <p className="font-outfit font-normal text-base text-[#706065]">
           Stay consistent. Track your progress.
         </p>
       </header>
@@ -292,7 +292,7 @@ export default function Gym() {
             </div>
 
             {/* Calendar Grid Headers */}
-            <div className="grid grid-cols-7 gap-2 mb-2 font-mono text-[11px] font-bold text-[#706065] uppercase tracking-wider text-center">
+            <div className="grid grid-cols-7 gap-2 mb-2 font-mono text-xs font-bold text-[#706065] uppercase tracking-wider text-center">
               <div>Mon</div>
               <div>Tue</div>
               <div>Wed</div>
@@ -339,7 +339,7 @@ export default function Gym() {
                     ? "Today"
                     : selectedDateStr}
                 </h2>
-                <p className="text-xs text-[#706065] font-medium font-mono uppercase tracking-wider">
+                <p className="text-xs text-[#706065] font-semibold font-mono uppercase tracking-wider">
                   {dailyCategoryName}
                 </p>
               </div>
@@ -364,19 +364,19 @@ export default function Gym() {
             ) : !exercises || exercises.length === 0 ? (
               <div className="text-center py-12 text-[#706065] flex flex-col items-center justify-center">
                 <Dumbbell className="h-12 w-12 text-zinc-300 stroke-[1.25px] mb-3" />
-                <p className="text-sm font-medium">No exercises scheduled for this day.</p>
+                <p className="text-sm font-semibold">No exercises scheduled for this day.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse font-outfit">
                   <thead>
                     <tr className="border-b border-[#E5DFE2] text-[#706065] text-xs uppercase tracking-wider font-mono">
-                      <th className="py-3 px-2 font-medium w-8"></th>
-                      <th className="py-3 px-2 font-medium">Exercise</th>
-                      <th className="py-3 px-2 font-medium text-center">Sets</th>
-                      <th className="py-3 px-2 font-medium text-center">Reps</th>
-                      <th className="py-3 px-2 font-medium text-right">Weight</th>
-                      <th className="py-3 px-2 font-medium text-center w-12"></th>
+                      <th className="py-3 px-2 font-semibold w-8"></th>
+                      <th className="py-3 px-2 font-semibold">Exercise</th>
+                      <th className="py-3 px-2 font-semibold text-center">Sets</th>
+                      <th className="py-3 px-2 font-semibold text-center">Reps</th>
+                      <th className="py-3 px-2 font-semibold text-right">Weight</th>
+                      <th className="py-3 px-2 font-semibold text-center w-12"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -400,7 +400,7 @@ export default function Gym() {
                           </button>
                         </td>
                         <td
-                          className={`py-4 px-2 font-medium ${
+                          className={`py-4 px-2 font-semibold ${
                             ex.completed ? "text-[#706065] line-through" : "text-[#201B1E]"
                           }`}
                         >
@@ -472,10 +472,10 @@ export default function Gym() {
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="font-sora text-[36px] font-bold text-[#201B1E]">
+                <span className="font-sora text-3xl font-bold text-[#201B1E]">
                   {consistencyPercent}%
                 </span>
-                <span className="font-mono text-[11px] text-[#706065] mt-0.5">
+                <span className="font-mono text-xs text-[#706065] mt-0.5">
                   {completedDays} of {totalDays} days
                 </span>
               </div>
@@ -485,7 +485,7 @@ export default function Gym() {
           {/* Weekly Volume Card */}
           <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)]">
             <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Weekly Volume</h3>
-            <div className="flex items-end justify-between h-40 px-2 font-mono text-[11px] text-[#706065]">
+            <div className="flex items-end justify-between h-40 px-2 font-mono text-xs text-[#706065]">
               {stats?.weekly_volume.map((day, idx) => {
                 const maxVol = Math.max(...stats.weekly_volume.map((d) => d.volume), 100)
                 const heightPercent = Math.max(Math.round((day.volume / maxVol) * 100), 5)
@@ -495,7 +495,7 @@ export default function Gym() {
                   <div key={idx} className="flex flex-col items-center gap-2 w-full">
                     <div className="relative group w-8 flex justify-center">
                       {/* Tooltip on hover */}
-                      <span className="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 bg-[#201B1E] text-white text-[10px] px-1.5 py-0.5 rounded transition-opacity font-mono pointer-events-none z-10">
+                      <span className="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 bg-[#201B1E] text-white text-xs px-1.5 py-0.5 rounded transition-opacity font-mono pointer-events-none z-10">
                         {Math.round(day.volume)}kg
                       </span>
                       <div
@@ -505,7 +505,7 @@ export default function Gym() {
                         style={{ height: `${heightPercent}px` }}
                       ></div>
                     </div>
-                    <span className="font-bold text-[10px]">{weekday[0].toUpperCase()}</span>
+                    <span className="font-bold text-xs">{weekday[0].toUpperCase()}</span>
                   </div>
                 )
               })}
@@ -569,14 +569,14 @@ export default function Gym() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-6">
           <div className="bg-white border border-[#E5DFE2] rounded-[24px] w-full max-w-md p-6 shadow-[0_10px_40px_-5px_rgba(239,188,213,0.3)] animate-in zoom-in-95">
-            <h3 className="font-sora font-bold text-[20px] text-[#201B1E] mb-6">
+            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">
               Add New Exercise
             </h3>
 
             <form onSubmit={handleAddExercise} className="space-y-4 font-outfit">
               {/* Exercise Name Input */}
               <div className="space-y-1.5">
-                <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
+                <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
                   Exercise Name
                 </label>
                 <input
@@ -591,7 +591,7 @@ export default function Gym() {
 
               {/* Category Dropdown */}
               <div className="space-y-1.5">
-                <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
+                <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
                   Muscle Group
                 </label>
                 <select
@@ -611,7 +611,7 @@ export default function Gym() {
               {/* Sets & Reps Numeric Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
+                  <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
                     Sets
                   </label>
                   <input
@@ -626,7 +626,7 @@ export default function Gym() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
+                  <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
                     Reps / Set
                   </label>
                   <input
@@ -643,7 +643,7 @@ export default function Gym() {
 
               {/* Weight input */}
               <div className="space-y-1.5">
-                <label className="text-[12px] font-bold text-[#706065] uppercase font-mono tracking-wider">
+                <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
                   Weight (kg)
                 </label>
                 <input
