@@ -28,24 +28,24 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #193665;
+  --foreground: #09090b;
   --card: #ffffff;
-  --card-foreground: #193665;
+  --card-foreground: #09090b;
   --popover: #ffffff;
-  --popover-foreground: #193665;
-  --primary: #76baf9;
-  --primary-foreground: #193665;
-  --secondary: #5c8edf;
-  --secondary-foreground: #ffffff;
-  --muted: #c2e6fb33;
-  --muted-foreground: #193665cc;
-  --accent: #5c8edf;
-  --accent-foreground: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
   --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #1936651a;
-  --input: #1936651a;
-  --ring: #76baf9;
+  --destructive-foreground: #fafafa;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
   --radius: 0.5rem;
   
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -54,25 +54,25 @@
 }
 
 .dark {
-  --background: #10223f;
-  --foreground: #c2e6fb;
-  --card: #193665;
-  --card-foreground: #c2e6fb;
-  --popover: #193665;
-  --popover-foreground: #c2e6fb;
-  --primary: #76baf9;
-  --primary-foreground: #193665;
-  --secondary: #5c8edf;
-  --secondary-foreground: #ffffff;
-  --muted: #193665;
-  --muted-foreground: #c2e6fbcc;
-  --accent: #5c8edf;
-  --accent-foreground: #ffffff;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #09090b;
+  --card-foreground: #fafafa;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
   --destructive: #7f1d1d;
-  --destructive-foreground: #ffffff;
-  --border: #76baf940;
-  --input: #76baf940;
-  --ring: #76baf9;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
 }
 
 html,
@@ -85,134 +85,4 @@ body {
   margin: 0;
   background-color: var(--background);
   color: var(--foreground);
-  overflow: hidden;
 }
-
-/* Custom minimal scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 9999px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
-}
-
-/* Minimal animation utilities (used by Dialog/Sheet/DropdownMenu) */
-@keyframes _fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes _zoom-in-95 {
-  from { transform: scale(0.95); }
-  to   { transform: scale(1); }
-}
-@keyframes _slide-in-from-left {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
-}
-@keyframes _slide-in-from-right {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-.animate-in { animation-duration: 150ms; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
-.fade-in-0 { animation-name: _fade-in; }
-.zoom-in-95 { animation-name: _zoom-in-95; }
-.slide-in-from-left { animation-name: _slide-in-from-left; }
-.slide-in-from-right { animation-name: _slide-in-from-right; }
-.slide-in-from-top { animation-name: _slide-in-from-top; }
-.slide-in-from-bottom { animation-name: _slide-in-from-bottom; }
-@keyframes _slide-in-from-top { from { transform: translateY(-100%); } to { transform: translateY(0); } }
-@keyframes _slide-in-from-bottom { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-@keyframes pulse-highlight {
-  0%, 100% {
-    background-color: transparent;
-  }
-  30%, 70% {
-    background-color: rgba(113, 113, 122, 0.25);
-  }
-}
-.animate-pulse-highlight {
-  animation: pulse-highlight 1.5s ease-in-out;
-  border-radius: 0.5rem;
-}
-
-@keyframes wave-bar {
-  0%, 100% { transform: scaleY(0.35); }
-  50% { transform: scaleY(1); }
-}
-.animate-wave-bar-1 { animation: wave-bar 0.8s ease-in-out infinite; transform-origin: bottom; }
-.animate-wave-bar-2 { animation: wave-bar 0.5s ease-in-out infinite; transform-origin: bottom; animation-delay: 0.15s; }
-.animate-wave-bar-3 { animation: wave-bar 0.7s ease-in-out infinite; transform-origin: bottom; animation-delay: 0.3s; }
-.animate-wave-bar-4 { animation: wave-bar 0.6s ease-in-out infinite; transform-origin: bottom; animation-delay: 0.45s; }
-
-/* Custom slider styling for premium audio player */
-input[type="range"].slider-premium {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 5px;
-  border-radius: 9999px;
-  background: linear-gradient(to right, var(--primary) var(--seek-percent, 0%), var(--muted) var(--seek-percent, 0%));
-  outline: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-input[type="range"].slider-premium::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 9999px;
-  background: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease;
-}
-
-input[type="range"].slider-premium::-webkit-slider-thumb:hover {
-  transform: scale(1.3);
-}
-
-input[type="range"].slider-premium:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Firefox */
-input[type="range"].slider-premium::-moz-range-track {
-  height: 5px;
-  border-radius: 9999px;
-  background: var(--muted);
-}
-
-input[type="range"].slider-premium::-moz-range-progress {
-  height: 5px;
-  border-radius: 9999px;
-  background: var(--primary);
-}
-
-input[type="range"].slider-premium::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  border: none;
-  border-radius: 9999px;
-  background: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-input[type="range"].slider-premium::-moz-range-thumb:hover {
-  transform: scale(1.3);
-}
-
