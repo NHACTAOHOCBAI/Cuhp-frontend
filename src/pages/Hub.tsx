@@ -173,8 +173,8 @@ export default function Hub() {
         {/* Gym Card (Col Span 4) */}
         <div className="glass-card md:col-span-4 flex flex-col bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] hover:translate-y-[-2px] hover:shadow-[0_15px_35px_-5px_rgba(239,188,213,0.25)] transition-all duration-300 min-h-[300px]">
           <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-3 text-[#EFBCD5]">
-              <Dumbbell className="h-6 w-6 stroke-[2.5px]" />
+            <div className="flex items-center gap-3 text-[#7b5268]">
+              <Dumbbell className="h-6 w-6" />
               <h3 className="font-sora font-semibold text-xl text-[#1f1a1d] truncate max-w-[160px]">
                 {gymCategoryName || "Gym Schedule"}
               </h3>
