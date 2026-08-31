@@ -10,6 +10,8 @@ import EnglishVocabularies from "@/pages/EnglishVocabularies"
 import EnglishAnalytics from "@/pages/EnglishAnalytics"
 import EnglishReadingList from "@/pages/EnglishReadingList"
 import EnglishReadingDetail from "@/pages/EnglishReadingDetail"
+import EnglishAudioLibrary from "@/pages/EnglishAudioLibrary"
+import EnglishShadowingDetail from "@/pages/EnglishShadowingDetail"
 
 function FeaturePlaceholderPage({ name }: { name: string }) {
   return (
@@ -73,10 +75,8 @@ export default function App() {
             <Route path="vocabularies" element={<EnglishVocabularies />} />
             <Route path="reading" element={<EnglishReadingList />} />
             <Route path="reading/:id" element={<EnglishReadingDetail />} />
-            <Route
-              path="listening"
-              element={<FeaturePlaceholderPage name="English Listening List" />}
-            />
+            <Route path="listening" element={<EnglishAudioLibrary />} />
+            <Route path="listening/:id" element={<EnglishShadowingDetail />} />
             <Route path="analytics" element={<EnglishAnalytics />} />
           </Route>
           <Route
