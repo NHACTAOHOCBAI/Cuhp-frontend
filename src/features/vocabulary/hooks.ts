@@ -6,11 +6,13 @@ import {
   deleteVocabulary,
   fetchVocabularies,
   updateVocabulary,
+  reviewVocabulary,
 } from "./api"
 import type {
   VocabularyListParams,
   VocabularyUpdate,
 } from "./types"
+import type { VocabularyReviewRequest } from "./api"
 import type { VocabularyItem } from "@/types"
 
 const QUERY_KEY = ["vocabularies"] as const
@@ -83,6 +85,19 @@ export function useBulkDeleteVocabulary() {
     mutationFn: (ids: string[]) => bulkDeleteVocabularies(ids, token),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEY })
+    },
+  })
+}
+
+export function useReviewVocabulary() {
+  const { token } = useAuth()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: VocabularyReviewRequest }) =>
+      reviewVocabulary(id, payload, token),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: QUERY_KEY })
+      qc.invalidateQueries({ queryKey: ["users", "me"] })
     },
   })
 }

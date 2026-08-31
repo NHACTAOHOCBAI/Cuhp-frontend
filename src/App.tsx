@@ -5,6 +5,9 @@ import Layout from "@/components/Layout"
 import Hub from "@/pages/Hub"
 import Login from "@/pages/Login"
 import Gym from "@/pages/Gym"
+import EnglishLayout from "@/components/EnglishLayout"
+import EnglishVocabularies from "@/pages/EnglishVocabularies"
+import EnglishAnalytics from "@/pages/EnglishAnalytics"
 
 function FeaturePlaceholderPage({ name }: { name: string }) {
   return (
@@ -52,16 +55,30 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          
+          {/* Nested English Hub Layout and Routes */}
           <Route
             path="/english"
             element={
               <ProtectedRoute>
                 <Layout>
-                  <FeaturePlaceholderPage name="English Hub" />
+                  <EnglishLayout />
                 </Layout>
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="vocabularies" replace />} />
+            <Route path="vocabularies" element={<EnglishVocabularies />} />
+            <Route
+              path="reading"
+              element={<FeaturePlaceholderPage name="English Reading List" />}
+            />
+            <Route
+              path="listening"
+              element={<FeaturePlaceholderPage name="English Listening List" />}
+            />
+            <Route path="analytics" element={<EnglishAnalytics />} />
+          </Route>
           <Route
             path="/todo"
             element={

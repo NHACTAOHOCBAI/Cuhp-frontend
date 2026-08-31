@@ -82,3 +82,27 @@ export async function lookupVocabularyWord(
   const qs = new URLSearchParams({ word }).toString()
   return apiFetch<VocabularyLookupResult>(`${API_BASE}/lookup/word?${qs}`, { token })
 }
+
+export interface VocabularyReviewRequest {
+  known: boolean
+}
+
+export interface VocabularyReviewResponse {
+  vocabulary: VocabularyItem
+  daily_target: number
+  current_streak: number
+  words_reviewed_today: number
+  streak_incremented_today: boolean
+}
+
+export async function reviewVocabulary(
+  id: string,
+  payload: VocabularyReviewRequest,
+  token: string | null,
+): Promise<VocabularyReviewResponse> {
+  return apiFetch<VocabularyReviewResponse>(`${API_BASE}/${id}/review`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    token,
+  })
+}
