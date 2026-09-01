@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useReadingPassagesQuery, useDeleteReadingPassage } from "@/features/reading/hooks"
 import { useVocabulariesQuery } from "@/features/vocabulary/hooks"
 import { ReadingPassageModal } from "@/features/reading/components/ReadingPassageModal"
-import { Search, BookOpen, Clock, Languages, Pencil, Trash2, Plus } from "lucide-react"
+import { Search, BookOpen, Clock, Languages, Pencil, Trash2, Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import type { ReadingPassage, ReadingPassageListItem } from "@/features/reading/types"
 
@@ -13,6 +13,8 @@ export default function EnglishReadingList() {
 
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedLevel, setSelectedLevel] = React.useState<string | undefined>(undefined)
+  const [page, setPage] = React.useState(1)
+  const pageSize = 9
 
   // Modal State (Add / Edit)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
@@ -23,15 +25,20 @@ export default function EnglishReadingList() {
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery)
+      setPage(1)
     }, 300)
     return () => clearTimeout(handler)
   }, [searchQuery])
 
-  // Fetch passages based on search and level
+  // Fetch passages based on search, level, and pagination
   const { data: listResponse, isLoading } = useReadingPassagesQuery({
+    page,
+    page_size: pageSize,
     q: debouncedSearch || undefined,
     level: selectedLevel || undefined,
   })
+
+  const totalPages = Math.ceil((listResponse?.total ?? 0) / pageSize)
 
   const levelFilters = [
     { label: "All", value: undefined },
@@ -140,7 +147,10 @@ export default function EnglishReadingList() {
             return (
               <button
                 key={lvl.value ?? "all"}
-                onClick={() => setSelectedLevel(lvl.value)}
+                onClick={() => {
+                  setSelectedLevel(lvl.value)
+                  setPage(1)
+                }}
                 className={`px-4 py-1.5 rounded-full border transition-all active:scale-95 ${
                   isSelected
                     ? "bg-[#EFBCD5]/20 text-[#7b5268] border-[#EFBCD5]/30"
@@ -288,6 +298,39 @@ export default function EnglishReadingList() {
               </article>
             )
           })}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pt-6 mt-4 border-t border-[#E5DFE2]/70 flex items-center justify-between font-outfit text-xs text-[#706065]">
+          <span className="font-mono font-medium">
+            Page <strong className="text-[#201B1E]">{page}</strong> of <strong className="text-[#201B1E]">{totalPages}</strong> ({listResponse?.total ?? 0} passages)
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page <= 1}
+              onClick={() => {
+                setPage((prev) => Math.max(prev - 1, 1))
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }}
+              className="px-3.5 py-2 rounded-xl border border-[#E5DFE2] bg-white hover:bg-[#FCFAF7] disabled:opacity-40 transition-all flex items-center gap-1.5 font-semibold text-[#201B1E] shadow-2xs"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => {
+                setPage((prev) => Math.min(prev + 1, totalPages))
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }}
+              className="px-3.5 py-2 rounded-xl border border-[#E5DFE2] bg-white hover:bg-[#FCFAF7] disabled:opacity-40 transition-all flex items-center gap-1.5 font-semibold text-[#201B1E] shadow-2xs"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

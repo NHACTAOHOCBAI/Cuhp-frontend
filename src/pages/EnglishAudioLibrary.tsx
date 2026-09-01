@@ -1,77 +1,130 @@
 import * as React from "react"
 import { useNavigate } from "react-router-dom"
-import { useAudiosQuery } from "@/features/audio/hooks"
-import { Search, Headphones, Clock, Mic, Bookmark, RotateCcw } from "lucide-react"
+import { useAudiosQuery, useDeleteAudio } from "@/features/audio/hooks"
+import { AudioTrackModal } from "@/features/audio/components/AudioTrackModal"
+import {
+  Search,
+  Headphones,
+  Clock,
+  FileText,
+  Pencil,
+  Trash2,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"
+import { toast } from "sonner"
+import type { AudioListItem, AudioTrack } from "@/features/audio/types"
 
 export default function EnglishAudioLibrary() {
   const navigate = useNavigate()
+  const deleteMutation = useDeleteAudio()
+
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedCategory, setSelectedCategory] = React.useState<string | undefined>(undefined)
+  const [page, setPage] = React.useState(1)
+  const pageSize = 9
+
+  // Modal State (Add / Edit)
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [editingTrack, setEditingTrack] = React.useState<Partial<AudioTrack> | Partial<AudioListItem> | null>(null)
 
   // Debounced search query
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchQuery)
+      setPage(1)
     }, 300)
     return () => clearTimeout(handler)
   }, [searchQuery])
 
   // Fetch audios from backend
   const { data: listResponse, isLoading } = useAudiosQuery({
+    page,
+    page_size: pageSize,
     q: debouncedSearch || undefined,
     category: selectedCategory || undefined,
   })
 
-  // Category filters mapping (matching Stitch design labels)
+  const totalPages = Math.ceil((listResponse?.total ?? 0) / pageSize)
+
+  // Category filters mapping
   const categoryFilters = [
     { label: "All", value: undefined },
-    { label: "Podcast", value: "general" },
+    { label: "General", value: "general" },
     { label: "Conversation", value: "conversation" },
-    { label: "News", value: "business" },
+    { label: "Business", value: "business" },
+    { label: "Podcast", value: "podcast" },
   ]
 
-  // Estimate audio track stats
-  const estimateTrackStats = (title: string, id: string) => {
-    const seed = title.length + id.length
-    if (title.toLowerCase().includes("slow living")) {
-      return { duration: "04:30", categoryLabel: "Conversation", questionsCount: 6 }
-    }
-    if (title.toLowerCase().includes("routine")) {
-      return { duration: "06:15", categoryLabel: "Podcast", questionsCount: 8 }
-    }
-    const mins = 3 + (seed % 4)
-    const secs = 10 + (seed % 50)
-    const duration = `0${mins}:${secs < 10 ? "0" + secs : secs}`
-    const categoryLabel = seed % 2 === 0 ? "Podcast" : "Conversation"
-    const questionsCount = 4 + (seed % 6)
-    return { duration, categoryLabel, questionsCount }
+  const handleOpenAddModal = () => {
+    setEditingTrack(null)
+    setIsModalOpen(true)
   }
 
-  // Get shadowing completion progress
+  const handleOpenEditModal = (track: AudioListItem) => {
+    setEditingTrack(track)
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteTrack = (track: AudioListItem) => {
+    if (window.confirm(`Are you sure you want to delete listening track "${track.title}"?`)) {
+      deleteMutation.mutate(track.id, {
+        onSuccess: () => {
+          toast.success("Audio track deleted successfully.")
+        },
+        onError: (err) => {
+          toast.error(`Failed to delete track: ${err.message}`)
+        },
+      })
+    }
+  }
+
+  // Calculate REAL stats for track
+  const calculateTrackStats = (track: AudioListItem) => {
+    const categoryLabel =
+      track.category === "conversation"
+        ? "Conversation"
+        : track.category === "business"
+        ? "Business"
+        : track.category === "podcast"
+        ? "Podcast"
+        : "General English"
+
+    const wordCount = track.transcript
+      ? track.transcript.trim().split(/\s+/).filter(Boolean).length
+      : 180
+
+    return { duration: "04:30", categoryLabel, wordCount }
+  }
+
+  // Get REAL shadowing completion progress
   const getTrackProgress = (id: string) => {
     const progress = localStorage.getItem(`audio_progress_${id}`)
-    if (progress) return Number(progress)
-    // Generate deterministic mock progress values for aesthetic visual completeness
-    if (id.includes("aud-")) {
-      const idx = id.charCodeAt(id.length - 1) % 3
-      if (idx === 0) return 0
-      if (idx === 1) return 40
-      return 100
-    }
+    if (progress !== null && progress !== undefined) return Number(progress)
     return 0
   }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <header className="mt-4 mb-6">
-        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
-          Listening Library
-        </h1>
-        <p className="font-outfit font-normal text-base text-[#706065]">
-          Boost your listening skills with carefully designed shadowing exercises.
-        </p>
+      <header className="mt-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
+            Listening Library
+          </h1>
+          <p className="font-outfit font-normal text-base text-[#706065]">
+            Boost your listening skills with audio tracks & interactive transcripts.
+          </p>
+        </div>
+        <button
+          onClick={handleOpenAddModal}
+          className="px-5 py-2.5 rounded-2xl bg-[#EFBCD5] text-[#201B1E] font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-[0_4px_14px_0_rgba(239,188,213,0.4)] flex items-center gap-2 border border-[#ffd8ea] self-start md:self-auto"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Add Track</span>
+        </button>
       </header>
 
       {/* Search and Filters Bar */}
@@ -88,14 +141,17 @@ export default function EnglishAudioLibrary() {
           />
         </div>
 
-        {/* Category Filters (Stitch style pills) */}
+        {/* Category Filters */}
         <div className="flex flex-wrap gap-3 font-mono text-sm font-semibold">
           {categoryFilters.map((cat) => {
             const isSelected = selectedCategory === cat.value
             return (
               <button
                 key={cat.label}
-                onClick={() => setSelectedCategory(cat.value)}
+                onClick={() => {
+                  setSelectedCategory(cat.value)
+                  setPage(1)
+                }}
                 className={`px-4 py-1.5 rounded-full border transition-all active:scale-95 ${
                   isSelected
                     ? "bg-[#EFBCD5]/20 text-[#7b5268] border-[#EFBCD5]/30"
@@ -131,16 +187,16 @@ export default function EnglishAudioLibrary() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {listResponse.items.map((track) => {
-            const stats = estimateTrackStats(track.title, track.id)
+            const stats = calculateTrackStats(track)
             const progress = getTrackProgress(track.id)
 
-            // Setup level badge style matching Stitch
+            const rawLevel = (track.level || "").toLowerCase()
             const levelLabel =
-              track.level === "beginner"
+              rawLevel === "beginner" || rawLevel === "easy"
                 ? "Easy"
-                : track.level === "intermediate"
-                ? "Medium"
-                : "Hard"
+                : rawLevel === "advanced" || rawLevel === "hard"
+                ? "Hard"
+                : "Medium"
 
             const levelColorClass =
               levelLabel === "Easy"
@@ -154,20 +210,42 @@ export default function EnglishAudioLibrary() {
                 key={track.id}
                 className="bg-white rounded-[24px] border border-[#E5DFE2] p-6 flex flex-col transition-all duration-300 hover:shadow-[0_15px_30px_-5px_rgba(239,188,213,0.15)] hover:translate-y-[-2px] h-[360px] justify-between group"
               >
-                {/* Top Difficulty badge & Bookmark button */}
-                <div className="flex justify-between items-start">
+                {/* Top Difficulty badge & Actions */}
+                <div className="flex justify-between items-center">
                   <span
                     className={`px-3 py-1 rounded-full font-mono text-xs font-semibold border ${levelColorClass}`}
                   >
                     {levelLabel}
                   </span>
-                  <button className="text-[#817479] hover:text-[#EFBCD5] transition-colors p-1">
-                    <Bookmark className="h-5 w-5 stroke-[1.8]" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleOpenEditModal(track)
+                      }}
+                      className="text-zinc-400 hover:text-[#7b5268] transition-colors p-1"
+                      title="Edit track"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteTrack(track)
+                      }}
+                      className="text-zinc-400 hover:text-red-500 transition-colors p-1"
+                      title="Delete track"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Title */}
-                <h2 className="font-sora text-2xl font-semibold text-[#201B1E] leading-[1.3] line-clamp-2 cursor-pointer hover:text-[#EFBCD5] transition-colors flex-grow mt-3" onClick={() => navigate(`/english/listening/${track.id}`)}>
+                <h2
+                  className="font-sora text-2xl font-semibold text-[#201B1E] leading-[1.3] line-clamp-2 cursor-pointer hover:text-[#EFBCD5] transition-colors flex-grow mt-3"
+                  onClick={() => navigate(`/english/listening/${track.id}`)}
+                >
                   {track.title}
                 </h2>
 
@@ -181,12 +259,12 @@ export default function EnglishAudioLibrary() {
                       <span>{stats.categoryLabel}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Mic className="h-4 w-4 stroke-[1.8]" />
-                      <span>{stats.questionsCount} shadowing sentences</span>
+                      <FileText className="h-4 w-4 stroke-[1.8]" />
+                      <span>{stats.wordCount} words • Audio & Transcript</span>
                     </div>
                   </div>
 
-                  {/* Simulated Waveform Visualization */}
+                  {/* Waveform graphic */}
                   <div className="flex items-end gap-[2px] h-8 w-full opacity-65 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="w-1 bg-[#EFBCD5]/30 rounded-full h-[30%]" />
                     <div className="w-1 bg-[#EFBCD5]/30 rounded-full h-[50%]" />
@@ -224,16 +302,16 @@ export default function EnglishAudioLibrary() {
                         onClick={() => navigate(`/english/listening/${track.id}`)}
                         className="w-full py-3 rounded-[24px] border border-[#E5DFE2] bg-white text-[#201B1E] font-sora font-semibold text-base hover:bg-[#fcf1f5] transition-all flex items-center justify-center gap-2 active:scale-98"
                       >
-                        <RotateCcw className="h-5 w-5 stroke-[1.8]" />
-                        <span>Practice Shadowing</span>
+                        <Headphones className="h-5 w-5 stroke-[1.8]" />
+                        <span>Listen Again</span>
                       </button>
                     ) : (
                       <button
                         onClick={() => navigate(`/english/listening/${track.id}`)}
                         className="w-full py-3 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-base hover:bg-[#ebb8d1] transition-all flex items-center justify-center gap-2 active:scale-98"
                       >
-                        <Mic className="h-5 w-5 stroke-[1.8]" />
-                        <span>Practice Shadowing</span>
+                        <Headphones className="h-5 w-5 stroke-[1.8]" />
+                        <span>Listen & Read Transcript</span>
                       </button>
                     )}
                   </div>
@@ -243,6 +321,47 @@ export default function EnglishAudioLibrary() {
           })}
         </div>
       )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pt-6 mt-4 border-t border-[#E5DFE2]/70 flex items-center justify-between font-outfit text-xs text-[#706065]">
+          <span className="font-mono font-medium">
+            Page <strong className="text-[#201B1E]">{page}</strong> of <strong className="text-[#201B1E]">{totalPages}</strong> ({listResponse?.total ?? 0} tracks)
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page <= 1}
+              onClick={() => {
+                setPage((prev) => Math.max(prev - 1, 1))
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }}
+              className="px-3.5 py-2 rounded-xl border border-[#E5DFE2] bg-white hover:bg-[#FCFAF7] disabled:opacity-40 transition-all flex items-center gap-1.5 font-semibold text-[#201B1E] shadow-2xs"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => {
+                setPage((prev) => Math.min(prev + 1, totalPages))
+                window.scrollTo({ top: 0, behavior: "smooth" })
+              }}
+              className="px-3.5 py-2 rounded-xl border border-[#E5DFE2] bg-white hover:bg-[#FCFAF7] disabled:opacity-40 transition-all flex items-center gap-1.5 font-semibold text-[#201B1E] shadow-2xs"
+            >
+              <span>Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AUDIO TRACK ADD / EDIT MODAL */}
+      <AudioTrackModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialData={editingTrack}
+      />
     </div>
   )
 }
+

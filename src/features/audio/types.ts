@@ -32,6 +32,7 @@ export interface AudioListItem {
   level?: string | null
   category?: string | null
   has_transcript: boolean
+  transcript?: string | null
 }
 
 /** Full shape returned by the detail endpoint. */
