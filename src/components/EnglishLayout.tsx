@@ -14,8 +14,8 @@ export default function EnglishLayout() {
 
   const navItems = [
     { label: "Vocabulary", path: "/english/vocabularies", icon: Layers },
-    { label: "Reading", path: "/english/reading", icon: BookOpen, isLink: true },
-    { label: "Listening", path: "/english/listening", icon: Volume2, isLink: true },
+    { label: "Reading", path: "/english/reading", icon: BookOpen },
+    { label: "Listening", path: "/english/listening", icon: Volume2 },
     { label: "Analytics", path: "/english/analytics", icon: TrendingUp },
   ]
 
@@ -30,21 +30,8 @@ export default function EnglishLayout() {
 
         <nav className="flex flex-col gap-1.5 flex-grow">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path
+            const isActive = location.pathname.startsWith(item.path)
             const Icon = item.icon
-
-            if (item.isLink) {
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="flex items-center gap-[12px] px-[12px] py-2.5 rounded-xl text-left text-[#706065] hover:bg-[#F6EBEF] hover:text-[#EFBCD5] transition-all font-semibold"
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-outfit text-sm">{item.label}</span>
-                </Link>
-              )
-            }
 
             return (
               <Link

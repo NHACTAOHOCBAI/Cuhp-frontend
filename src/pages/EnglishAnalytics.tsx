@@ -13,14 +13,14 @@ export default function EnglishAnalytics() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="font-sora font-bold text-3xl text-[#1f1a1d] tracking-tight">
+      <header className="mt-4 mb-6">
+        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
           English Hub Analytics
         </h1>
-        <p className="font-outfit text-base text-[#706065] mt-1">
+        <p className="font-outfit font-normal text-base text-[#706065]">
           Your learning progress statistics
         </p>
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-outfit">
         <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] space-y-4">

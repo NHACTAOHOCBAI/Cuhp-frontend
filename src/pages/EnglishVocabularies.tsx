@@ -89,14 +89,14 @@ export default function EnglishVocabularies() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="font-sora font-bold text-3xl text-[#1f1a1d] tracking-tight">
+      <header className="mt-4 mb-6">
+        <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
           Vocabulary Review
         </h1>
-        <p className="font-outfit text-base text-[#706065] mt-1">
+        <p className="font-outfit font-normal text-base text-[#706065]">
           Daily Leitner System Session
         </p>
-      </div>
+      </header>
 
       <section className="flex flex-col lg:flex-row gap-[24px] items-start w-full">
         {/* SRS Sidebar Box Counts */}
