@@ -171,72 +171,84 @@ export default function EnglishVocabularies() {
               const wordItem = currentWord!;
               return (
                 <div className="w-full max-w-xl flex flex-col items-center gap-5">
-                  <div className="bg-white w-full rounded-[24px] p-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col items-center text-center min-h-[400px] justify-between transition-all duration-300">
-                    <div className="w-full flex-grow flex flex-col justify-center py-6">
-                      {/* Word Card */}
-                      <div className="mb-6">
-                        <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4]">
-                          Box {wordItem.box_number || 1}
-                        </span>
-                        <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] mt-4 tracking-tight">
-                          {wordItem.word}
-                        </h2>
-                        {wordItem.pronunciation && (
-                          <p className="font-outfit text-sm text-[#EFBCD5] font-semibold tracking-wide mt-1.5 font-mono">
-                            {wordItem.pronunciation}
-                          </p>
-                        )}
-                        {wordItem.word_type && (
-                          <span className="text-xs font-bold uppercase font-mono text-[#706065]/60 block mt-1">
-                            ({wordItem.word_type})
+                  {/* 3D Flip Card Container */}
+                  <div
+                    className="w-full min-h-[380px] cursor-pointer [perspective:1000px] select-none"
+                    onClick={() => setRevealMeaning((prev) => !prev)}
+                  >
+                    <div
+                      className={`relative w-full h-full min-h-[380px] transition-transform duration-500 [transform-style:preserve-3d] ${
+                        revealMeaning ? "[transform:rotateY(180deg)]" : ""
+                      }`}
+                    >
+                      {/* Front Face (Word) */}
+                      <div className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col items-center text-center justify-center [backface-visibility:hidden]">
+                        <div className="w-full flex flex-col items-center justify-center py-4">
+                          <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4] mb-4">
+                            Box {wordItem.box_number || 1}
                           </span>
-                        )}
+                          <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] tracking-tight">
+                            {wordItem.word}
+                          </h2>
+                          {wordItem.pronunciation && (
+                            <p className="font-outfit text-sm text-[#EFBCD5] font-semibold tracking-wide mt-1.5 font-mono">
+                              {wordItem.pronunciation}
+                            </p>
+                          )}
+                          {wordItem.word_type && (
+                            <span className="text-xs font-bold uppercase font-mono text-[#706065]/60 block mt-1">
+                              ({wordItem.word_type})
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Revealed Meaning Area */}
-                      {revealMeaning ? (
-                        <div className="space-y-4 max-w-md mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
-                          <p className="font-sora text-lg text-[#201B1E] font-semibold leading-relaxed">
+                      {/* Back Face (Meaning) */}
+                      <div className="absolute inset-0 w-full h-full bg-[#FCFAF7] rounded-[24px] p-[24px] border border-[#EFBCD5]/70 shadow-[0_10px_30px_-5px_rgba(239,188,213,0.2)] flex flex-col items-center text-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                        <div className="w-full flex flex-col items-center justify-center py-4 space-y-4 max-w-md mx-auto">
+                          <span className="font-mono text-xs font-bold text-[#7b5268] uppercase tracking-wider bg-[#EFBCD5]/25 px-3 py-1 rounded-full border border-[#EFBCD5]/40 mb-2">
+                            Meaning
+                          </span>
+                          <p className="font-sora text-2xl text-[#201B1E] font-bold leading-relaxed">
                             {wordItem.meaning}
                           </p>
                           {wordItem.context_sentence && (
-                            <p className="font-outfit text-sm text-[#706065] italic leading-relaxed bg-[#FCFAF7] p-3.5 rounded-xl border border-[#E5DFE2]/60">
+                            <p className="font-outfit text-sm text-[#706065] italic leading-relaxed bg-white p-3.5 rounded-xl border border-[#E5DFE2]/70 w-full">
                               "{wordItem.context_sentence}"
                             </p>
                           )}
                           {wordItem.notes && (
-                            <p className="text-xs font-mono text-[#7b5268] bg-[#fcf1f5]/55 p-2 rounded-lg border border-[#ffd8ea]/50">
+                            <p className="text-xs font-mono text-[#7b5268] bg-[#fcf1f5] p-2 rounded-lg border border-[#ffd8ea]">
                               Notes: {wordItem.notes}
                             </p>
                           )}
                         </div>
-                      ) : (
-                        <button
-                          onClick={() => setRevealMeaning(true)}
-                          className="mx-auto mt-4 px-6 py-2.5 bg-[#fcf1f5] text-[#7b5268] border border-[#d2c2c8] rounded-xl font-sora font-semibold text-xs hover:bg-[#EFBCD5]/20 active:scale-95 transition-all"
-                        >
-                          Show meaning
-                        </button>
-                      )}
+                      </div>
                     </div>
+                  </div>
 
-                    {/* Action buttons */}
-                    <div className="flex gap-[24px] w-full justify-center mt-6">
-                      <button
-                        onClick={() => handleReview(false)}
-                        className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] text-[#706065] font-sora text-base font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2"
-                      >
-                        <X className="h-4.5 w-4.5 text-[#706065] stroke-[2.5px]" />
-                        <span>Forgot</span>
-                      </button>
-                      <button
-                        onClick={() => handleReview(true)}
-                        className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-base font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
-                      >
-                        <Check className="h-4.5 w-4.5 text-[#201B1E] stroke-[3px]" />
-                        <span>Remembered</span>
-                      </button>
-                    </div>
+                  {/* Action Buttons (Forgot / Remembered) */}
+                  <div className="flex gap-[24px] w-full justify-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleReview(false)
+                      }}
+                      className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] bg-white text-[#706065] font-sora text-base font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xs"
+                    >
+                      <X className="h-4.5 w-4.5 text-[#706065] stroke-[2.5px]" />
+                      <span>Forgot</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleReview(true)
+                      }}
+                      className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-base font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
+                    >
+                      <Check className="h-4.5 w-4.5 text-[#201B1E] stroke-[3px]" />
+                      <span>Remembered</span>
+                    </button>
                   </div>
 
                   {/* Bottom Progress Bar (~20px below card) */}
