@@ -539,12 +539,13 @@ export default function Gym() {
               </div>
             )}
 
-            <div className="mt-6 flex justify-center">
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={handleOpenAddModal}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#EFBCD5] text-[#201B1E] text-sm font-sora font-bold rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                className="flex items-center gap-1 text-sm font-sora font-semibold text-[#EFBCD5] hover:text-[#7b5268] transition-colors"
               >
-                <Plus className="h-4 w-4 stroke-[3px]" /> Add Exercise
+                <Plus className="h-4 w-4" />
+                <span>Add Exercise</span>
               </button>
             </div>
           </div>
@@ -597,7 +598,9 @@ export default function Gym() {
               {stats?.weekly_volume.map((day, idx) => {
                 const maxVol = Math.max(...stats.weekly_volume.map((d) => d.volume), 100)
                 const heightPercent = Math.max(Math.round((day.volume / maxVol) * 100), 5)
-                const weekday = new Date(day.date).toLocaleDateString("en-US", { weekday: "short" })
+                const [y, m, d] = day.date.split("-").map(Number)
+                const dateObj = new Date(y, m - 1, d)
+                const weekday = dateObj.toLocaleDateString("en-US", { weekday: "short" })
 
                 return (
                   <div key={idx} className="flex flex-col items-center gap-2 w-full">
