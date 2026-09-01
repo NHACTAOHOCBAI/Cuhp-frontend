@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom"
 import { useAudioById, useAudioIpaQuery } from "@/features/audio/hooks"
 import { useVocabulariesQuery } from "@/features/vocabulary/hooks"
 import { VocabularyModal } from "@/features/vocabulary/components/VocabularyModal"
+import { extractContextSentence } from "@/lib/contextSentence"
 import type { VocabularyItem } from "@/types"
 import {
   Play,
@@ -49,6 +50,7 @@ export default function EnglishShadowingDetail() {
 
   // Floating Selection State
   const [selectedText, setSelectedText] = React.useState<string>("")
+  const [selectedContainerText, setSelectedContainerText] = React.useState<string>("")
   const [selectionPos, setSelectionPos] = React.useState<{ x: number; y: number } | null>(null)
 
   // Vocabulary Modal State
@@ -199,7 +201,14 @@ export default function EnglishShadowingDetail() {
         try {
           const range = selection.getRangeAt(0)
           const rect = range.getBoundingClientRect()
+          const container = range.commonAncestorContainer
+          const containerText =
+            (container.nodeType === Node.TEXT_NODE
+              ? container.parentElement?.textContent
+              : container.textContent) || ""
+
           setSelectedText(text)
+          setSelectedContainerText(containerText)
           setSelectionPos({
             x: rect.left + rect.width / 2,
             y: Math.max(10, rect.top - 8),
@@ -254,9 +263,15 @@ export default function EnglishShadowingDetail() {
     const targetWord = cleanWord || selectedText.trim()
     if (!targetWord) return
 
+    const fullSentence = extractContextSentence(
+      targetWord,
+      transcriptText,
+      selectedContainerText
+    )
+
     setPrefilledVocabItem({
       word: targetWord,
-      context_sentence: selectedText,
+      context_sentence: fullSentence,
       notes: `Saved from listening: ${track?.title || ""}`,
     })
     setIsVocabModalOpen(true)

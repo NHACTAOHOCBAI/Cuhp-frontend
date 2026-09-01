@@ -45,6 +45,7 @@ export function VocabularyModal({ isOpen, onClose, initialData }: VocabularyModa
         setIsLookingUp(true)
         lookupVocabularyWord(w.trim(), token)
           .then((res) => {
+            if (res.word) setWord(res.word)
             if (res.pronunciation) setPronunciation(res.pronunciation)
             if (res.meaning) setMeaning(res.meaning)
             if (res.word_type) setWordType(res.word_type.toLowerCase())
@@ -75,10 +76,11 @@ export function VocabularyModal({ isOpen, onClose, initialData }: VocabularyModa
     setIsLookingUp(true)
     try {
       const res = await lookupVocabularyWord(trimmed, token)
+      if (res.word) setWord(res.word)
       if (res.pronunciation) setPronunciation(res.pronunciation)
       if (res.meaning) setMeaning(res.meaning)
       if (res.word_type) setWordType(res.word_type.toLowerCase())
-      toast.success(`Found details for "${trimmed}"!`)
+      toast.success(`Found details for "${res.word || trimmed}"!`)
     } catch (err: any) {
       toast.error("Could not fetch dictionary info.")
     } finally {
