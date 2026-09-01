@@ -91,4 +91,12 @@ export interface AudioComment {
   selected_text?: string | null
   created_at: string
   user: AudioCommentUser
-}
+}
+
+export interface AudioIpaResponse {
+  id?: string
+  title?: string
+  phonetic: string
+  interlinear: string
+}
+

@@ -8,6 +8,7 @@ import {
   bulkDeleteAudios,
   deleteAudio,
   fetchAudioById,
+  fetchAudioIpa,
   fetchAudios,
   updateAudio,
   uploadAudioWithProgress,
@@ -43,6 +44,16 @@ export function useAudioById(id: string | undefined) {
     queryFn: () => fetchAudioById(id!, token),
     enabled: !!token && !!id,
     staleTime: 60_000,
+  })
+}
+
+export function useAudioIpaQuery(audioId: string | undefined) {
+  const { token } = useAuth()
+  return useQuery({
+    queryKey: [...QUERY_KEY, "detail", audioId, "ipa"] as const,
+    queryFn: () => fetchAudioIpa(audioId!, token),
+    enabled: !!token && !!audioId,
+    staleTime: 5 * 60_000,
   })
 }
 

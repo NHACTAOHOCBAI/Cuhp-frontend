@@ -86,3 +86,22 @@ body {
   background-color: var(--background);
   color: var(--foreground);
 }
+
+/* IPA Phonetic Annotations (Ruby) */
+ruby.ipa-ruby {
+  display: inline-ruby;
+  ruby-position: over;
+  ruby-align: center;
+  margin: 0 1px;
+}
+
+ruby.ipa-ruby rt.ipa-phonetic {
+  font-size: 0.65em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #8c5770;
+  line-height: 1;
+  user-select: none;
+  letter-spacing: -0.2px;
+}
+

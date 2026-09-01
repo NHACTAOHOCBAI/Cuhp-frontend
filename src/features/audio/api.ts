@@ -16,6 +16,7 @@ import type {
   BulkDeleteResponse,
   UploadProgress,
   AudioComment,
+  AudioIpaResponse,
 } from "./types"
 
 const API_BASE = "/api/v1/audio"
@@ -166,4 +167,23 @@ export async function deleteAudioComment(
     method: "DELETE",
     token,
   })
-}
+}
+
+export async function fetchAudioIpa(
+  audioId: string,
+  token: string | null,
+): Promise<AudioIpaResponse> {
+  return apiFetch<AudioIpaResponse>(`${API_BASE}/${audioId}/ipa`, { token })
+}
+
+export async function transcribeTextIpa(
+  text: string,
+  token: string | null,
+): Promise<AudioIpaResponse> {
+  return apiFetch<AudioIpaResponse>(`${API_BASE}/transcribe-ipa`, {
+    method: "POST",
+    body: JSON.stringify({ text }),
+    token,
+  })
+}
+

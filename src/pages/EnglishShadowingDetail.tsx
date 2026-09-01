@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useParams, Link } from "react-router-dom"
-import { useAudioById } from "@/features/audio/hooks"
+import { useAudioById, useAudioIpaQuery } from "@/features/audio/hooks"
 import { useVocabulariesQuery } from "@/features/vocabulary/hooks"
 import { VocabularyModal } from "@/features/vocabulary/components/VocabularyModal"
 import type { VocabularyItem } from "@/types"
@@ -14,6 +14,7 @@ import {
   X,
   Trash2,
   ArrowLeft,
+  Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -27,8 +28,9 @@ interface TrackNote {
 export default function EnglishShadowingDetail() {
   const { id } = useParams<{ id: string }>()
 
-  // 1. Fetch audio track details
+  // 1. Fetch audio track details & IPA transcription
   const { data: track, isLoading: isTrackLoading } = useAudioById(id)
+  const { data: ipaData, isLoading: isIpaLoading } = useAudioIpaQuery(id)
 
   // 2. Fetch saved vocabulary
   const { data: userVocab } = useVocabulariesQuery({ page_size: 1000 })
@@ -70,25 +72,24 @@ export default function EnglishShadowingDetail() {
     track?.transcript ||
     "It's easy to get caught up in the constant hustle of modern life.\n\nWe are always rushing from one task to another, never really pausing.\n\nWe need to embrace slow living in this fast-paced world.\n\nFinding time for a quiet morning coffee can change your whole day.\n\nIt is about intentional choices rather than passive reactions.\n\nWhen we slow down, we actually notice the details around us more clearly.\n\nThis practice isn't about doing less, but doing things with more presence."
 
-  // Render highlighted transcript HTML safely without breaking HTML tags/attributes
-  const renderedTranscriptHtml = React.useMemo(() => {
-    if (!transcriptText) return ""
+  // Helper to safely highlight text in HTML without corrupting tags
+  const applyHighlightsToHtml = (htmlContent: string, highlights: string[]) => {
+    if (!htmlContent) return ""
 
-    // Format if plain text (convert double newlines to paragraphs)
-    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(transcriptText)
-    let baseHtml = transcriptText
+    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(htmlContent)
+    let baseHtml = htmlContent
     if (!hasHtmlTags) {
-      baseHtml = transcriptText
+      baseHtml = htmlContent
         .split(/\n\s*\n/)
         .map((p) => `<p class="mb-4">${p.replace(/\n/g, "<br/>")}</p>`)
         .join("")
     }
 
-    if (!trackHighlights || trackHighlights.length === 0) {
+    if (!highlights || highlights.length === 0) {
       return baseHtml
     }
 
-    const escaped = trackHighlights
+    const escaped = highlights
       .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
       .filter(Boolean)
       .join("|")
@@ -125,7 +126,19 @@ export default function EnglishShadowingDetail() {
     } catch {
       return baseHtml
     }
+  }
+
+  // 1. Rendered English Transcript HTML
+  const renderedTranscriptHtml = React.useMemo(() => {
+    return applyHighlightsToHtml(transcriptText, trackHighlights)
   }, [transcriptText, trackHighlights])
+
+  // 2. Rendered Full IPA Transcript HTML
+  const renderedIpaHtml = React.useMemo(() => {
+    const rawIpa = ipaData?.phonetic || ""
+    if (!rawIpa) return ""
+    return applyHighlightsToHtml(rawIpa, trackHighlights)
+  }, [ipaData?.phonetic, trackHighlights])
 
   // HTML5 Audio event handlers & simulation fallback
   React.useEffect(() => {
@@ -439,14 +452,14 @@ export default function EnglishShadowingDetail() {
         </div>
       </header>
 
-      {/* Main Split Grid (Left: Audio Player & Sidebar Panels, Right: Transcript Card) */}
-      <main className="flex flex-col lg:flex-row gap-6 items-stretch">
-        {/* Left Column: Audio Player & Sidebar Panels */}
-        <div className="w-full lg:w-[45%] flex flex-col gap-6">
-          {/* Audio Player Card (matching screenshot) */}
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col gap-6">
+      {/* Main 3-Column Split Grid */}
+      <main className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+        {/* Column 1: Audio Player & Sidebar Panels */}
+        <div className="flex flex-col gap-5">
+          {/* Audio Player Card */}
+          <div className="bg-white rounded-[24px] p-5 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col gap-5">
             {/* Waveform graphic visualization box */}
-            <div className="flex items-center justify-center bg-[#fcf1f5]/30 rounded-2xl border border-[#E5DFE2] relative overflow-hidden h-36">
+            <div className="flex items-center justify-center bg-[#fcf1f5]/30 rounded-2xl border border-[#E5DFE2] relative overflow-hidden h-32">
               <img
                 alt="Waveform"
                 className="absolute inset-0 w-full h-full object-cover opacity-75"
@@ -471,15 +484,15 @@ export default function EnglishShadowingDetail() {
               </div>
             </div>
 
-            {/* Centered Playback controls matching screenshot */}
-            <div className="flex justify-center items-center gap-8 pt-1 relative">
+            {/* Centered Playback controls */}
+            <div className="flex justify-center items-center gap-6 pt-1 relative">
               {/* Rewind 10s */}
               <button
                 onClick={() => handleSkip(-10)}
                 className="text-[#201B1E] hover:text-[#EFBCD5] transition-all p-2 flex items-center justify-center active:scale-95 cursor-pointer"
                 title="Rewind 10 seconds"
               >
-                <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                   <path d="M3 3v5h5" />
                   <text x="12" y="14.5" fontSize="6.5" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none" fontFamily="monospace">10</text>
@@ -489,13 +502,13 @@ export default function EnglishShadowingDetail() {
               {/* Center Play/Pause Circle */}
               <button
                 onClick={handleTogglePlay}
-                className="w-16 h-16 rounded-full bg-[#EFBCD5] text-[#201B1E] flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm border border-[#ffd8ea] cursor-pointer flex-shrink-0"
+                className="w-14 h-14 rounded-full bg-[#EFBCD5] text-[#201B1E] flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm border border-[#ffd8ea] cursor-pointer flex-shrink-0"
                 title={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? (
-                  <Pause className="h-7 w-7 stroke-[2.5]" />
+                  <Pause className="h-6 w-6 stroke-[2.5]" />
                 ) : (
-                  <Play className="h-7 w-7 stroke-[2.5] fill-current ml-1" />
+                  <Play className="h-6 w-6 stroke-[2.5] fill-current ml-0.5" />
                 )}
               </button>
 
@@ -505,7 +518,7 @@ export default function EnglishShadowingDetail() {
                 className="text-[#201B1E] hover:text-[#EFBCD5] transition-all p-2 flex items-center justify-center active:scale-95 cursor-pointer"
                 title="Forward 10 seconds"
               >
-                <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                   <path d="M21 3v5h-5" />
                   <text x="12" y="14.5" fontSize="6.5" fontWeight="bold" textAnchor="middle" fill="currentColor" stroke="none" fontFamily="monospace">10</text>
@@ -515,23 +528,23 @@ export default function EnglishShadowingDetail() {
           </div>
 
           {/* Listening Notes & Comments Panel */}
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0">
-            <h3 className="font-sora font-bold text-base text-[#201B1E] mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-[24px] p-5 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0">
+            <h3 className="font-sora font-bold text-sm text-[#201B1E] mb-3 flex items-center gap-2">
               <StickyNote className="h-4 w-4 text-[#EFBCD5]" /> Listening Notes ({trackNotes.length})
             </h3>
             {trackNotes.length === 0 ? (
-              <p className="text-xs text-[#706065] italic py-2">
+              <p className="text-xs text-[#706065] italic py-1">
                 No notes added yet. Highlight text in the transcript to add notes & comments!
               </p>
             ) : (
-              <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-40 overflow-y-auto pr-1">
                 {trackNotes.map((note) => (
                   <div
                     key={note.id}
-                    className="p-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-xs space-y-1.5 relative group"
+                    className="p-2.5 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-xs space-y-1 relative group"
                   >
                     <div className="flex justify-between items-start">
-                      <span className="font-semibold text-[#7b5268] italic border-l-2 border-[#EFBCD5] pl-2 block truncate max-w-[220px]">
+                      <span className="font-semibold text-[#7b5268] italic border-l-2 border-[#EFBCD5] pl-2 block truncate max-w-[180px]">
                         "{note.selectedText}"
                       </span>
                       <button
@@ -553,31 +566,31 @@ export default function EnglishShadowingDetail() {
           </div>
 
           {/* Saved Vocabulary in Track Panel */}
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0 font-outfit">
-            <h3 className="font-sora font-bold text-base text-[#201B1E] mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-[24px] p-5 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0 font-outfit">
+            <h3 className="font-sora font-bold text-sm text-[#201B1E] mb-3 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#EFBCD5]" />
               <span>Saved Vocabulary in Track ({savedTrackWords.length})</span>
             </h3>
             {savedTrackWords.length === 0 ? (
-              <p className="text-xs text-[#706065] italic py-2">
-                No vocabulary saved from this track yet. Highlight transcript text and click "Save Vocab"!
+              <p className="text-xs text-[#706065] italic py-1">
+                No vocabulary saved from this track yet. Highlight text and click "Save Vocab"!
               </p>
             ) : (
-              <ul className="space-y-3 font-outfit max-h-64 overflow-y-auto pr-1">
+              <ul className="space-y-2 font-outfit max-h-48 overflow-y-auto pr-1">
                 {savedTrackWords.map((item) => (
                   <li
                     key={item.id}
-                    className="flex justify-between items-center p-2.5 hover:bg-[#fcf1f5] rounded-xl cursor-pointer transition-colors border-b border-[#E5DFE2]/40 last:border-0 pb-3"
+                    className="flex justify-between items-center p-2 hover:bg-[#fcf1f5] rounded-xl cursor-pointer transition-colors border-b border-[#E5DFE2]/40 last:border-0 pb-2"
                   >
                     <div>
-                      <span className="font-bold text-base text-[#1f1a1d]">{item.word}</span>
+                      <span className="font-bold text-sm text-[#1f1a1d]">{item.word}</span>
                       {item.pronunciation && (
-                        <span className="font-mono text-xs text-[#706065] ml-2 font-semibold">
+                        <span className="font-mono text-[11px] text-[#706065] ml-1.5 font-semibold">
                           {item.pronunciation}
                         </span>
                       )}
                     </div>
-                    <span className="text-xs font-semibold text-[#7b5268] bg-[#fcf1f5] px-2.5 py-1 rounded-lg border border-[#eae0e4] max-w-[180px] truncate">
+                    <span className="text-[11px] font-semibold text-[#7b5268] bg-[#fcf1f5] px-2 py-0.5 rounded-lg border border-[#eae0e4] max-w-[130px] truncate">
                       {item.meaning}
                     </span>
                   </li>
@@ -587,24 +600,56 @@ export default function EnglishShadowingDetail() {
           </div>
         </div>
 
-        {/* Right Column: English Transcript Card */}
-        <div className="w-full lg:w-[55%] flex flex-col gap-6">
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[650px] overflow-hidden">
+        {/* Column 2: English Transcript Card */}
+        <div className="flex flex-col">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[680px] overflow-hidden">
             {/* Card Header */}
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#E5DFE2]/70">
-              <h2 className="font-sora text-lg font-bold text-[#1f1a1d]">
-                Transcript
+              <h2 className="font-sora text-base font-bold text-[#1f1a1d] flex items-center gap-2">
+                <span>Transcript</span>
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-[#FCFAF7] text-[#706065] border border-[#E5DFE2]">
+                  English
+                </span>
               </h2>
-              <span className="text-xs font-normal text-[#706065] font-outfit">
-                Highlight text to save vocab, add notes, or search YouGlish
+              <span className="text-[11px] font-normal text-[#706065] font-outfit">
+                Highlight to save
               </span>
             </div>
 
             {/* Sentences Transcript Scroller */}
             <div
-              className="transcript-content flex-grow overflow-y-auto pr-2 text-base font-outfit text-zinc-800 leading-[1.8] select-text hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-4 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+              className="transcript-content flex-grow overflow-y-auto pr-2 text-sm text-zinc-800 leading-[1.8] select-text hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-3 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
               dangerouslySetInnerHTML={{ __html: renderedTranscriptHtml }}
             />
+          </div>
+        </div>
+
+        {/* Column 3: IPA Phonetics Card */}
+        <div className="flex flex-col">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[680px] overflow-hidden">
+            {/* Card Header */}
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#E5DFE2]/70">
+              <h2 className="font-sora text-base font-bold text-[#1f1a1d] flex items-center gap-2">
+                <span>IPA Phonetics</span>
+                <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-md bg-[#fcf1f5] text-[#70495e] border border-[#EFBCD5]/50">
+                  Full IPA
+                </span>
+              </h2>
+              {isIpaLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#70495e]" />}
+            </div>
+
+            {/* Phonetic Content */}
+            {isIpaLoading && !renderedIpaHtml ? (
+              <div className="flex-grow flex flex-col items-center justify-center gap-3 text-[#706065] font-outfit">
+                <Loader2 className="w-6 h-6 animate-spin text-[#EFBCD5]" />
+                <p className="text-xs font-semibold">Generating full IPA phonetic transcription...</p>
+              </div>
+            ) : (
+              <div
+                className="transcript-content flex-grow overflow-y-auto pr-2 text-sm text-zinc-800 leading-[1.8] select-text hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-3 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+                dangerouslySetInnerHTML={{ __html: renderedIpaHtml }}
+              />
+            )}
           </div>
         </div>
       </main>
