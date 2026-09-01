@@ -23,6 +23,7 @@ import {
   Pencil,
 } from "lucide-react"
 import { toast } from "sonner"
+import { CustomSelect } from "@/components/ui/CustomSelect"
 
 export default function Gym() {
   const { token } = useAuth()
@@ -54,6 +55,14 @@ export default function Gym() {
 
   // 1. Fetch categories
   const { data: categories } = useGymCategoriesQuery()
+
+  const categoryOptions = React.useMemo(() => {
+    if (!categories) return []
+    return categories.map((cat) => ({
+      value: cat.id,
+      label: cat.name,
+    }))
+  }, [categories])
 
   // 2. Fetch exercises for currently selected date
   const { data: exercises, isLoading: isExercisesLoading } = useGymExercisesQuery(selectedDateStr)
@@ -675,18 +684,12 @@ export default function Gym() {
                 <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
                   Muscle Group
                 </label>
-                <select
+                <CustomSelect
                   value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  className="w-full px-4 py-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all"
-                >
-                  <option value="">-- Select muscle group --</option>
-                  {categories?.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedCategoryId(val)}
+                  options={categoryOptions}
+                  placeholder="-- Select muscle group --"
+                />
               </div>
 
               {/* Sets & Reps Numeric Grid */}

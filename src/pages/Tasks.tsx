@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react"
 import { toast } from "sonner"
+import { CustomSelect } from "@/components/ui/CustomSelect"
 
 export default function Tasks() {
   // 1. Fetch todos
@@ -582,16 +583,17 @@ export default function Tasks() {
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
                   Eisenhower Matrix
                 </label>
-                <select
+                <CustomSelect
                   value={newQuadrant}
-                  onChange={(e) => setNewQuadrant(e.target.value as TodoQuadrant)}
-                  className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d]"
-                >
-                  <option value="do">Do First (Urgent & Important)</option>
-                  <option value="schedule">Schedule (Not Urgent & Important)</option>
-                  <option value="delegate">Delegate (Urgent & Not Important)</option>
-                  <option value="eliminate">Eliminate (Not Urgent & Not Important)</option>
-                </select>
+                  onChange={(val) => setNewQuadrant(val as TodoQuadrant)}
+                  options={[
+                    { value: "do", label: "Do First (Urgent & Important)", color: "#EF4444" },
+                    { value: "schedule", label: "Schedule (Not Urgent & Important)", color: "#3B82F6" },
+                    { value: "delegate", label: "Delegate (Urgent & Not Important)", color: "#F59E0B" },
+                    { value: "eliminate", label: "Eliminate (Not Urgent & Not Important)", color: "#10B981" },
+                  ]}
+                  placeholder="-- Select Quadrant --"
+                />
               </div>
 
               <div className="pt-4 border-t border-[#E5DFE2] flex gap-3">
