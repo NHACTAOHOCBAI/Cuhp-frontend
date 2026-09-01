@@ -170,81 +170,89 @@ export default function EnglishVocabularies() {
             (() => {
               const wordItem = currentWord!;
               return (
-                <div className="bg-white w-full max-w-xl rounded-[24px] p-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col items-center text-center relative min-h-[400px] justify-between transition-all duration-300">
-                  {/* Top Progress bar */}
-                  <div className="absolute top-0 left-0 w-full h-1.5 bg-zinc-100 rounded-t-[24px] overflow-hidden">
-                    <div
-                      className="h-full bg-[#EFBCD5] rounded-r-full transition-all duration-300"
-                      style={{
-                        width: `${((currentCardIndex) / dueTotal) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
-
-                  <div className="w-full flex-grow flex flex-col justify-center py-6">
-                    {/* Word Card */}
-                    <div className="mb-6">
-                      <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4]">
-                        Box {wordItem.box_number || 1}
-                      </span>
-                      <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] mt-4 tracking-tight">
-                        {wordItem.word}
-                      </h2>
-                      {wordItem.pronunciation && (
-                        <p className="font-outfit text-sm text-[#EFBCD5] font-semibold tracking-wide mt-1.5 font-mono">
-                          {wordItem.pronunciation}
-                        </p>
-                      )}
-                      {wordItem.word_type && (
-                        <span className="text-xs font-bold uppercase font-mono text-[#706065]/60 block mt-1">
-                          ({wordItem.word_type})
+                <div className="w-full max-w-xl flex flex-col items-center gap-5">
+                  <div className="bg-white w-full rounded-[24px] p-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col items-center text-center min-h-[400px] justify-between transition-all duration-300">
+                    <div className="w-full flex-grow flex flex-col justify-center py-6">
+                      {/* Word Card */}
+                      <div className="mb-6">
+                        <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4]">
+                          Box {wordItem.box_number || 1}
                         </span>
+                        <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] mt-4 tracking-tight">
+                          {wordItem.word}
+                        </h2>
+                        {wordItem.pronunciation && (
+                          <p className="font-outfit text-sm text-[#EFBCD5] font-semibold tracking-wide mt-1.5 font-mono">
+                            {wordItem.pronunciation}
+                          </p>
+                        )}
+                        {wordItem.word_type && (
+                          <span className="text-xs font-bold uppercase font-mono text-[#706065]/60 block mt-1">
+                            ({wordItem.word_type})
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Revealed Meaning Area */}
+                      {revealMeaning ? (
+                        <div className="space-y-4 max-w-md mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
+                          <p className="font-sora text-lg text-[#201B1E] font-semibold leading-relaxed">
+                            {wordItem.meaning}
+                          </p>
+                          {wordItem.context_sentence && (
+                            <p className="font-outfit text-sm text-[#706065] italic leading-relaxed bg-[#FCFAF7] p-3.5 rounded-xl border border-[#E5DFE2]/60">
+                              "{wordItem.context_sentence}"
+                            </p>
+                          )}
+                          {wordItem.notes && (
+                            <p className="text-xs font-mono text-[#7b5268] bg-[#fcf1f5]/55 p-2 rounded-lg border border-[#ffd8ea]/50">
+                              Notes: {wordItem.notes}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setRevealMeaning(true)}
+                          className="mx-auto mt-4 px-6 py-2.5 bg-[#fcf1f5] text-[#7b5268] border border-[#d2c2c8] rounded-xl font-sora font-semibold text-xs hover:bg-[#EFBCD5]/20 active:scale-95 transition-all"
+                        >
+                          Show meaning
+                        </button>
                       )}
                     </div>
 
-                    {/* Revealed Meaning Area */}
-                    {revealMeaning ? (
-                      <div className="space-y-4 max-w-md mx-auto animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <p className="font-sora text-lg text-[#201B1E] font-semibold leading-relaxed">
-                          {wordItem.meaning}
-                        </p>
-                        {wordItem.context_sentence && (
-                          <p className="font-outfit text-sm text-[#706065] italic leading-relaxed bg-[#FCFAF7] p-3.5 rounded-xl border border-[#E5DFE2]/60">
-                            "{wordItem.context_sentence}"
-                          </p>
-                        )}
-                        {wordItem.notes && (
-                          <p className="text-xs font-mono text-[#7b5268] bg-[#fcf1f5]/55 p-2 rounded-lg border border-[#ffd8ea]/50">
-                            Notes: {wordItem.notes}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
+                    {/* Action buttons */}
+                    <div className="flex gap-[24px] w-full justify-center mt-6">
                       <button
-                        onClick={() => setRevealMeaning(true)}
-                        className="mx-auto mt-4 px-6 py-2.5 bg-[#fcf1f5] text-[#7b5268] border border-[#d2c2c8] rounded-xl font-sora font-semibold text-xs hover:bg-[#EFBCD5]/20 active:scale-95 transition-all"
+                        onClick={() => handleReview(false)}
+                        className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] text-[#706065] font-sora text-base font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
-                        Show meaning
+                        <X className="h-4.5 w-4.5 text-[#706065] stroke-[2.5px]" />
+                        <span>Forgot</span>
                       </button>
-                    )}
+                      <button
+                        onClick={() => handleReview(true)}
+                        className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-base font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
+                      >
+                        <Check className="h-4.5 w-4.5 text-[#201B1E] stroke-[3px]" />
+                        <span>Remembered</span>
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Action buttons */}
-                  <div className="flex gap-[24px] w-full justify-center mt-6">
-                    <button
-                      onClick={() => handleReview(false)}
-                      className="flex-1 py-3 px-6 rounded-[24px] border border-[#E5DFE2] text-[#706065] font-sora text-base font-bold hover:bg-zinc-50 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      <X className="h-4.5 w-4.5 text-red-500 stroke-[2.5px]" />
-                      <span>Forgot</span>
-                    </button>
-                    <button
-                      onClick={() => handleReview(true)}
-                      className="flex-1 py-3 px-6 rounded-[24px] bg-[#EFBCD5] text-[#201B1E] font-sora text-base font-bold hover:opacity-90 active:scale-95 transition-all shadow-sm flex items-center justify-center gap-2 border border-[#ffd8ea]"
-                    >
-                      <Check className="h-4.5 w-4.5 text-[#201B1E] stroke-[3px]" />
-                      <span>Remembered</span>
-                    </button>
+                  {/* Bottom Progress Bar (~20px below card) */}
+                  <div className="w-full font-outfit">
+                    <div className="flex justify-between items-center text-xs font-mono font-semibold text-[#706065] mb-1.5 px-1">
+                      <span>Progress</span>
+                      <span>{currentCardIndex} / {dueTotal} words</span>
+                    </div>
+                    <div className="w-full h-2.5 bg-[#fcf1f5] rounded-full overflow-hidden border border-[#E5DFE2]/60 shadow-xs">
+                      <div
+                        className="h-full bg-[#EFBCD5] rounded-full transition-all duration-300"
+                        style={{
+                          width: `${(currentCardIndex / dueTotal) * 100}%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               );

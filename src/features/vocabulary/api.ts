@@ -18,6 +18,7 @@ export async function fetchVocabularies(
   if (params.page_size) search.set("page_size", String(params.page_size))
   if (params.q) search.set("q", params.q)
   if (params.word_type) search.set("word_type", params.word_type)
+  if (params.due !== undefined && params.due !== null) search.set("due", String(params.due))
 
   const qs = search.toString()
   const path = qs ? `${API_BASE}?${qs}` : API_BASE
