@@ -143,7 +143,7 @@ export default function EnglishShadowingDetail() {
           {trackTitle}
         </h1>
         <p className="font-outfit text-base text-[#7b5268] font-semibold">
-          Track {track?.id ? track.id.slice(-2) : "04"} • Intermediate • {formatTime(duration)}
+          {track?.level ? `${track.level} Level` : "Intermediate"} • {track?.category || "General English"} • {formatTime(duration)}
         </p>
       </header>
 

@@ -1,26 +1,39 @@
 import * as React from "react"
 import { useParams, Link } from "react-router-dom"
-import { useAuth } from "@/hooks/useAuth"
 import {
   useReadingPassageById,
   useTranslationPracticeQuery,
   useSaveTranslationPractice,
 } from "@/features/reading/hooks"
-import { useCreateVocabulary } from "@/features/vocabulary/hooks"
-import { lookupVocabularyWord } from "@/features/vocabulary/api"
-import { ArrowLeft, Languages, Check, Save } from "lucide-react"
+import { useVocabulariesQuery } from "@/features/vocabulary/hooks"
+import { VocabularyModal } from "@/features/vocabulary/components/VocabularyModal"
+import { RichTextEditor } from "@/components/ui/RichTextEditor"
+import type { VocabularyItem } from "@/types"
+import {
+  ArrowLeft,
+  Languages,
+  Save,
+  Bookmark,
+  MessageSquare,
+  ExternalLink,
+  StickyNote,
+  Trash2,
+  X,
+  Highlighter,
+} from "lucide-react"
 import { toast } from "sonner"
 
-interface LookupData {
-  word: string
-  pronunciation?: string | null
-  meaning?: string | null
-  word_type?: string | null
+
+
+interface PassageNote {
+  id: string
+  selectedText: string
+  comment: string
+  createdAt: string
 }
 
 export default function EnglishReadingDetail() {
   const { id } = useParams<{ id: string }>()
-  const { token } = useAuth()
 
   // 1. Fetch reading passage details
   const { data: passage, isLoading: isPassageLoading } = useReadingPassageById(id)
@@ -28,96 +41,244 @@ export default function EnglishReadingDetail() {
   // 2. Fetch user's translation practice
   const { data: practice } = useTranslationPracticeQuery(id)
 
-  // 3. Save translation practice mutation
+  // 4. Save translation practice mutation
   const saveTranslationMutation = useSaveTranslationPractice(id!)
 
-  // 4. Save word to Leitner mutation
-  const createVocabMutation = useCreateVocabulary()
+  // 5. Fetch user's saved vocabulary list & filter words saved from this passage
+  const { data: userVocab } = useVocabulariesQuery({ page_size: 1000 })
+
+  const savedPassageWords = React.useMemo(() => {
+    if (!userVocab?.items || !passage) return []
+    const titleLower = passage.title.toLowerCase()
+    const contentLower = passage.content.toLowerCase()
+
+    return userVocab.items.filter((item) => {
+      const noteMatches = item.notes?.toLowerCase().includes(titleLower)
+      const textMatches = contentLower.includes(item.word.toLowerCase())
+      return noteMatches || textMatches
+    })
+  }, [userVocab, passage])
 
   // Local state for translation text input
   const [translationText, setTranslationText] = React.useState("")
 
-  // Set translation text when loaded from server
+  // Passage Notes & Highlights state
+  const [passageNotes, setPassageNotes] = React.useState<PassageNote[]>([])
+  const [passageHighlights, setPassageHighlights] = React.useState<string[]>([])
+  const [isCommentModalOpen, setIsCommentModalOpen] = React.useState(false)
+  const [commentInput, setCommentInput] = React.useState("")
+
+  // Floating Selection State
+  const [selectedText, setSelectedText] = React.useState<string>("")
+  const [selectionPos, setSelectionPos] = React.useState<{ x: number; y: number } | null>(null)
+
+  // Vocabulary Modal State for Reading page
+  const [isVocabModalOpen, setIsVocabModalOpen] = React.useState(false)
+  const [prefilledVocabItem, setPrefilledVocabItem] = React.useState<Partial<VocabularyItem> | null>(null)
+
+  // Load translation & passage notes on mount
   React.useEffect(() => {
     if (practice) {
       setTranslationText(practice.translation_content)
     }
   }, [practice])
 
-  // Mark passage as read in localStorage when first opening
   React.useEffect(() => {
     if (id) {
       localStorage.setItem(`read_passage_${id}`, "true")
+      const currentProg = localStorage.getItem(`passage_progress_${id}`)
+      if (!currentProg) {
+        localStorage.setItem(`passage_progress_${id}`, "40")
+      }
+      const savedNotes = localStorage.getItem(`passage_notes_${id}`)
+      if (savedNotes) {
+        try {
+          setPassageNotes(JSON.parse(savedNotes))
+        } catch {
+          setPassageNotes([])
+        }
+      }
+      const savedHighlights = localStorage.getItem(`passage_highlights_${id}`)
+      if (savedHighlights) {
+        try {
+          setPassageHighlights(JSON.parse(savedHighlights))
+        } catch {
+          setPassageHighlights([])
+        }
+      }
     }
   }, [id])
 
-  // Local state for word click-to-lookup feature
-  const [lookupWord, setLookupWord] = React.useState<string | null>(null)
-  const [lookupData, setLookupData] = React.useState<LookupData | null>(null)
-  const [lookupLoading, setLookupLoading] = React.useState(false)
-  const [popupPos, setPopupPos] = React.useState<{ x: number; y: number } | null>(null)
-
-  // Dictionary lookup when clicking on a word
-  const handleWordClick = async (e: React.MouseEvent, word: string) => {
-    e.stopPropagation()
-    setLookupWord(word)
-    setLookupLoading(true)
-    setLookupData(null)
-
-    // Position popup next to clicked word coordinates
-    const rect = (e.target as HTMLElement).getBoundingClientRect()
-    setPopupPos({
-      x: rect.left + window.scrollX,
-      y: rect.bottom + window.scrollY + 8,
-    })
-
-    try {
-      const data = await lookupVocabularyWord(word, token)
-      setLookupData(data)
-    } catch (err) {
-      toast.error("Unable to look up the dictionary right now.")
-    } finally {
-      setLookupLoading(false)
+  // Save notes to localStorage
+  const savePassageNotesToStorage = (updated: PassageNote[]) => {
+    setPassageNotes(updated)
+    if (id) {
+      localStorage.setItem(`passage_notes_${id}`, JSON.stringify(updated))
     }
   }
 
-  // Handle saving looked up word to Leitner Box 1
-  const handleSaveWord = () => {
-    if (!lookupData) return
-
-    createVocabMutation.mutate(
-      {
-        word: lookupData.word,
-        meaning: lookupData.meaning || "Meaning not set",
-        pronunciation: lookupData.pronunciation || null,
-        word_type: lookupData.word_type || null,
-        notes: "Saved from reading: " + (passage?.title || ""),
-        context_sentence: null,
-      },
-      {
-        onSuccess: () => {
-          toast.success(`Saved "${lookupData.word}" to Box 1 (SRS)!`)
-          setLookupWord(null)
-          setLookupData(null)
-          setPopupPos(null)
-        },
-        onError: (err) => {
-          toast.error(`Failed to save vocabulary: ${err.message}`)
-        },
+  // Handle Text Selection Popup
+  React.useEffect(() => {
+    const handleMouseUp = (e: MouseEvent) => {
+      // Ignore if clicking inside toolbar or modal
+      const target = e.target as HTMLElement
+      if (target.closest(".selection-toolbar") || target.closest(".comment-modal")) {
+        return
       }
+
+      const selection = window.getSelection()
+      if (!selection || selection.isCollapsed) {
+        return
+      }
+
+      const text = selection.toString().trim()
+      if (text.length > 0) {
+        try {
+          const range = selection.getRangeAt(0)
+          const rect = range.getBoundingClientRect()
+          setSelectedText(text)
+          setSelectionPos({
+            x: rect.left + rect.width / 2,
+            y: Math.max(10, rect.top - 8),
+          })
+        } catch {
+          // ignore selection errors
+        }
+      }
+    }
+
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest(".selection-toolbar") || target.closest(".comment-modal")) {
+        return
+      }
+      const selection = window.getSelection()
+      if (!selection || selection.isCollapsed) {
+        setSelectionPos(null)
+      }
+    }
+
+    document.addEventListener("mouseup", handleMouseUp)
+    document.addEventListener("click", handleDocumentClick)
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp)
+      document.removeEventListener("click", handleDocumentClick)
+    }
+  }, [])
+
+
+
+  // Action 0: Highlight Selected Text
+  const handleHighlightSelectedText = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!selectedText) return
+    const textToHighlight = selectedText.trim()
+    if (!textToHighlight) return
+
+    if (!passageHighlights.includes(textToHighlight)) {
+      const updated = [...passageHighlights, textToHighlight]
+      setPassageHighlights(updated)
+      if (id) {
+        localStorage.setItem(`passage_highlights_${id}`, JSON.stringify(updated))
+      }
+      toast.success("Text highlighted!")
+    } else {
+      toast.info("This text is already highlighted.")
+    }
+    setSelectionPos(null)
+  }
+
+  // Render paragraph content with HTML tags and highlighted marks
+  const renderParagraphWithHighlights = (text: string) => {
+    let formattedText = text
+    if (passageHighlights && passageHighlights.length > 0) {
+      const escaped = passageHighlights
+        .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .filter(Boolean)
+        .join("|")
+      if (escaped) {
+        try {
+          const regex = new RegExp(`(${escaped})`, "gi")
+          formattedText = text.replace(
+            regex,
+            '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all">$1</mark>'
+          )
+        } catch {
+          // ignore regex errors
+        }
+      }
+    }
+
+    return (
+      <span
+        className="whitespace-pre-wrap leading-[1.7]"
+        dangerouslySetInnerHTML={{ __html: formattedText }}
+      />
     )
   }
 
-  // Close lookup popup when clicking elsewhere
-  React.useEffect(() => {
-    const handleClose = () => {
-      setLookupWord(null)
-      setLookupData(null)
-      setPopupPos(null)
+  // Action 1: Save Selection as Vocabulary via Modal
+  const handleSaveSelectedVocab = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!selectedText) return
+    const cleanWord = selectedText.replace(/^[^a-zA-Z]+|[^a-zA-Z]+$/g, "").trim()
+    const targetWord = cleanWord || selectedText.trim()
+    if (!targetWord) return
+
+    setPrefilledVocabItem({
+      word: targetWord,
+      context_sentence: selectedText,
+      notes: `Saved from reading: ${passage?.title || ""}`,
+    })
+    setIsVocabModalOpen(true)
+    setSelectionPos(null)
+  }
+
+  // Action 2: Add Comment / Note for Selection
+  const handleOpenAddComment = () => {
+    setCommentInput("")
+    setIsCommentModalOpen(true)
+  }
+
+  const handleSaveComment = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!commentInput.trim() || !selectedText) return
+
+    const newNote: PassageNote = {
+      id: `note-${Date.now()}`,
+      selectedText,
+      comment: commentInput.trim(),
+      createdAt: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     }
-    window.addEventListener("click", handleClose)
-    return () => window.removeEventListener("click", handleClose)
-  }, [])
+
+    const updated = [newNote, ...passageNotes]
+    savePassageNotesToStorage(updated)
+    toast.success("Note added successfully!")
+    setIsCommentModalOpen(false)
+    setSelectionPos(null)
+  }
+
+  const handleDeleteNote = (noteId: string) => {
+    const updated = passageNotes.filter((n) => n.id !== noteId)
+    savePassageNotesToStorage(updated)
+    toast.success("Note deleted.")
+  }
+
+  // Action 3: Open YouGlish Pronunciation
+  const handleOpenYouglish = () => {
+    if (!selectedText) return
+    const query = encodeURIComponent(selectedText.trim())
+    const url = `https://youglish.com/pronounce/${query}/english`
+    window.open(url, "_blank", "noopener,noreferrer")
+    setSelectionPos(null)
+  }
+
+
 
   // Handle saving translation practice
   const handleSaveTranslation = () => {
@@ -137,50 +298,11 @@ export default function EnglishReadingDetail() {
     )
   }
 
-  const handleTranslationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value
-    setTranslationText(val)
-    if (id && val.trim().length > 0) {
-      const currentProgress = localStorage.getItem(`passage_progress_${id}`)
-      if (currentProgress !== "100") {
-        localStorage.setItem(`passage_progress_${id}`, "40")
-      }
-    }
-  }
 
-  // Render a paragraph text splitting into clickable word spans
-  const renderInteractiveText = (text: string) => {
-    const words = text.split(/(\s+)/)
-    return words.map((chunk, idx) => {
-      if (/^\s+$/.test(chunk)) {
-        return chunk
-      }
-      // Clean word to query
-      const cleanWord = chunk.replace(/[^a-zA-Z]/g, "")
-      if (!cleanWord) return chunk
-
-      return (
-        <span
-          key={idx}
-          onClick={(e) => handleWordClick(e, cleanWord)}
-          className="hover:bg-[#EFBCD5]/35 hover:text-[#7b5268] cursor-pointer px-0.5 rounded transition-all inline-block font-semibold"
-        >
-          {chunk}
-        </span>
-      )
-    })
-  }
-
-  // Vocabulary highlight in sidebar
-  const highlightWords = [
-    { word: "Serendipity", ipa: "/ˌserənˈdipədē/", meaning: "Pleasant surprise discovery" },
-    { word: "Mindfulness", ipa: "/ˈmīn(d)fəlnəs/", meaning: "Quality of being aware" },
-    { word: "Tranquility", ipa: "/traNGˈkwilədē/", meaning: "State of calmness" },
-  ]
 
   if (isPassageLoading) {
     return (
-      <div className="py-12 space-y-6 animate-pulse max-w-5xl mx-auto">
+      <div className="py-12 space-y-6 animate-pulse max-w-5xl mx-auto font-outfit">
         <div className="h-4 bg-zinc-100 rounded w-1/4"></div>
         <div className="h-10 bg-zinc-100 rounded w-3/4"></div>
         <div className="h-64 bg-zinc-50 rounded w-full"></div>
@@ -190,9 +312,9 @@ export default function EnglishReadingDetail() {
 
   if (!passage) {
     return (
-      <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px]">
-        <p className="font-outfit text-sm font-semibold text-[#706065]">This passage was not found.</p>
-        <Link to="/english/reading" className="mt-4 text-xs font-bold text-[#EFBCD5] hover:underline">
+      <div className="text-center py-16 bg-white border border-[#E5DFE2] rounded-[24px] font-outfit">
+        <p className="text-sm font-semibold text-[#706065]">This passage was not found.</p>
+        <Link to="/english/reading" className="mt-4 text-xs font-bold text-[#EFBCD5] hover:underline inline-block">
           Back to reading library
         </Link>
       </div>
@@ -200,39 +322,53 @@ export default function EnglishReadingDetail() {
   }
 
   return (
-    <div className="space-y-6 w-full relative">
+    <div className="space-y-6 w-full relative font-outfit">
       {/* Page Header */}
       <header className="mb-[24px]">
         <Link
           to="/english/reading"
-          className="font-outfit text-sm text-[#706065] hover:text-[#EFBCD5] transition-colors flex items-center gap-1.5 mb-2 font-semibold"
+          className="text-sm text-[#706065] hover:text-[#EFBCD5] transition-colors flex items-center gap-1.5 mb-2 font-semibold"
         >
           <ArrowLeft className="h-4 w-4" /> Reading Library
         </Link>
         <h1 className="font-sora font-bold text-3xl text-[#201B1E] mb-1">{passage.title}</h1>
-        <div className="font-mono text-xs font-bold text-[#70495e] uppercase tracking-wider">
-          {passage.level ? `${passage.level} Level` : "General English"} • 5 min read
-        </div>
+        {(() => {
+          const words = passage.content ? passage.content.trim().split(/\s+/).length : 0
+          const minRead = Math.max(1, Math.ceil(words / 150))
+          const levelText = passage.level
+            ? `${passage.level} LEVEL`
+            : passage.category
+            ? passage.category.toUpperCase()
+            : "GENERAL ENGLISH"
+          return (
+            <div className="font-mono text-xs font-bold text-[#70495e] uppercase tracking-wider">
+              {levelText} • {words} WORDS • {minRead} MIN READ
+            </div>
+          )
+        })()}
       </header>
 
       {/* Main Split Grid (Reader & Worksheets) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left Column: English Reader */}
-        <section className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col h-[600px] overflow-hidden">
-          <h3 className="font-sora font-bold text-lg text-[#1f1a1d] mb-4 pb-3 border-b border-[#E5DFE2]/70">
-            English Text (Click a word to translate)
+        <section className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col h-[650px] overflow-hidden">
+          <h3 className="font-sora font-bold text-lg text-[#1f1a1d] mb-4 pb-3 border-b border-[#E5DFE2]/70 flex items-center justify-between">
+            <span>English Text</span>
+            <span className="text-xs font-normal text-[#706065] font-outfit">
+              Highlight text to save vocab, add notes, or search YouGlish
+            </span>
           </h3>
           <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-zinc-800 text-base leading-[1.7] font-outfit select-text hide-scrollbar">
             {passage.content.split("\n\n").map((para, idx) => (
-              <p key={idx}>{renderInteractiveText(para)}</p>
+              <p key={idx} className="whitespace-pre-wrap">{renderParagraphWithHighlights(para)}</p>
             ))}
           </div>
         </section>
 
-        {/* Right Column: Worksheets */}
-        <section className="flex flex-col gap-6 h-[600px]">
+        {/* Right Column: Worksheets & Notes */}
+        <section className="flex flex-col gap-6 h-[650px] overflow-y-auto pr-1">
           {/* Translation Practise Panel */}
-          <div className="flex-1 bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col min-h-[260px]">
             <div className="pb-4 border-b border-[#E5DFE2] flex justify-between items-center mb-4">
               <span className="font-sora font-bold text-sm text-[#706065] flex items-center gap-2">
                 <Languages className="h-4.5 w-4.5 text-[#EFBCD5]" />
@@ -246,85 +382,218 @@ export default function EnglishReadingDetail() {
                 <Save className="h-4 w-4" /> Save Translation
               </button>
             </div>
-            <textarea
+            <RichTextEditor
               value={translationText}
-              onChange={handleTranslationChange}
-              placeholder="Type your translation here to compare and save your learning progress..."
-              className="w-full flex-grow p-4 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-sm focus:outline-none focus:border-[#EFBCD5] transition-all resize-none font-outfit leading-relaxed"
+              onChange={(val) => {
+                setTranslationText(val)
+                if (id && val.trim().length > 0) {
+                  const currentProgress = Number(localStorage.getItem(`passage_progress_${id}`) || 0)
+                  if (currentProgress < 100) {
+                    localStorage.setItem(`passage_progress_${id}`, "75")
+                  }
+                }
+              }}
+              rows={4}
+              placeholder="Type your translation here. Use formatting buttons for bold, italic, underline, or lists..."
             />
           </div>
 
-          {/* Key Vocabulary Highlights Panel */}
+          {/* Reading Notes & Comments Panel */}
           <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0">
-            <h3 className="font-sora font-bold text-base text-[#201B1E] mb-4 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EFBCD5]" /> Key Vocabulary in Passage
+            <h3 className="font-sora font-bold text-base text-[#201B1E] mb-3 flex items-center gap-2">
+              <StickyNote className="h-4 w-4 text-[#EFBCD5]" /> Passage Notes ({passageNotes.length})
             </h3>
-            <ul className="space-y-3 font-outfit">
-              {highlightWords.map((item, idx) => (
-                <li
-                  key={idx}
-                  onClick={(e) => handleWordClick(e, item.word)}
-                  className="flex justify-between items-center p-2.5 hover:bg-[#fcf1f5] rounded-xl cursor-pointer transition-colors border-b border-[#E5DFE2]/40 last:border-0 pb-3"
-                >
-                  <div>
-                    <span className="font-bold text-base text-[#1f1a1d]">{item.word}</span>
-                    <span className="font-mono text-xs text-[#706065] ml-2 font-semibold">
-                      {item.ipa}
+            {passageNotes.length === 0 ? (
+              <p className="text-xs text-[#706065] italic py-2">
+                No notes added yet. Highlight text in the passage to add comments & notes!
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                {passageNotes.map((note) => (
+                  <div
+                    key={note.id}
+                    className="p-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-xs space-y-1.5 relative group"
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="font-semibold text-[#7b5268] italic border-l-2 border-[#EFBCD5] pl-2 block truncate max-w-[220px]">
+                        "{note.selectedText}"
+                      </span>
+                      <button
+                        onClick={() => handleDeleteNote(note.id)}
+                        className="text-zinc-400 hover:text-red-500 transition-colors p-0.5"
+                        title="Delete note"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-[#201B1E] font-medium leading-relaxed">{note.comment}</p>
+                    <span className="text-[10px] text-[#706065]/70 block text-right font-mono">
+                      {note.createdAt}
                     </span>
                   </div>
-                  <span className="text-xs font-semibold text-[#7b5268] bg-[#fcf1f5] px-2.5 py-1 rounded-lg border border-[#eae0e4]">
-                    {item.meaning}
-                  </span>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Saved Vocabulary in Passage Panel */}
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-shrink-0 font-outfit">
+            <h3 className="font-sora font-bold text-base text-[#201B1E] mb-4 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#EFBCD5]" />
+              <span>Saved Vocabulary in Passage ({savedPassageWords.length})</span>
+            </h3>
+            {savedPassageWords.length === 0 ? (
+              <p className="text-xs text-[#706065] italic py-2">
+                No vocabulary saved from this passage yet. Highlight text in the passage and click "Save Vocab"!
+              </p>
+            ) : (
+              <ul className="space-y-3 font-outfit max-h-64 overflow-y-auto pr-1">
+                {savedPassageWords.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex justify-between items-center p-2.5 hover:bg-[#fcf1f5] rounded-xl cursor-pointer transition-colors border-b border-[#E5DFE2]/40 last:border-0 pb-3"
+                  >
+                    <div>
+                      <span className="font-bold text-base text-[#1f1a1d]">{item.word}</span>
+                      {item.pronunciation && (
+                        <span className="font-mono text-xs text-[#706065] ml-2 font-semibold">
+                          {item.pronunciation}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs font-semibold text-[#7b5268] bg-[#fcf1f5] px-2.5 py-1 rounded-lg border border-[#eae0e4] max-w-[180px] truncate">
+                      {item.meaning}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
       </div>
 
-      {/* Floating Word Dictionary Popup */}
-      {popupPos && lookupWord && (
+      {/* FLOATING SELECTION TOOLBAR (POPUP WHEN HIGHLIGHTING TEXT) */}
+      {selectionPos && selectedText && (
         <div
-          className="absolute z-[999] w-72 bg-white/95 backdrop-blur-md border border-[#E5DFE2] shadow-[0_15px_35px_-5px_rgba(239,188,213,0.25)] rounded-[20px] p-4 flex flex-col gap-3 pointer-events-auto animate-in zoom-in-95 font-outfit text-left"
-          style={{ left: `${popupPos.x - 140}px`, top: `${popupPos.y}px` }}
-          onClick={(e) => e.stopPropagation()}
+          className="selection-toolbar fixed z-[99999] -translate-x-1/2 -translate-y-full bg-white/95 backdrop-blur-md text-[#201B1E] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.35)] rounded-2xl p-1.5 flex items-center gap-1 animate-in zoom-in-95 duration-150 font-outfit border border-[#E5DFE2]"
+          style={{ left: `${selectionPos.x}px`, top: `${selectionPos.y}px` }}
         >
-          {lookupLoading ? (
-            <div className="flex items-center justify-center py-4 text-xs font-mono text-[#706065] animate-pulse">
-              Looking up dictionary...
-            </div>
-          ) : lookupData ? (
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-sora font-bold text-lg text-[#1f1a1d]">
-                  {lookupData.word}
-                </h4>
-                {lookupData.pronunciation && (
-                  <p className="font-mono text-xs text-[#EFBCD5] font-bold mt-0.5">
-                    {lookupData.pronunciation}
-                  </p>
-                )}
-                {lookupData.word_type && (
-                  <span className="text-xs font-bold uppercase font-mono text-[#706065]/50 mt-0.5 block">
-                    ({lookupData.word_type})
-                  </span>
-                )}
-              </div>
-              <p className="font-sora text-sm font-semibold text-[#201B1E] leading-relaxed">
-                {lookupData.meaning || "No definition found"}
-              </p>
-              <button
-                onClick={handleSaveWord}
-                className="w-full bg-[#EFBCD5] text-[#201B1E] font-sora font-bold text-xs py-2 rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-sm border border-[#ffd8ea]"
-              >
-                <Check className="h-3.5 w-3.5 stroke-[3px]" /> Save to SRS
-              </button>
-            </div>
-          ) : (
-            <div className="text-xs font-semibold text-red-500 py-2">No definition found.</div>
-          )}
+          {/* Action 0: Highlight Text */}
+          <button
+            onClick={handleHighlightSelectedText}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#fcf1f5] text-[#7b5268] transition-all text-xs font-bold"
+            title="Highlight text"
+          >
+            <Highlighter className="w-3.5 h-3.5 text-[#EFBCD5]" />
+            <span>Highlight</span>
+          </button>
+
+          <div className="w-[1px] h-4 bg-[#E5DFE2]" />
+
+          {/* Action 1: Save Vocabulary */}
+          <button
+            onClick={handleSaveSelectedVocab}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#fcf1f5] text-[#7b5268] transition-all text-xs font-bold"
+            title="Save as Vocabulary"
+          >
+            <Bookmark className="w-3.5 h-3.5 fill-[#EFBCD5] text-[#EFBCD5]" />
+            <span>Save Vocab</span>
+          </button>
+
+          <div className="w-[1px] h-4 bg-[#E5DFE2]" />
+
+          {/* Action 2: Comment / Note */}
+          <button
+            onClick={handleOpenAddComment}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#fcf1f5] text-[#706065] hover:text-[#201B1E] transition-all text-xs font-semibold"
+            title="Add Note or Comment"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-[#EFBCD5]" />
+            <span>Note</span>
+          </button>
+
+          <div className="w-[1px] h-4 bg-[#E5DFE2]" />
+
+          {/* Action 3: YouGlish Lookup */}
+          <button
+            onClick={handleOpenYouglish}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#fcf1f5] text-[#706065] hover:text-[#7b5268] transition-all text-xs font-semibold"
+            title="Search pronunciation on YouGlish"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-[#7b5268]" />
+            <span>YouGlish</span>
+          </button>
         </div>
       )}
+
+      {/* COMMENT / NOTE INPUT MODAL */}
+      {isCommentModalOpen && (
+        <div className="comment-modal fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150 font-outfit">
+          <div className="bg-white border border-[#E5DFE2] rounded-[24px] shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5DFE2] bg-[#FCFAF7]">
+              <h3 className="font-sora font-bold text-base text-[#201B1E] flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#EFBCD5]" /> Add Passage Note
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsCommentModalOpen(false)}
+                className="p-1 rounded-full hover:bg-[#F6EBEF] text-[#706065] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveComment} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-[#706065] mb-1.5">
+                  Highlighted Snippet
+                </label>
+                <div className="p-3 bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl text-xs italic text-[#7b5268] max-h-24 overflow-y-auto">
+                  "{selectedText}"
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-bold uppercase text-[#706065] mb-1.5">
+                  Your Note / Comment <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder="Write your note or thoughts here..."
+                  className="w-full p-3 rounded-xl border border-[#E5DFE2] bg-[#FCFAF7] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#EFBCD5] text-xs text-[#201B1E] leading-relaxed"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCommentModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-[#E5DFE2] text-[#706065] font-semibold text-xs hover:bg-zinc-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#EFBCD5] text-[#201B1E] font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                >
+                  Save Note
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* VOCABULARY ADD / EDIT MODAL */}
+      <VocabularyModal
+        isOpen={isVocabModalOpen}
+        onClose={() => setIsVocabModalOpen(false)}
+        initialData={prefilledVocabItem}
+      />
     </div>
   )
 }

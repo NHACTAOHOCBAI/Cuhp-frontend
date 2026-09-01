@@ -37,6 +37,7 @@ export interface ReadingPassage {
 export interface ReadingPassageListItem {
   id: string
   title: string
+  content: string
   level?: string | null
   category?: string | null
   user_id: string

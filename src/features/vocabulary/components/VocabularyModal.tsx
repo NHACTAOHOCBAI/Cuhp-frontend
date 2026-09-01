@@ -11,7 +11,7 @@ import type { VocabularyItem } from "@/types"
 interface VocabularyModalProps {
   isOpen: boolean
   onClose: () => void
-  initialData?: VocabularyItem | null
+  initialData?: Partial<VocabularyItem> | null
 }
 
 export function VocabularyModal({ isOpen, onClose, initialData }: VocabularyModalProps) {
@@ -27,18 +27,32 @@ export function VocabularyModal({ isOpen, onClose, initialData }: VocabularyModa
   const [notes, setNotes] = React.useState("")
   const [isLookingUp, setIsLookingUp] = React.useState(false)
 
-  const isEditing = !!initialData
+  const isEditing = !!(initialData && "id" in initialData && initialData.id)
 
   // Populate form fields on open or initialData change
   React.useEffect(() => {
-    if (initialData) {
-      setWord(initialData.word || "")
+    if (isOpen && initialData) {
+      const w = initialData.word || ""
+      setWord(w)
       setPronunciation(initialData.pronunciation || "")
       setMeaning(initialData.meaning || "")
       setWordType(initialData.word_type || "")
       setContextSentence(initialData.context_sentence || "")
       setNotes(initialData.notes || "")
-    } else {
+
+      // If word is pre-filled without meaning, auto-lookup dictionary
+      if (w.trim() && !initialData.meaning && token) {
+        setIsLookingUp(true)
+        lookupVocabularyWord(w.trim(), token)
+          .then((res) => {
+            if (res.pronunciation) setPronunciation(res.pronunciation)
+            if (res.meaning) setMeaning(res.meaning)
+            if (res.word_type) setWordType(res.word_type.toLowerCase())
+          })
+          .catch(() => {})
+          .finally(() => setIsLookingUp(false))
+      }
+    } else if (isOpen) {
       setWord("")
       setPronunciation("")
       setMeaning("")
@@ -46,7 +60,7 @@ export function VocabularyModal({ isOpen, onClose, initialData }: VocabularyModa
       setContextSentence("")
       setNotes("")
     }
-  }, [initialData, isOpen])
+  }, [initialData, isOpen, token])
 
   if (!isOpen) return null
 
@@ -82,7 +96,7 @@ export function VocabularyModal({ isOpen, onClose, initialData }: VocabularyModa
     if (isEditing && initialData) {
       updateMutation.mutate(
         {
-          id: initialData.id,
+          id: initialData.id!,
           payload: {
             word: word.trim(),
             pronunciation: pronunciation.trim() || null,
