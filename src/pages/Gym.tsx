@@ -332,13 +332,14 @@ export default function Gym() {
     if (totalSets === 0) return []
 
     const colorMap: Record<string, string> = {
-      "Ngực": "#EFBCD5",
-      "Lưng": "#93C5FD",
-      "Chân": "#C4B5FD",
-      "Vai": "#FDE68A",
-      "Tay": "#6EE7B7",
-      "Bụng": "#FCA5A5",
-      "Cardio": "#FDBA74",
+      "Ngực": "#EFBCD5",    // Signature Cuhp Pink
+      "Chân": "#E39EC5",    // Soft Rose Pink
+      "Lưng": "#D980B3",    // Deep Blush Pink
+      "Vai": "#E8A2C3",     // Pastel Rose
+      "Tay": "#F4C2D7",     // Soft Light Pink
+      "Bụng": "#C86B98",    // Berry Plum Pink
+      "Cardio": "#F2B4CE",  // Peach-Rose Pink
+      "Khác": "#E0B6C7",    // Muted Rose Pink
     }
 
     return Object.entries(counts)
@@ -346,7 +347,7 @@ export default function Gym() {
         name,
         sets,
         percent: Math.round((sets / totalSets) * 100),
-        color: colorMap[name] || "#CBD5E1",
+        color: colorMap[name] || "#EFBCD5",
       }))
       .sort((a, b) => b.sets - a.sets)
       .slice(0, 5)
