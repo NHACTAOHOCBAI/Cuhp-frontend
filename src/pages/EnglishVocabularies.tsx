@@ -17,8 +17,10 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Volume2,
 } from "lucide-react"
 import { toast } from "sonner"
+import { speakWord } from "@/lib/tts"
 import type { EnglishOutletContext } from "@/components/EnglishLayout"
 import type { VocabularyItem } from "@/types"
 
@@ -28,9 +30,11 @@ export default function EnglishVocabularies() {
   // View Mode: "review" (Flashcards) or "library" (Manage All Words)
   const [viewMode, setViewMode] = React.useState<"review" | "library">("review")
 
-  // --- REVIEW TAB STATE ---
+  // --- REVIEW TAB STATE (Isolated Session Queue) ---
+  const [reviewQueue, setReviewQueue] = React.useState<VocabularyItem[]>([])
   const [currentCardIndex, setCurrentCardIndex] = React.useState(0)
   const [revealMeaning, setRevealMeaning] = React.useState(false)
+  const [sessionInitialized, setSessionInitialized] = React.useState(false)
 
   // --- LIBRARY TAB STATE ---
   const [page, setPage] = React.useState(1)
@@ -65,10 +69,22 @@ export default function EnglishVocabularies() {
   const deleteMutation = useDeleteVocabulary()
   const bulkDeleteMutation = useBulkDeleteVocabulary()
 
+  // Initialize review session queue when dueVocab arrives
+  React.useEffect(() => {
+    if (dueVocab?.items && !sessionInitialized) {
+      setReviewQueue(dueVocab.items)
+      setSessionInitialized(true)
+    }
+  }, [dueVocab, sessionInitialized])
+
   // Reset indices when restartKey triggers from Layout sidebar
   React.useEffect(() => {
     setCurrentCardIndex(0)
     setRevealMeaning(false)
+    if (dueVocab?.items) {
+      setReviewQueue(dueVocab.items)
+      setSessionInitialized(true)
+    }
   }, [restartKey])
 
   // Calculate box counts for sidebar
@@ -89,39 +105,44 @@ export default function EnglishVocabularies() {
     return libraryVocab?.items || []
   }, [libraryVocab])
 
-  // Current flashcard word
+  // Current flashcard word from isolated review session queue
   const currentWord = React.useMemo(() => {
-    if (!dueVocab?.items || dueVocab.items.length === 0) return null
-    if (currentCardIndex >= dueVocab.items.length) return null
-    return dueVocab.items[currentCardIndex]
-  }, [dueVocab, currentCardIndex])
+    if (!reviewQueue || reviewQueue.length === 0) return null
+    if (currentCardIndex >= reviewQueue.length) return null
+    return reviewQueue[currentCardIndex]
+  }, [reviewQueue, currentCardIndex])
 
-  const dueTotal = dueVocab?.total ?? 0
+  const sessionTotal = reviewQueue.length
 
   // Handle flashcard review
   const handleReview = (known: boolean) => {
     if (!currentWord) return
 
+    const reviewedWord = currentWord
+
+    // Trigger review mutation in background
     reviewMutation.mutate(
       {
-        id: currentWord.id,
+        id: reviewedWord.id,
         payload: { known },
       },
       {
         onSuccess: () => {
           if (known) {
-            toast.success(`Great! You knew "${currentWord.word}".`)
+            toast.success(`Great! You knew "${reviewedWord.word}".`)
           } else {
-            toast.info(`Saved. "${currentWord.word}" was moved back to Box 1 for review tomorrow.`)
+            toast.info(`Saved. "${reviewedWord.word}" was moved back to Box 1 for review tomorrow.`)
           }
-          setRevealMeaning(false)
-          setCurrentCardIndex((prev) => prev + 1)
         },
         onError: (err) => {
           toast.error(`Vocabulary review error: ${err.message}`)
         },
       }
     )
+
+    // Advance to next card smoothly in local session queue
+    setRevealMeaning(false)
+    setCurrentCardIndex((prev) => prev + 1)
   }
 
   // Handle single item delete
@@ -272,13 +293,13 @@ export default function EnglishVocabularies() {
 
           {/* Main Flashcard Area */}
           <div className="flex-grow w-full flex flex-col items-center">
-            {isDueLoading ? (
+            {isDueLoading && !sessionInitialized ? (
               <div className="bg-white w-full max-w-xl rounded-[24px] border border-[#E5DFE2] p-[24px] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col items-center justify-center min-h-[400px] animate-pulse">
                 <div className="h-8 bg-zinc-100 rounded w-1/2 mb-4"></div>
                 <div className="h-4 bg-zinc-50 rounded w-1/4 mb-12"></div>
                 <div className="h-6 bg-zinc-100 rounded w-5/6"></div>
               </div>
-            ) : !dueVocab?.items || dueVocab.items.length === 0 || currentCardIndex >= dueVocab.items.length ? (
+            ) : reviewQueue.length === 0 || currentCardIndex >= reviewQueue.length ? (
               <div className="bg-white w-full max-w-xl rounded-[24px] border border-[#E5DFE2] p-[24px] shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)] flex flex-col items-center justify-center text-center min-h-[400px]">
                 <div className="relative mb-6">
                   <div className="w-16 h-16 bg-[#fcf1f5] rounded-full flex items-center justify-center text-[#EFBCD5] border border-[#ffd8ea] animate-bounce">
@@ -291,12 +312,24 @@ export default function EnglishVocabularies() {
                 <p className="font-outfit text-sm text-[#706065] max-w-sm mb-6">
                   You've reviewed all due words for today. Keep your streak going!
                 </p>
-                <button
-                  onClick={() => setViewMode("library")}
-                  className="px-6 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm"
-                >
-                  Manage Word Library
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setSessionInitialized(false)
+                      setCurrentCardIndex(0)
+                      setRevealMeaning(false)
+                    }}
+                    className="px-5 py-2.5 bg-white border border-[#E5DFE2] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:bg-zinc-50 active:scale-95 transition-all shadow-xs cursor-pointer"
+                  >
+                    Refresh Session
+                  </button>
+                  <button
+                    onClick={() => setViewMode("library")}
+                    className="px-6 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm cursor-pointer"
+                  >
+                    Manage Word Library
+                  </button>
+                </div>
               </div>
             ) : (
               (() => {
@@ -316,14 +349,27 @@ export default function EnglishVocabularies() {
                         {/* Front Face (Word) */}
                         <div className="absolute inset-0 w-full h-full bg-white rounded-[24px] p-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col items-center text-center justify-center [backface-visibility:hidden]">
                           <div className="w-full flex flex-col items-center justify-center py-4">
-                            <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4] mb-4">
+                            <span className="font-mono text-xs font-bold text-[#706065] uppercase tracking-wider bg-[#fcf1f5] px-3 py-1 rounded-full border border-[#eae0e4] mb-3">
                               Box {wordItem.box_number || 1}
                             </span>
-                            <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] tracking-tight">
-                              {wordItem.word}
-                            </h2>
+                            <div className="flex items-center justify-center gap-3">
+                              <h2 className="font-sora text-[44px] font-bold text-[#1f1a1d] tracking-tight">
+                                {wordItem.word}
+                              </h2>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  speakWord(wordItem.word)
+                                }}
+                                className="w-10 h-10 rounded-full bg-[#fcf1f5] hover:bg-[#EFBCD5] text-[#7b5268] hover:text-[#201B1E] border border-[#ffd8ea] transition-all active:scale-95 shadow-xs flex items-center justify-center cursor-pointer flex-shrink-0"
+                                title="Listen to pronunciation"
+                              >
+                                <Volume2 className="w-5 h-5 stroke-[2.2]" />
+                              </button>
+                            </div>
                             {wordItem.pronunciation && (
-                              <p className="font-outfit text-sm text-[#EFBCD5] font-semibold tracking-wide mt-1.5 font-mono">
+                              <p className="font-outfit text-sm text-[#EFBCD5] font-semibold tracking-wide mt-1 font-mono">
                                 {wordItem.pronunciation}
                               </p>
                             )}
@@ -338,9 +384,22 @@ export default function EnglishVocabularies() {
                         {/* Back Face (Meaning) */}
                         <div className="absolute inset-0 w-full h-full bg-[#FCFAF7] rounded-[24px] p-[24px] border border-[#EFBCD5]/70 shadow-[0_10px_30px_-5px_rgba(239,188,213,0.2)] flex flex-col items-center text-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
                           <div className="w-full flex flex-col items-center justify-center py-4 space-y-4 max-w-md mx-auto">
-                            <span className="font-mono text-xs font-bold text-[#7b5268] uppercase tracking-wider bg-[#EFBCD5]/25 px-3 py-1 rounded-full border border-[#EFBCD5]/40 mb-2">
-                              Meaning
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-bold text-[#7b5268] uppercase tracking-wider bg-[#EFBCD5]/25 px-3 py-1 rounded-full border border-[#EFBCD5]/40">
+                                Meaning
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  speakWord(wordItem.word)
+                                }}
+                                className="p-1 rounded-full bg-white hover:bg-[#EFBCD5]/40 text-[#7b5268] hover:text-[#1f1a1d] border border-[#EFBCD5]/40 transition-all active:scale-95 cursor-pointer"
+                                title="Listen to pronunciation"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                             <p className="font-sora text-2xl text-[#201B1E] font-bold leading-relaxed">
                               {wordItem.meaning}
                             </p>
@@ -383,17 +442,19 @@ export default function EnglishVocabularies() {
                       </button>
                     </div>
 
-                    {/* Bottom Progress Bar (~20px below card) */}
+                    {/* Bottom Progress Bar */}
                     <div className="w-full font-outfit">
                       <div className="flex justify-between items-center text-xs font-mono font-semibold text-[#706065] mb-1.5 px-1">
                         <span>Progress</span>
-                        <span>{currentCardIndex} / {dueTotal} words</span>
+                        <span>
+                          {currentCardIndex} / {sessionTotal} words
+                        </span>
                       </div>
                       <div className="w-full h-2.5 bg-[#fcf1f5] rounded-full overflow-hidden border border-[#E5DFE2]/60 shadow-xs">
                         <div
                           className="h-full bg-[#EFBCD5] rounded-full transition-all duration-300"
                           style={{
-                            width: `${(currentCardIndex / dueTotal) * 100}%`,
+                            width: `${sessionTotal > 0 ? (currentCardIndex / sessionTotal) * 100 : 0}%`,
                           }}
                         ></div>
                       </div>
@@ -493,7 +554,17 @@ export default function EnglishVocabularies() {
                             </button>
                           </td>
                           <td className="py-4 px-2 font-semibold text-[#201B1E]">
-                            {item.word}
+                            <div className="flex items-center gap-2">
+                              <span>{item.word}</span>
+                              <button
+                                type="button"
+                                onClick={() => speakWord(item.word)}
+                                className="text-zinc-400 hover:text-[#7b5268] transition-colors p-1 rounded-lg hover:bg-[#fcf1f5] cursor-pointer"
+                                title="Listen to pronunciation"
+                              >
+                                <Volume2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                           <td className="py-4 px-2 text-sm font-mono text-[#EFBCD5] font-semibold">
                             {item.pronunciation || "—"}
