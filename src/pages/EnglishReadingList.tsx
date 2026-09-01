@@ -76,8 +76,9 @@ export default function EnglishReadingList() {
   // Calculate REAL stats for passage
   const calculatePassageStats = (passage: ReadingPassageListItem) => {
     let words = 500
-    if (passage.content && passage.content.trim().length > 0) {
-      words = passage.content.trim().split(/\s+/).length
+    const cleanContent = (passage.content || "").replace(/<[^>]*>/g, " ")
+    if (cleanContent.trim().length > 0) {
+      words = cleanContent.trim().split(/\s+/).filter(Boolean).length
     }
     const minutes = Math.max(1, Math.ceil(words / 150))
 
@@ -85,7 +86,7 @@ export default function EnglishReadingList() {
     let newWordsCount = 0
     if (userVocab?.items) {
       const titleLower = passage.title.toLowerCase()
-      const contentLower = (passage.content || "").toLowerCase()
+      const contentLower = cleanContent.toLowerCase()
       newWordsCount = userVocab.items.filter((item) => {
         const noteMatches = item.notes?.toLowerCase().includes(titleLower)
         const textMatches = contentLower.length > 0 && contentLower.includes(item.word.toLowerCase())

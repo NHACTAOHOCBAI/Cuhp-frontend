@@ -50,11 +50,11 @@ export default function EnglishReadingDetail() {
   const savedPassageWords = React.useMemo(() => {
     if (!userVocab?.items || !passage) return []
     const titleLower = passage.title.toLowerCase()
-    const contentLower = passage.content.toLowerCase()
+    const cleanContent = (passage.content || "").replace(/<[^>]*>/g, " ").toLowerCase()
 
     return userVocab.items.filter((item) => {
       const noteMatches = item.notes?.toLowerCase().includes(titleLower)
-      const textMatches = contentLower.includes(item.word.toLowerCase())
+      const textMatches = cleanContent.length > 0 && cleanContent.includes(item.word.toLowerCase())
       return noteMatches || textMatches
     })
   }, [userVocab, passage])
@@ -188,34 +188,61 @@ export default function EnglishReadingDetail() {
     setSelectionPos(null)
   }
 
-  // Render paragraph content with HTML tags and highlighted marks
-  const renderParagraphWithHighlights = (text: string) => {
-    let formattedText = text
-    if (passageHighlights && passageHighlights.length > 0) {
-      const escaped = passageHighlights
-        .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-        .filter(Boolean)
-        .join("|")
-      if (escaped) {
-        try {
-          const regex = new RegExp(`(${escaped})`, "gi")
-          formattedText = text.replace(
-            regex,
-            '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all">$1</mark>'
-          )
-        } catch {
-          // ignore regex errors
-        }
-      }
+  // Render highlighted passage HTML safely without breaking HTML tags/attributes
+  const renderedPassageHtml = React.useMemo(() => {
+    if (!passage?.content) return ""
+
+    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(passage.content)
+    let baseHtml = passage.content
+    if (!hasHtmlTags) {
+      baseHtml = passage.content
+        .split(/\n\s*\n/)
+        .map((p) => `<p class="mb-4">${p.replace(/\n/g, "<br/>")}</p>`)
+        .join("")
     }
 
-    return (
-      <span
-        className="whitespace-pre-wrap leading-[1.7]"
-        dangerouslySetInnerHTML={{ __html: formattedText }}
-      />
-    )
-  }
+    if (!passageHighlights || passageHighlights.length === 0) {
+      return baseHtml
+    }
+
+    const escaped = passageHighlights
+      .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .filter(Boolean)
+      .join("|")
+    if (!escaped) return baseHtml
+
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(baseHtml, "text/html")
+      const regex = new RegExp(`(${escaped})`, "gi")
+
+      const walkTextNodes = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.nodeValue
+          if (text && regex.test(text)) {
+            const span = doc.createElement("span")
+            span.innerHTML = text.replace(
+              regex,
+              '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all">$1</mark>'
+            )
+            node.parentNode?.replaceChild(span, node)
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as Element
+          if (["SCRIPT", "STYLE", "MARK"].includes(el.tagName)) return
+          const children = Array.from(el.childNodes)
+          for (const child of children) {
+            walkTextNodes(child)
+          }
+        }
+      }
+
+      walkTextNodes(doc.body)
+      return doc.body.innerHTML
+    } catch {
+      return baseHtml
+    }
+  }, [passage?.content, passageHighlights])
 
   // Action 1: Save Selection as Vocabulary via Modal
   const handleSaveSelectedVocab = (e: React.MouseEvent) => {
@@ -358,11 +385,10 @@ export default function EnglishReadingDetail() {
               Highlight text to save vocab, add notes, or search YouGlish
             </span>
           </h3>
-          <div className="overflow-y-auto flex-1 pr-2 space-y-5 text-zinc-800 text-base leading-[1.7] font-outfit select-text hide-scrollbar">
-            {passage.content.split("\n\n").map((para, idx) => (
-              <p key={idx} className="whitespace-pre-wrap">{renderParagraphWithHighlights(para)}</p>
-            ))}
-          </div>
+          <div
+            className="overflow-y-auto flex-1 pr-2 space-y-4 text-zinc-800 text-base leading-[1.8] font-outfit select-text hide-scrollbar [&_p]:mb-4 [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+            dangerouslySetInnerHTML={{ __html: renderedPassageHtml }}
+          />
         </section>
 
         {/* Right Column: Worksheets & Notes */}

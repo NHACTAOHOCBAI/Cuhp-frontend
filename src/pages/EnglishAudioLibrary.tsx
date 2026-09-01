@@ -92,8 +92,9 @@ export default function EnglishAudioLibrary() {
         ? "Podcast"
         : "General English"
 
-    const wordCount = track.transcript
-      ? track.transcript.trim().split(/\s+/).filter(Boolean).length
+    const cleanText = track.transcript ? track.transcript.replace(/<[^>]*>/g, " ") : ""
+    const wordCount = cleanText
+      ? cleanText.trim().split(/\s+/).filter(Boolean).length
       : 180
 
     return { duration: "04:30", categoryLabel, wordCount }

@@ -57,14 +57,75 @@ export default function EnglishShadowingDetail() {
   const savedTrackWords = React.useMemo(() => {
     if (!userVocab?.items || !track) return []
     const titleLower = track.title.toLowerCase()
-    const transcriptLower = (track.transcript || "").toLowerCase()
+    const cleanTranscript = (track.transcript || "").replace(/<[^>]*>/g, " ").toLowerCase()
 
     return userVocab.items.filter((item) => {
       const noteMatches = item.notes?.toLowerCase().includes(titleLower)
-      const textMatches = transcriptLower.length > 0 && transcriptLower.includes(item.word.toLowerCase())
+      const textMatches = cleanTranscript.length > 0 && cleanTranscript.includes(item.word.toLowerCase())
       return noteMatches || textMatches
     })
   }, [userVocab, track])
+
+  const transcriptText =
+    track?.transcript ||
+    "It's easy to get caught up in the constant hustle of modern life.\n\nWe are always rushing from one task to another, never really pausing.\n\nWe need to embrace slow living in this fast-paced world.\n\nFinding time for a quiet morning coffee can change your whole day.\n\nIt is about intentional choices rather than passive reactions.\n\nWhen we slow down, we actually notice the details around us more clearly.\n\nThis practice isn't about doing less, but doing things with more presence."
+
+  // Render highlighted transcript HTML safely without breaking HTML tags/attributes
+  const renderedTranscriptHtml = React.useMemo(() => {
+    if (!transcriptText) return ""
+
+    // Format if plain text (convert double newlines to paragraphs)
+    const hasHtmlTags = /<[a-z][\s\S]*>/i.test(transcriptText)
+    let baseHtml = transcriptText
+    if (!hasHtmlTags) {
+      baseHtml = transcriptText
+        .split(/\n\s*\n/)
+        .map((p) => `<p class="mb-4">${p.replace(/\n/g, "<br/>")}</p>`)
+        .join("")
+    }
+
+    if (!trackHighlights || trackHighlights.length === 0) {
+      return baseHtml
+    }
+
+    const escaped = trackHighlights
+      .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .filter(Boolean)
+      .join("|")
+    if (!escaped) return baseHtml
+
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(baseHtml, "text/html")
+      const regex = new RegExp(`(${escaped})`, "gi")
+
+      const walkTextNodes = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.nodeValue
+          if (text && regex.test(text)) {
+            const span = doc.createElement("span")
+            span.innerHTML = text.replace(
+              regex,
+              '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all">$1</mark>'
+            )
+            node.parentNode?.replaceChild(span, node)
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as Element
+          if (["SCRIPT", "STYLE", "MARK"].includes(el.tagName)) return
+          const children = Array.from(el.childNodes)
+          for (const child of children) {
+            walkTextNodes(child)
+          }
+        }
+      }
+
+      walkTextNodes(doc.body)
+      return doc.body.innerHTML
+    } catch {
+      return baseHtml
+    }
+  }, [transcriptText, trackHighlights])
 
   // HTML5 Audio event handlers & simulation fallback
   React.useEffect(() => {
@@ -239,43 +300,7 @@ export default function EnglishShadowingDetail() {
     setSelectionPos(null)
   }
 
-  // Render text content with highlighted marks
-  const renderTextWithHighlights = (text: string) => {
-    if (!trackHighlights || trackHighlights.length === 0) {
-      return text
-    }
 
-    const escaped = trackHighlights
-      .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-      .filter(Boolean)
-      .join("|")
-    if (!escaped) return text
-
-    try {
-      const regex = new RegExp(`(${escaped})`, "gi")
-      const parts = text.split(regex)
-
-      return parts.map((part, idx) => {
-        const isHighlighted = trackHighlights.some(
-          (h) => h.toLowerCase() === part.toLowerCase()
-        )
-        if (isHighlighted) {
-          return (
-            <mark
-              key={idx}
-              className="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all"
-              title="Highlighted text"
-            >
-              {part}
-            </mark>
-          )
-        }
-        return part
-      })
-    } catch {
-      return text
-    }
-  }
 
   // Format time display (mm:ss)
   const formatTime = (timeInSecs: number) => {
@@ -326,9 +351,6 @@ export default function EnglishShadowingDetail() {
   }
 
   const trackTitle = track?.title || "Listening Track"
-  const transcriptText =
-    track?.transcript ||
-    "It's easy to get caught up in the constant hustle of modern life.\n\nWe are always rushing from one task to another, never really pausing.\n\nWe need to embrace slow living in this fast-paced world.\n\nFinding time for a quiet morning coffee can change your whole day.\n\nIt is about intentional choices rather than passive reactions.\n\nWhen we slow down, we actually notice the details around us more clearly.\n\nThis practice isn't about doing less, but doing things with more presence."
 
   return (
     <div className="space-y-6 w-full relative font-outfit">
@@ -579,13 +601,10 @@ export default function EnglishShadowingDetail() {
             </div>
 
             {/* Sentences Transcript Scroller */}
-            <div className="flex-grow overflow-y-auto pr-2 space-y-4 text-base font-outfit text-zinc-800 leading-[1.7] select-text hide-scrollbar">
-              {transcriptText.split("\n\n").map((para, idx) => (
-                <p key={idx} className="whitespace-pre-wrap">
-                  {renderTextWithHighlights(para)}
-                </p>
-              ))}
-            </div>
+            <div
+              className="transcript-content flex-grow overflow-y-auto pr-2 text-base font-outfit text-zinc-800 leading-[1.8] select-text hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-4 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+              dangerouslySetInnerHTML={{ __html: renderedTranscriptHtml }}
+            />
           </div>
         </div>
       </main>
