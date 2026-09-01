@@ -404,6 +404,8 @@ export default function Gym() {
             {/* Calendar Grid Cells */}
             <div className="grid grid-cols-7 gap-2 text-center text-sm font-outfit">
               {calendarDays.map((cell, index) => {
+                const todayStr = new Date().toLocaleDateString("sv-SE")
+                const isToday = cell.dateStr === todayStr
                 const isSelected = cell.dateStr === selectedDateStr
                 const hasWorkout = exerciseDates.has(cell.dateStr)
 
@@ -413,13 +415,32 @@ export default function Gym() {
                     onClick={() => setSelectedDateStr(cell.dateStr)}
                     className={`p-2 rounded-xl flex flex-col items-center justify-center min-h-[56px] border transition-all relative ${
                       isSelected
-                        ? "bg-[#EFBCD5]/20 border-[#EFBCD5] text-[#1f1a1d] font-bold"
+                        ? "bg-[#EFBCD5]/25 border-[#EFBCD5] text-[#1f1a1d] font-bold shadow-xs"
+                        : isToday
+                        ? "bg-[#fcf1f5] border-[#EFBCD5]/60 text-[#1f1a1d] font-bold"
                         : hasWorkout
-                        ? "bg-[#fcf1f5] border-[#E5DFE2] hover:border-[#EFBCD5] text-[#1f1a1d] font-semibold"
+                        ? "bg-[#fcf1f5]/50 border-[#E5DFE2] hover:border-[#EFBCD5] text-[#1f1a1d] font-semibold"
                         : "bg-white border-transparent hover:border-[#E5DFE2]/70 text-[#706065]"
                     } ${!cell.isCurrentMonth && "opacity-40"}`}
                   >
-                    <span>{cell.dayNum}</span>
+                    {/* Today Badge Dot */}
+                    {isToday && (
+                      <span
+                        className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#EFBCD5] ring-2 ring-white"
+                        title="Today"
+                      />
+                    )}
+
+                    <span
+                      className={`flex items-center justify-center ${
+                        isToday
+                          ? "w-6 h-6 rounded-full bg-[#EFBCD5] text-[#201B1E] text-xs font-bold shadow-xs"
+                          : ""
+                      }`}
+                    >
+                      {cell.dayNum}
+                    </span>
+
                     {hasWorkout && (
                       <Dumbbell className="h-3.5 w-3.5 text-[#EFBCD5] stroke-[2.5px] mt-0.5" />
                     )}
