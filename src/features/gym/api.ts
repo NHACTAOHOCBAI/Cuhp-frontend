@@ -59,7 +59,8 @@ export async function fetchExercisesByDate(
   date: string,
   token: string | null,
 ): Promise<WorkoutExercise[]> {
-  return apiFetch<WorkoutExercise[]>(`${API_BASE}/exercises?date=${date}`, { token })
+  const url = date ? `${API_BASE}/exercises?date=${encodeURIComponent(date)}` : `${API_BASE}/exercises`
+  return apiFetch<WorkoutExercise[]>(url, { token })
 }
 
 export interface ExercisePayload {

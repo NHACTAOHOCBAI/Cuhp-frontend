@@ -1,11 +1,13 @@
 import * as React from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/hooks/useAuth"
+import type { WorkoutExercise } from "@/types"
 import {
   useGymCategoriesQuery,
   useGymExercisesQuery,
   useGymStatsQuery,
   useCreateExercise,
+  useUpdateExercise,
   useToggleExerciseComplete,
   useDeleteExercise,
   useCopyDayForward,
@@ -18,6 +20,7 @@ import {
   Dumbbell,
   Check,
   Trash2,
+  Pencil,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -40,8 +43,9 @@ export default function Gym() {
 
   // Modal open states
   const [showAddModal, setShowAddModal] = React.useState(false)
+  const [editingExercise, setEditingExercise] = React.useState<WorkoutExercise | null>(null)
 
-  // Add Exercise Form States
+  // Add/Edit Exercise Form States
   const [exerciseName, setExerciseName] = React.useState("")
   const [selectedCategoryId, setSelectedCategoryId] = React.useState("")
   const [setsCount, setSetsCount] = React.useState(4)
@@ -66,6 +70,7 @@ export default function Gym() {
 
   // Mutations
   const createExerciseMutation = useCreateExercise()
+  const updateExerciseMutation = useUpdateExercise()
   const toggleCompleteMutation = useToggleExerciseComplete()
   const deleteExerciseMutation = useDeleteExercise()
   const copyForwardMutation = useCopyDayForward()
@@ -174,40 +179,92 @@ export default function Gym() {
     )
   }
 
-  // Create exercise submit handler
-  const handleAddExercise = (e: React.FormEvent) => {
+  const handleOpenAddModal = () => {
+    setEditingExercise(null)
+    setExerciseName("")
+    setSelectedCategoryId("")
+    setSetsCount(4)
+    setRepsCount(8)
+    setWeightKg(60)
+    setShowAddModal(true)
+  }
+
+  const handleOpenEditModal = (ex: WorkoutExercise) => {
+    setEditingExercise(ex)
+    setExerciseName(ex.name)
+    setSelectedCategoryId(ex.category_id || ex.category?.id || "")
+    setSetsCount(ex.sets)
+    setRepsCount(ex.reps)
+    setWeightKg(ex.weight ?? 0)
+    setShowAddModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowAddModal(false)
+    setEditingExercise(null)
+    setExerciseName("")
+    setSelectedCategoryId("")
+    setSetsCount(4)
+    setRepsCount(8)
+    setWeightKg(60)
+  }
+
+  // Create or update exercise submit handler
+  const handleSaveExercise = (e: React.FormEvent) => {
     e.preventDefault()
     if (!exerciseName.trim()) {
       toast.error("Please enter an exercise name.")
       return
     }
 
-    createExerciseMutation.mutate(
-      {
-        name: exerciseName.trim(),
-        date: selectedDateStr,
-        sets: setsCount,
-        reps: repsCount,
-        weight: weightKg,
-        category_id: selectedCategoryId || null,
-        completed: false,
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["gym", "exercises"] })
-          toast.success("Added new exercise!")
-          setShowAddModal(false)
-          setExerciseName("")
-          // Reset default values
-          setSetsCount(4)
-          setRepsCount(8)
-          setWeightKg(60)
+    if (editingExercise) {
+      updateExerciseMutation.mutate(
+        {
+          id: editingExercise.id,
+          payload: {
+            name: exerciseName.trim(),
+            date: editingExercise.date,
+            sets: setsCount,
+            reps: repsCount,
+            weight: weightKg,
+            category_id: selectedCategoryId || null,
+            completed: editingExercise.completed,
+          },
         },
-        onError: (err) => {
-          toast.error(`Error: ${err.message}`)
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["gym", "exercises"] })
+            toast.success("Updated exercise!")
+            handleCloseModal()
+          },
+          onError: (err) => {
+            toast.error(`Error: ${err.message}`)
+          },
+        }
+      )
+    } else {
+      createExerciseMutation.mutate(
+        {
+          name: exerciseName.trim(),
+          date: selectedDateStr,
+          sets: setsCount,
+          reps: repsCount,
+          weight: weightKg,
+          category_id: selectedCategoryId || null,
+          completed: false,
         },
-      }
-    )
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["gym", "exercises"] })
+            toast.success("Added new exercise!")
+            handleCloseModal()
+          },
+          onError: (err) => {
+            toast.error(`Error: ${err.message}`)
+          },
+        }
+      )
+    }
   }
 
   const handleDeleteExercise = (id: string) => {
@@ -235,24 +292,56 @@ export default function Gym() {
     return { consistencyPercent: percent, completedDays: completed, totalDays: total }
   }, [stats])
 
-  // Estimated 1RM calculations (Max weight lifted for Bench, Squat, Deadlift)
-  const personalRecords = React.useMemo(() => {
-    const records = { squat: 120, bench: 90, deadlift: 140 }
-    if (!stats?.exercise_progress) return records
+  // Muscle Group Focus calculations (% of total sets per category/muscle group)
+  const muscleGroupDistribution = React.useMemo(() => {
+    const list = (allExercises && allExercises.length > 0) ? allExercises : (exercises || [])
+    if (list.length === 0) return []
 
-    stats.exercise_progress.forEach((prog) => {
-      const name = prog.exercise_name.toLowerCase()
-      const maxWeight = prog.points.reduce((max, pt) => Math.max(max, pt.max_weight), 0)
+    const counts: Record<string, number> = {}
+    let totalSets = 0
 
-      if (maxWeight > 0) {
-        if (name.includes("squat")) records.squat = maxWeight
-        if (name.includes("bench")) records.bench = maxWeight
-        if (name.includes("deadlift")) records.deadlift = maxWeight
+    list.forEach((ex) => {
+      let groupName = "Khác"
+      if (ex.category?.name) {
+        groupName = ex.category.name
+      } else {
+        const lowerName = ex.name.toLowerCase()
+        if (lowerName.includes("bench") || lowerName.includes("ngực") || lowerName.includes("chest")) groupName = "Ngực"
+        else if (lowerName.includes("squat") || lowerName.includes("chân") || lowerName.includes("leg")) groupName = "Chân"
+        else if (lowerName.includes("deadlift") || lowerName.includes("lưng") || lowerName.includes("back") || lowerName.includes("pull")) groupName = "Lưng"
+        else if (lowerName.includes("press") || lowerName.includes("vai") || lowerName.includes("shoulder")) groupName = "Vai"
+        else if (lowerName.includes("curl") || lowerName.includes("tay") || lowerName.includes("arm")) groupName = "Tay"
+        else if (lowerName.includes("crunch") || lowerName.includes("bụng") || lowerName.includes("abs")) groupName = "Bụng"
+        else if (lowerName.includes("cardio") || lowerName.includes("run") || lowerName.includes("chạy")) groupName = "Cardio"
       }
+
+      const sets = ex.sets || 1
+      counts[groupName] = (counts[groupName] || 0) + sets
+      totalSets += sets
     })
 
-    return records
-  }, [stats])
+    if (totalSets === 0) return []
+
+    const colorMap: Record<string, string> = {
+      "Ngực": "#EFBCD5",
+      "Lưng": "#93C5FD",
+      "Chân": "#C4B5FD",
+      "Vai": "#FDE68A",
+      "Tay": "#6EE7B7",
+      "Bụng": "#FCA5A5",
+      "Cardio": "#FDBA74",
+    }
+
+    return Object.entries(counts)
+      .map(([name, sets]) => ({
+        name,
+        sets,
+        percent: Math.round((sets / totalSets) * 100),
+        color: colorMap[name] || "#CBD5E1",
+      }))
+      .sort((a, b) => b.sets - a.sets)
+      .slice(0, 5)
+  }, [allExercises, exercises])
 
   return (
     <div className="space-y-8">
@@ -416,13 +505,22 @@ export default function Gym() {
                           {ex.weight ? `${ex.weight} kg` : "Bodyweight"}
                         </td>
                         <td className="py-4 px-2 text-center">
-                          <button
-                            onClick={() => handleDeleteExercise(ex.id)}
-                            className="text-zinc-300 hover:text-red-500 transition-colors p-1"
-                            title="Delete exercise"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditModal(ex)}
+                              className="text-zinc-400 hover:text-[#7b5268] transition-colors p-1"
+                              title="Edit exercise"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteExercise(ex.id)}
+                              className="text-zinc-400 hover:text-red-500 transition-colors p-1"
+                              title="Delete exercise"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -433,7 +531,7 @@ export default function Gym() {
 
             <div className="mt-6 flex justify-center">
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={handleOpenAddModal}
                 className="flex items-center gap-2 px-5 py-2.5 bg-[#EFBCD5] text-[#201B1E] text-sm font-sora font-bold rounded-xl hover:opacity-90 active:scale-95 transition-all shadow-sm"
               >
                 <Plus className="h-4 w-4 stroke-[3px]" /> Add Exercise
@@ -512,55 +610,38 @@ export default function Gym() {
             </div>
           </div>
 
-          {/* Estimated 1RM Card */}
+          {/* Muscle Focus Card */}
           <div className="glass-card bg-white border border-[#E5DFE2] rounded-[24px] p-6 shadow-[0_10px_30px_-5px_rgba(239, 188, 213, 0.15)]">
-            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Estimated 1RM</h3>
-            <div className="space-y-5 font-outfit">
-              <div>
-                <div className="flex justify-between mb-2 text-sm font-semibold">
-                  <span className="text-[#201B1E]">Squat</span>
-                  <span className="font-mono text-sm font-bold text-[#7b5268]">
-                    {personalRecords.squat} kg
-                  </span>
-                </div>
-                <div className="w-full bg-[#fcf1f5] h-2.5 rounded-full overflow-hidden border border-[#E5DFE2]/45">
-                  <div
-                    className="bg-[#EFBCD5] h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${Math.min((personalRecords.squat / 200) * 100, 100)}%` }}
-                  ></div>
-                </div>
+            <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">Muscle Focus</h3>
+            {muscleGroupDistribution.length > 0 ? (
+              <div className="space-y-4 font-outfit">
+                {muscleGroupDistribution.map((item) => (
+                  <div key={item.name}>
+                    <div className="flex justify-between mb-1.5 text-sm font-semibold">
+                      <span className="text-[#201B1E]">{item.name}</span>
+                      <span className="font-mono text-xs font-bold text-[#7b5268]">
+                        {item.percent}% ({item.sets} sets)
+                      </span>
+                    </div>
+                    <div className="w-full bg-[#fcf1f5] h-2.5 rounded-full overflow-hidden border border-[#E5DFE2]/45">
+                      <div
+                        className="h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{
+                          width: `${item.percent}%`,
+                          backgroundColor: item.color,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-
-              <div>
-                <div className="flex justify-between mb-2 text-sm font-semibold">
-                  <span className="text-[#201B1E]">Bench Press</span>
-                  <span className="font-mono text-sm font-bold text-[#7b5268]">
-                    {personalRecords.bench} kg
-                  </span>
-                </div>
-                <div className="w-full bg-[#fcf1f5] h-2.5 rounded-full overflow-hidden border border-[#E5DFE2]/45">
-                  <div
-                    className="bg-[#EFBCD5] h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${Math.min((personalRecords.bench / 150) * 100, 100)}%` }}
-                  ></div>
-                </div>
+            ) : (
+              <div className="text-center py-6 text-sm text-[#706065] font-outfit">
+                <Dumbbell className="w-8 h-8 mx-auto mb-2 text-[#EFBCD5] opacity-60" />
+                <p className="font-medium">Chưa có dữ liệu bài tập.</p>
+                <p className="text-xs text-[#706065]/70 mt-1">Ghi nhật ký bài tập để xem phân bổ nhóm cơ.</p>
               </div>
-
-              <div>
-                <div className="flex justify-between mb-2 text-sm font-semibold">
-                  <span className="text-[#201B1E]">Deadlift</span>
-                  <span className="font-mono text-sm font-bold text-[#7b5268]">
-                    {personalRecords.deadlift} kg
-                  </span>
-                </div>
-                <div className="w-full bg-[#fcf1f5] h-2.5 rounded-full overflow-hidden border border-[#E5DFE2]/45">
-                  <div
-                    className="bg-[#EFBCD5] h-full rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${Math.min((personalRecords.deadlift / 250) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -570,10 +651,10 @@ export default function Gym() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-6">
           <div className="bg-white border border-[#E5DFE2] rounded-[24px] w-full max-w-md p-6 shadow-[0_10px_40px_-5px_rgba(239,188,213,0.3)] animate-in zoom-in-95">
             <h3 className="font-sora font-bold text-xl text-[#201B1E] mb-6">
-              Add New Exercise
+              {editingExercise ? "Edit Exercise" : "Add New Exercise"}
             </h3>
 
-            <form onSubmit={handleAddExercise} className="space-y-4 font-outfit">
+            <form onSubmit={handleSaveExercise} className="space-y-4 font-outfit">
               {/* Exercise Name Input */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase font-mono tracking-wider">
@@ -661,7 +742,7 @@ export default function Gym() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={handleCloseModal}
                   className="flex-1 py-3 border border-[#E5DFE2] text-[#706065] font-sora font-semibold text-sm rounded-xl hover:bg-zinc-50 active:scale-95 transition-all"
                 >
                   Cancel
@@ -670,7 +751,7 @@ export default function Gym() {
                   type="submit"
                   className="flex-1 py-3 bg-[#EFBCD5] text-[#201B1E] font-sora font-semibold text-sm rounded-xl hover:opacity-90 active:scale-95 transition-all"
                 >
-                  Add Exercise
+                  {editingExercise ? "Save Changes" : "Add Exercise"}
                 </button>
               </div>
             </form>
