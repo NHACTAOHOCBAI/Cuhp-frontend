@@ -417,7 +417,7 @@ export default function EnglishReadingDetail() {
       {/* Main Split Grid (Reader & Worksheets) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         {/* Left Column: English Reader */}
-        <section className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col h-[650px] overflow-hidden">
+        <section className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col h-[calc(100vh-235px)] min-h-[500px] overflow-hidden">
           <h3 className="font-sora font-bold text-lg text-[#1f1a1d] mb-4 pb-3 border-b border-[#E5DFE2]/70 flex items-center justify-between">
             <span>English Text</span>
             <span className="text-xs font-normal text-[#706065] font-outfit">
@@ -431,9 +431,9 @@ export default function EnglishReadingDetail() {
         </section>
 
         {/* Right Column: Worksheets & Notes */}
-        <section className="flex flex-col gap-6 h-[650px] overflow-y-auto pr-1">
+        <section className="flex flex-col gap-6 h-[calc(100vh-235px)] min-h-[500px] overflow-y-auto pr-1">
           {/* Translation Practise Panel */}
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col min-h-[260px]">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex flex-col min-h-[380px]">
             <div className="pb-4 border-b border-[#E5DFE2] flex justify-between items-center mb-4">
               <span className="font-sora font-bold text-sm text-[#706065] flex items-center gap-2">
                 <Languages className="h-4.5 w-4.5 text-[#EFBCD5]" />
@@ -458,7 +458,8 @@ export default function EnglishReadingDetail() {
                   }
                 }
               }}
-              rows={4}
+              minHeight={260}
+              maxHeight={440}
               placeholder="Type your translation here. Use formatting buttons for bold, italic, underline, or lists..."
             />
           </div>

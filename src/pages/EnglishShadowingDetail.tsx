@@ -688,7 +688,7 @@ export default function EnglishShadowingDetail() {
 
         {/* Column 2: English Transcript Card */}
         <div className="flex flex-col">
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[680px] overflow-hidden">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[calc(100vh-340px)] min-h-[480px] overflow-hidden">
             {/* Card Header */}
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#E5DFE2]/70">
               <h2 className="font-sora text-base font-bold text-[#1f1a1d] flex items-center gap-2">
@@ -724,7 +724,7 @@ export default function EnglishShadowingDetail() {
 
         {/* Column 3: IPA Phonetics Card */}
         <div className="flex flex-col">
-          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[680px] overflow-hidden">
+          <div className="bg-white rounded-[24px] p-6 border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] flex-grow flex flex-col h-[calc(100vh-340px)] min-h-[480px] overflow-hidden">
             {/* Card Header */}
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-[#E5DFE2]/70">
               <h2 className="font-sora text-base font-bold text-[#1f1a1d] flex items-center gap-2">

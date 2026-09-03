@@ -7,6 +7,8 @@ interface RichTextEditorProps {
   placeholder?: string
   rows?: number
   className?: string
+  minHeight?: number | string
+  maxHeight?: number | string
 }
 
 export function RichTextEditor({
@@ -15,6 +17,8 @@ export function RichTextEditor({
   placeholder = "Write your text here...",
   rows = 6,
   className = "",
+  minHeight,
+  maxHeight,
 }: RichTextEditorProps) {
   const editorRef = React.useRef<HTMLDivElement>(null)
   const isInternalUpdate = React.useRef(false)
@@ -129,8 +133,18 @@ export function RichTextEditor({
     }
   }
 
-  const minHeightPx = Math.max(rows * 24, 110)
-  const maxHeightPx = Math.max(rows * 40, 280)
+  const computedMinHeight =
+    minHeight !== undefined
+      ? typeof minHeight === "number"
+        ? `${minHeight}px`
+        : minHeight
+      : `${Math.max(rows * 24, 110)}px`
+  const computedMaxHeight =
+    maxHeight !== undefined
+      ? typeof maxHeight === "number"
+        ? `${maxHeight}px`
+        : maxHeight
+      : `${Math.max(rows * 40, 360)}px`
 
   return (
     <div
@@ -248,8 +262,8 @@ export function RichTextEditor({
           }}
           className="w-full bg-transparent focus:outline-none text-sm text-[#201B1E] leading-relaxed font-outfit overflow-y-auto [&_p]:mb-2.5 [&_h3]:font-bold [&_h3]:text-base [&_h3]:mb-2 [&_h2]:font-bold [&_h2]:text-lg [&_h2]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mb-2"
           style={{
-            minHeight: `${minHeightPx}px`,
-            maxHeight: `${maxHeightPx}px`,
+            minHeight: computedMinHeight,
+            maxHeight: computedMaxHeight,
           }}
         />
       </div>

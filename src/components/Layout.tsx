@@ -249,7 +249,7 @@ export default function Layout({ children }: LayoutProps) {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-grow w-full px-[48px] pb-[80px] pt-[24px] mt-[92px]">
+      <main className="flex-grow w-full px-4 md:px-[48px] pt-5 mt-[72px] pb-16 md:pb-4">
         {children}
       </main>
 
