@@ -5,6 +5,7 @@ import { useVocabulariesQuery } from "@/features/vocabulary/hooks"
 import { VocabularyModal } from "@/features/vocabulary/components/VocabularyModal"
 import { extractContextSentence } from "@/lib/contextSentence"
 import type { VocabularyItem } from "@/types"
+import { AudioTrackModal } from "@/features/audio/components/AudioTrackModal"
 import {
   Play,
   Pause,
@@ -16,6 +17,8 @@ import {
   Trash2,
   ArrowLeft,
   Loader2,
+  RotateCw,
+  Pencil,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -31,7 +34,24 @@ export default function EnglishShadowingDetail() {
 
   // 1. Fetch audio track details & IPA transcription
   const { data: track, isLoading: isTrackLoading } = useAudioById(id)
-  const { data: ipaData, isLoading: isIpaLoading } = useAudioIpaQuery(id)
+  const {
+    data: ipaData,
+    isLoading: isIpaLoading,
+    isFetching: isIpaFetching,
+    refetch: refetchIpa,
+  } = useAudioIpaQuery(id)
+
+  // Edit Track Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
+
+  const handleRefreshIpa = async () => {
+    try {
+      await refetchIpa()
+      toast.success("Refreshed IPA Phonetics!")
+    } catch {
+      toast.error("Failed to refresh IPA phonetics")
+    }
+  }
 
   // 2. Fetch saved vocabulary
   const { data: userVocab } = useVocabulariesQuery({ page_size: 1000 })
@@ -454,17 +474,28 @@ export default function EnglishShadowingDetail() {
       )}
 
       {/* Page Header */}
-      <header className="mb-4">
-        <Link
-          to="/english/listening"
-          className="font-outfit text-sm text-[#706065] hover:text-[#EFBCD5] transition-colors inline-flex items-center gap-1.5 mb-2 font-semibold"
-        >
-          <ArrowLeft className="h-4 w-4" /> Listening Library
-        </Link>
-        <h1 className="font-sora font-bold text-3xl text-[#201B1E] mb-1">{trackTitle}</h1>
-        <div className="font-mono text-xs font-bold text-[#70495e] uppercase tracking-wider">
-          {track?.level ? `${track.level} LEVEL` : "INTERMEDIATE"} • {track?.category ? track.category.toUpperCase() : "GENERAL ENGLISH"} • {formatTime(duration)}
+      <header className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <Link
+            to="/english/listening"
+            className="font-outfit text-sm text-[#706065] hover:text-[#EFBCD5] transition-colors inline-flex items-center gap-1.5 mb-2 font-semibold"
+          >
+            <ArrowLeft className="h-4 w-4" /> Listening Library
+          </Link>
+          <h1 className="font-sora font-bold text-3xl text-[#201B1E] mb-1">{trackTitle}</h1>
+          <div className="font-mono text-xs font-bold text-[#70495e] uppercase tracking-wider">
+            {track?.level ? `${track.level} LEVEL` : "INTERMEDIATE"} • {track?.category ? track.category.toUpperCase() : "GENERAL ENGLISH"} • {formatTime(duration)}
+          </div>
         </div>
+        {track && (
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="px-4 py-2 rounded-2xl bg-[#FCFAF7] hover:bg-[#fcf1f5] text-[#201B1E] font-sora font-bold text-xs transition-all border border-[#E5DFE2] flex items-center gap-2 self-start md:self-auto cursor-pointer"
+          >
+            <Pencil className="w-3.5 h-3.5 text-[#70495e]" />
+            <span>Edit Track</span>
+          </button>
+        )}
       </header>
 
       {/* Main 3-Column Split Grid */}
@@ -626,9 +657,21 @@ export default function EnglishShadowingDetail() {
                   English
                 </span>
               </h2>
-              <span className="text-[11px] font-normal text-[#706065] font-outfit">
-                Highlight to save
-              </span>
+              <div className="flex items-center gap-2">
+                {track && (
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="flex items-center gap-1 text-xs font-semibold text-[#70495e] hover:text-[#201B1E] px-2.5 py-1 rounded-lg bg-[#fcf1f5] hover:bg-[#f8e4ee] border border-[#EFBCD5]/40 transition-colors cursor-pointer"
+                    title="Edit Transcript"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+                )}
+                <span className="text-[11px] font-normal text-[#706065] font-outfit hidden sm:inline">
+                  Highlight to save
+                </span>
+              </div>
             </div>
 
             {/* Sentences Transcript Scroller */}
@@ -650,7 +693,17 @@ export default function EnglishShadowingDetail() {
                   Full IPA
                 </span>
               </h2>
-              {isIpaLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#70495e]" />}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefreshIpa}
+                  disabled={isIpaFetching}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FCFAF7] hover:bg-[#fcf1f5] text-xs font-semibold text-[#70495e] border border-[#E5DFE2] transition-colors cursor-pointer disabled:opacity-50"
+                  title="Refresh IPA Phonetics"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 ${isIpaFetching ? "animate-spin text-[#EFBCD5]" : ""}`} />
+                  <span>Refresh</span>
+                </button>
+              </div>
             </div>
 
             {/* Phonetic Content */}
@@ -716,6 +769,18 @@ export default function EnglishShadowingDetail() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* EDIT AUDIO TRACK MODAL */}
+      {track && (
+        <AudioTrackModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            refetchIpa()
+          }}
+          initialData={track}
+        />
       )}
 
       {/* VOCABULARY MODAL */}

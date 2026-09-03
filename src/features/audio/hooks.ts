@@ -80,8 +80,10 @@ export function useUpdateAudio() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: string; payload: AudioUpdate }) =>
       updateAudio(id, payload, token),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: QUERY_KEY })
+      qc.invalidateQueries({ queryKey: [...QUERY_KEY, "detail", variables.id, "ipa"] })
+      qc.refetchQueries({ queryKey: [...QUERY_KEY, "detail", variables.id, "ipa"] })
     },
   })
 }
