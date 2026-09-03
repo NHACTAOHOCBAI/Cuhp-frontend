@@ -21,6 +21,7 @@ import {
   Trash2,
   X,
   Highlighter,
+  Copy,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -177,7 +178,22 @@ export default function EnglishReadingDetail() {
 
 
 
-  // Action 0: Highlight Selected Text
+  // Action 0: Copy Selected Text to Clipboard
+  const handleCopySelectedText = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!selectedText) return
+    navigator.clipboard
+      .writeText(selectedText)
+      .then(() => {
+        toast.success("Copied to clipboard!")
+      })
+      .catch(() => {
+        toast.error("Failed to copy text.")
+      })
+    setSelectionPos(null)
+  }
+
+  // Action 1: Highlight Selected Text
   const handleHighlightSelectedText = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!selectedText) return
@@ -210,11 +226,19 @@ export default function EnglishReadingDetail() {
         .join("")
     }
 
-    if (!passageHighlights || passageHighlights.length === 0) {
+    const activeHighlights = [...(passageHighlights || [])]
+    if (selectionPos && selectedText && selectedText.trim().length > 0) {
+      const activeText = selectedText.trim()
+      if (!activeHighlights.includes(activeText)) {
+        activeHighlights.push(activeText)
+      }
+    }
+
+    if (activeHighlights.length === 0) {
       return baseHtml
     }
 
-    const escaped = passageHighlights
+    const escaped = activeHighlights
       .map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
       .filter(Boolean)
       .join("|")
@@ -232,7 +256,7 @@ export default function EnglishReadingDetail() {
             const span = doc.createElement("span")
             span.innerHTML = text.replace(
               regex,
-              '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all">$1</mark>'
+              '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-normal transition-all">$1</mark>'
             )
             node.parentNode?.replaceChild(span, node)
           }
@@ -251,7 +275,7 @@ export default function EnglishReadingDetail() {
     } catch {
       return baseHtml
     }
-  }, [passage?.content, passageHighlights])
+  }, [passage?.content, passageHighlights, selectedText, selectionPos])
 
   // Action 1: Save Selection as Vocabulary via Modal
   const handleSaveSelectedVocab = (e: React.MouseEvent) => {
@@ -401,7 +425,7 @@ export default function EnglishReadingDetail() {
             </span>
           </h3>
           <div
-            className="overflow-y-auto flex-1 pr-2 space-y-4 text-zinc-800 text-base leading-[1.8] font-outfit select-text hide-scrollbar [&_p]:mb-4 [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+            className="overflow-y-auto flex-1 pr-2 space-y-4 text-zinc-800 text-base leading-[1.8] font-outfit select-text selection:bg-[#EFBCD5]/50 selection:text-[#1f1a1d] hide-scrollbar [&_p]:mb-4 [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
             dangerouslySetInnerHTML={{ __html: renderedPassageHtml }}
           />
         </section>
@@ -516,10 +540,23 @@ export default function EnglishReadingDetail() {
       {/* FLOATING SELECTION TOOLBAR (POPUP WHEN HIGHLIGHTING TEXT) */}
       {selectionPos && selectedText && (
         <div
+          onMouseDown={(e) => e.preventDefault()}
           className="selection-toolbar fixed z-[99999] -translate-x-1/2 -translate-y-full bg-white/95 backdrop-blur-md text-[#201B1E] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.35)] rounded-2xl p-1.5 flex items-center gap-1 animate-in zoom-in-95 duration-150 font-outfit border border-[#E5DFE2]"
           style={{ left: `${selectionPos.x}px`, top: `${selectionPos.y}px` }}
         >
-          {/* Action 0: Highlight Text */}
+          {/* Action 0: Copy Selected Text */}
+          <button
+            onClick={handleCopySelectedText}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#fcf1f5] text-[#7b5268] transition-all text-xs font-bold"
+            title="Copy selected text"
+          >
+            <Copy className="w-3.5 h-3.5 text-[#EFBCD5]" />
+            <span>Copy</span>
+          </button>
+
+          <div className="w-[1px] h-4 bg-[#E5DFE2]" />
+
+          {/* Action 1: Highlight Text */}
           <button
             onClick={handleHighlightSelectedText}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-[#fcf1f5] text-[#7b5268] transition-all text-xs font-bold"

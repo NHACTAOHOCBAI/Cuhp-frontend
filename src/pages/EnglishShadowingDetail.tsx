@@ -19,6 +19,7 @@ import {
   Loader2,
   RotateCw,
   Pencil,
+  Copy,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -129,7 +130,7 @@ export default function EnglishShadowingDetail() {
             const span = doc.createElement("span")
             span.innerHTML = text.replace(
               regex,
-              '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-semibold transition-all">$1</mark>'
+              '<mark class="bg-[#EFBCD5]/45 text-[#1f1a1d] px-1 py-0.5 rounded font-normal transition-all">$1</mark>'
             )
             node.parentNode?.replaceChild(span, node)
           }
@@ -152,15 +153,29 @@ export default function EnglishShadowingDetail() {
 
   // 1. Rendered English Transcript HTML
   const renderedTranscriptHtml = React.useMemo(() => {
-    return applyHighlightsToHtml(transcriptText, trackHighlights)
-  }, [transcriptText, trackHighlights])
+    const activeHighlights = [...trackHighlights]
+    if (selectionPos && selectedText && selectedText.trim().length > 0) {
+      const activeText = selectedText.trim()
+      if (!activeHighlights.includes(activeText)) {
+        activeHighlights.push(activeText)
+      }
+    }
+    return applyHighlightsToHtml(transcriptText, activeHighlights)
+  }, [transcriptText, trackHighlights, selectionPos, selectedText])
 
   // 2. Rendered Full IPA Transcript HTML
   const renderedIpaHtml = React.useMemo(() => {
     const rawIpa = ipaData?.phonetic || ""
     if (!rawIpa) return ""
-    return applyHighlightsToHtml(rawIpa, trackHighlights)
-  }, [ipaData?.phonetic, trackHighlights])
+    const activeHighlights = [...trackHighlights]
+    if (selectionPos && selectedText && selectedText.trim().length > 0) {
+      const activeText = selectedText.trim()
+      if (!activeHighlights.includes(activeText)) {
+        activeHighlights.push(activeText)
+      }
+    }
+    return applyHighlightsToHtml(rawIpa, activeHighlights)
+  }, [ipaData?.phonetic, trackHighlights, selectionPos, selectedText])
 
   // HTML5 Audio event handlers & simulation fallback
   React.useEffect(() => {
@@ -253,6 +268,21 @@ export default function EnglishShadowingDetail() {
       document.removeEventListener("mousedown", handleMouseDown)
     }
   }, [])
+
+  // Action 0: Copy Selected Text to Clipboard
+  const handleCopySelectedText = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!selectedText) return
+    navigator.clipboard
+      .writeText(selectedText)
+      .then(() => {
+        toast.success("Copied to clipboard!")
+      })
+      .catch(() => {
+        toast.error("Failed to copy text.")
+      })
+    setSelectionPos(null)
+  }
 
   // Action 0: Highlight Selected Text
   const handleHighlightSelectedText = (e: React.MouseEvent) => {
@@ -429,12 +459,22 @@ export default function EnglishShadowingDetail() {
       {/* FLOATING TEXT SELECTION TOOLBAR */}
       {selectionPos && (
         <div
+          onMouseDown={(e) => e.preventDefault()}
           className="fixed z-50 transform -translate-x-1/2 -translate-y-full mb-2 bg-white/95 backdrop-blur-md shadow-[0_10px_30px_-5px_rgba(239,188,213,0.35)] rounded-2xl border border-[#E5DFE2] px-2 py-1.5 flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-150 selection-toolbar font-outfit"
           style={{
             left: `${selectionPos.x}px`,
             top: `${selectionPos.y}px`,
           }}
         >
+          <button
+            onClick={handleCopySelectedText}
+            className="px-2.5 py-1.5 rounded-xl hover:bg-[#FCFAF7] text-xs font-semibold text-[#1f1a1d] flex items-center gap-1.5 transition-colors"
+            title="Copy selected text"
+          >
+            <Copy className="w-3.5 h-3.5 text-[#EFBCD5]" />
+            <span>Copy</span>
+          </button>
+          <div className="w-[1px] h-4 bg-[#E5DFE2]" />
           <button
             onClick={handleHighlightSelectedText}
             className="px-2.5 py-1.5 rounded-xl hover:bg-[#FCFAF7] text-xs font-semibold text-[#1f1a1d] flex items-center gap-1.5 transition-colors"
@@ -676,7 +716,7 @@ export default function EnglishShadowingDetail() {
 
             {/* Sentences Transcript Scroller */}
             <div
-              className="transcript-content flex-grow overflow-y-auto pr-2 text-sm text-zinc-800 leading-[1.8] select-text hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-3 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+              className="transcript-content flex-grow overflow-y-auto pr-2 text-sm text-zinc-800 leading-[1.8] select-text selection:bg-[#EFBCD5]/50 selection:text-[#1f1a1d] hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-3 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
               dangerouslySetInnerHTML={{ __html: renderedTranscriptHtml }}
             />
           </div>
@@ -714,7 +754,7 @@ export default function EnglishShadowingDetail() {
               </div>
             ) : (
               <div
-                className="transcript-content flex-grow overflow-y-auto pr-2 text-sm text-zinc-800 leading-[1.8] select-text hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-3 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
+                className="transcript-content flex-grow overflow-y-auto pr-2 text-sm text-zinc-800 leading-[1.8] select-text selection:bg-[#EFBCD5]/50 selection:text-[#1f1a1d] hide-scrollbar [&_p]:mb-4 [&_img]:rounded-xl [&_img.floatright]:float-right [&_img.floatright]:ml-3 [&_img.floatright]:mb-2 [&_img.floatright]:border [&_img.floatright]:border-[#E5DFE2] [&_strong]:text-[#1f1a1d] [&_strong]:font-bold"
                 dangerouslySetInnerHTML={{ __html: renderedIpaHtml }}
               />
             )}

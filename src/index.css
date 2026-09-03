@@ -105,3 +105,15 @@ ruby.ipa-ruby rt.ipa-phonetic {
   letter-spacing: -0.2px;
 }
 
+/* Custom Text Selection Highlight */
+::selection {
+  background-color: rgba(239, 188, 213, 0.5);
+  color: #1f1a1d;
+}
+
+::-moz-selection {
+  background-color: rgba(239, 188, 213, 0.5);
+  color: #1f1a1d;
+}
+
+
