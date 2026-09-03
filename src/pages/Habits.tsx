@@ -51,6 +51,15 @@ export default function Habits() {
     return `${y}-${m}-${date}`
   }
 
+  // Check if a date is strictly in the future (after today)
+  const isFutureDate = (d: Date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const check = new Date(d)
+    check.setHours(0, 0, 0, 0)
+    return check.getTime() > today.getTime()
+  }
+
   const weekDates = getWeekDates(weekStart)
   const startDateStr = formatYYYYMMDD(weekDates[0])
   const endDateStr = formatYYYYMMDD(weekDates[6])
@@ -58,13 +67,14 @@ export default function Habits() {
   // Fetch logs for current week view
   const { data: weekLogs = [] } = useHabitLogsQuery(startDateStr, endDateStr)
 
-  // 3. Heatmap setup (representing 3 months: 14 weeks)
+  // 3. Heatmap setup (14 weeks window up to Today)
   const heatmapStart = React.useMemo(() => {
-    const d = new Date()
-    d.setDate(d.getDate() - 90) // Last 90 days
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() - 70) // 10 weeks before viewed week
     d.setHours(0, 0, 0, 0)
     return d
-  }, [])
+  }, [weekStart])
+
   const heatmapEnd = React.useMemo(() => {
     const d = new Date()
     d.setHours(23, 59, 59, 999)
@@ -91,8 +101,18 @@ export default function Habits() {
     return logMap[dateStr]?.[habitId] || false
   }
 
-  // Toggle habit log
-  const handleToggleLog = (habitId: string, dateStr: string, currentStatus: boolean) => {
+  // Toggle habit log (restricted to today or past dates only)
+  const handleToggleLog = (
+    habitId: string,
+    dateStr: string,
+    currentStatus: boolean,
+    dateObj: Date
+  ) => {
+    if (isFutureDate(dateObj)) {
+      toast.error("Cannot log habits for future dates.")
+      return
+    }
+
     toggleLogMutation.mutate(
       {
         habit_id: habitId,
@@ -186,35 +206,50 @@ export default function Habits() {
     }
   }
 
-  // Current month name (e.g. "September")
-  const currentMonthName = React.useMemo(() => {
-    return new Date().toLocaleString("en-US", { month: "long" })
-  }, [])
+  // Viewed month date (Thursday of the week) & Name (e.g. "September")
+  const viewedMonthDate = React.useMemo(() => {
+    const thursday = new Date(weekStart)
+    thursday.setDate(thursday.getDate() + 3)
+    return thursday
+  }, [weekStart])
 
-  // Calculate consistency analytics for sidebar
+  const currentMonthName = React.useMemo(() => {
+    return viewedMonthDate.toLocaleString("en-US", { month: "long" })
+  }, [viewedMonthDate])
+
+  // Calculate consistency analytics for sidebar (only counting up to today)
   const stats = React.useMemo(() => {
     const now = new Date()
-    const currentMonthIndex = now.getMonth()
+    const targetYear = viewedMonthDate.getFullYear()
+    const targetMonth = viewedMonthDate.getMonth()
+
+    // Filter logs for this month where completed === true and date <= today
     const monthlyLogs = heatmapLogs.filter((log) => {
-      const logDate = new Date(log.date)
-      return logDate.getMonth() === currentMonthIndex && log.completed
+      if (!log.completed) return false
+      const [y, m, d] = log.date.split("-").map(Number)
+      const logDate = new Date(y, m - 1, d)
+      logDate.setHours(0, 0, 0, 0)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      return (
+        y === targetYear &&
+        m - 1 === targetMonth &&
+        logDate.getTime() <= today.getTime()
+      )
     })
 
-    // Group logs by date
-    const dateGroups: Record<string, number> = {}
-    monthlyLogs.forEach((log) => {
-      dateGroups[log.date] = (dateGroups[log.date] || 0) + 1
-    })
+    // Group active days by date string
+    const activeDatesSet = new Set(monthlyLogs.map((log) => log.date))
+    const activeDaysCount = activeDatesSet.size
 
-    const activeDaysCount = Object.keys(dateGroups).length
-    const year = now.getFullYear()
-    const daysInMonth = new Date(year, currentMonthIndex + 1, 0).getDate()
+    const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate()
 
     return {
       activeDays: activeDaysCount,
       totalDays: daysInMonth,
     }
-  }, [heatmapLogs])
+  }, [heatmapLogs, viewedMonthDate])
 
   // Heatmap Weeks construction: 14 columns (weeks), each column has 7 Date objects (Mon-Sun)
   const heatmapWeeks = React.useMemo(() => {
@@ -228,13 +263,13 @@ export default function Habits() {
 
     const totalWeeks = 14
     for (let w = 0; w < totalWeeks; w++) {
-      const weekDates: Date[] = []
+      const wDates: Date[] = []
       for (let d = 0; d < 7; d++) {
         const date = new Date(firstMonday)
         date.setDate(firstMonday.getDate() + w * 7 + d)
-        weekDates.push(date)
+        wDates.push(date)
       }
-      weeks.push(weekDates)
+      weeks.push(wDates)
     }
     return weeks
   }, [heatmapStart])
@@ -252,6 +287,7 @@ export default function Habits() {
 
   // Get color intensity class for heatmap cells
   const getHeatmapColorClass = (date: Date) => {
+    if (isFutureDate(date)) return "bg-[#E5DFE2]/20 opacity-30"
     const dStr = formatYYYYMMDD(date)
     const count = heatmapCompletionMap[dStr] || 0
     if (count === 0) return "bg-[#E5DFE2]/40"
@@ -260,19 +296,37 @@ export default function Habits() {
     return "bg-[#EFBCD5] shadow-xs"
   }
 
-  // DYNAMIC Streak History Chart & Active Streak Calculation
+  // DYNAMIC Streak History Chart & Active Streak Calculation (up to Today)
   const streakChartData = React.useMemo(() => {
     if (!heatmapWeeks || heatmapWeeks.length === 0) {
       return { pathD: "", areaD: "", points: [], currentStreak: 0, lastPoint: { x: 272, y: 35 } }
     }
 
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Map of all completed dates (strictly date <= today)
+    const completedDatesSet = new Set<string>()
+    heatmapLogs.forEach((log) => {
+      if (log.completed) {
+        const [y, m, d] = log.date.split("-").map(Number)
+        const lDate = new Date(y, m - 1, d)
+        lDate.setHours(0, 0, 0, 0)
+        if (lDate.getTime() <= today.getTime()) {
+          completedDatesSet.add(log.date)
+        }
+      }
+    })
+
     // Calculate completions per week across the 14-week window
     const weeklyCounts: number[] = heatmapWeeks.map((week) => {
       let count = 0
       week.forEach((day) => {
-        const dStr = formatYYYYMMDD(day)
-        if (heatmapCompletionMap[dStr]) {
-          count += heatmapCompletionMap[dStr]
+        if (!isFutureDate(day)) {
+          const dStr = formatYYYYMMDD(day)
+          if (heatmapCompletionMap[dStr]) {
+            count += heatmapCompletionMap[dStr]
+          }
         }
       })
       return count
@@ -311,21 +365,19 @@ export default function Habits() {
     const firstPoint = points[0]
     const areaD = `${pathD} L ${lastPoint.x} 150 L ${firstPoint.x} 150 Z`
 
-    // Real active consecutive streak calculation
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    // Real active consecutive streak calculation from Today/Yesterday backwards
     let streak = 0
     let checkDate = new Date(today)
     const todayStr = formatYYYYMMDD(checkDate)
 
     // If today has no completed log yet, check starting from yesterday
-    if (!heatmapCompletionMap[todayStr]) {
+    if (!completedDatesSet.has(todayStr)) {
       checkDate.setDate(checkDate.getDate() - 1)
     }
 
     while (true) {
       const dStr = formatYYYYMMDD(checkDate)
-      if (heatmapCompletionMap[dStr] && heatmapCompletionMap[dStr] > 0) {
+      if (completedDatesSet.has(dStr)) {
         streak++
         checkDate.setDate(checkDate.getDate() - 1)
       } else {
@@ -340,7 +392,7 @@ export default function Habits() {
       lastPoint,
       currentStreak: streak,
     }
-  }, [heatmapWeeks, heatmapCompletionMap])
+  }, [heatmapWeeks, heatmapLogs, heatmapCompletionMap])
 
   return (
     <div className="space-y-8 font-outfit">
@@ -436,15 +488,27 @@ export default function Habits() {
                         {weekDates.map((d) => {
                           const dStr = formatYYYYMMDD(d)
                           const completed = isHabitCompleted(habit.id, dStr)
+                          const isFuture = isFutureDate(d)
+
                           return (
                             <td key={dStr} className="py-4 px-2 text-center">
                               <button
-                                onClick={() => handleToggleLog(habit.id, dStr, completed)}
-                                className={`w-7 h-7 rounded-full border transition-all inline-flex items-center justify-center cursor-pointer ${
-                                  completed
-                                    ? "bg-[#EFBCD5] border-[#EFBCD5] text-white shadow-xs scale-105"
-                                    : "border-[#E5DFE2] hover:border-[#EFBCD5] bg-white"
+                                disabled={isFuture}
+                                onClick={() => handleToggleLog(habit.id, dStr, completed, d)}
+                                className={`w-7 h-7 rounded-full border transition-all inline-flex items-center justify-center ${
+                                  isFuture
+                                    ? "opacity-35 cursor-not-allowed border-[#E5DFE2] bg-zinc-100/60"
+                                    : completed
+                                    ? "bg-[#EFBCD5] border-[#EFBCD5] text-white shadow-xs scale-105 cursor-pointer"
+                                    : "border-[#E5DFE2] hover:border-[#EFBCD5] bg-white cursor-pointer"
                                 }`}
+                                title={
+                                  isFuture
+                                    ? "Cannot log habits for future dates"
+                                    : completed
+                                    ? "Mark incomplete"
+                                    : "Mark completed"
+                                }
                               >
                                 {completed && (
                                   <span className="w-2.5 h-2.5 rounded-full bg-white" />
@@ -471,7 +535,7 @@ export default function Habits() {
             </div>
           </div>
 
-          {/* Activity Heatmap Grid Card (3 Months Window) */}
+          {/* Activity Heatmap Grid Card (14 Weeks Window up to Today) */}
           <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6">
             <div className="flex justify-between items-center mb-4">
               <div>
@@ -479,7 +543,7 @@ export default function Habits() {
                   Consistency Heatmap
                 </h3>
                 <p className="text-xs text-[#706065]">
-                  Daily completion volume over the last 3 months
+                  Daily completion volume over the 3-month window
                 </p>
               </div>
             </div>
@@ -507,10 +571,14 @@ export default function Habits() {
                             className={`w-3.5 h-3.5 rounded-xs transition-colors ${getHeatmapColorClass(
                               date
                             )}`}
-                            title={`${date.toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}: ${count} habit${count === 1 ? "" : "s"} completed`}
+                            title={
+                              isFutureDate(date)
+                                ? "Future date"
+                                : `${date.toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}: ${count} habit${count === 1 ? "" : "s"} completed`
+                            }
                           />
                         )
                       })}
