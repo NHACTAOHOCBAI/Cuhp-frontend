@@ -13,7 +13,6 @@ import {
   Trash2,
   X,
   Star,
-  Calendar,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -59,20 +58,15 @@ export default function Habits() {
   // Fetch logs for current week view
   const { data: weekLogs = [] } = useHabitLogsQuery(startDateStr, endDateStr)
 
-  // 3. Heatmap setup (representing 3 months: June, July, August as in the screenshot)
+  // 3. Heatmap setup (representing 3 months: 14 weeks)
   const heatmapStart = React.useMemo(() => {
-    // Standardize to start of June of the current year
     const d = new Date()
-    d.setMonth(5) // June (0-indexed)
-    d.setDate(1)
+    d.setDate(d.getDate() - 90) // Last 90 days
     d.setHours(0, 0, 0, 0)
     return d
   }, [])
   const heatmapEnd = React.useMemo(() => {
-    // End of August of the current year
     const d = new Date()
-    d.setMonth(7) // August (0-indexed)
-    d.setDate(31)
     d.setHours(23, 59, 59, 999)
     return d
   }, [])
@@ -192,11 +186,15 @@ export default function Habits() {
     }
   }
 
+  // Current month name (e.g. "September")
+  const currentMonthName = React.useMemo(() => {
+    return new Date().toLocaleString("en-US", { month: "long" })
+  }, [])
+
   // Calculate consistency analytics for sidebar
   const stats = React.useMemo(() => {
-    // Current month details (August for mockup, or dynamically current month)
     const now = new Date()
-    const currentMonthIndex = now.getMonth() // e.g. 7 for August
+    const currentMonthIndex = now.getMonth()
     const monthlyLogs = heatmapLogs.filter((log) => {
       const logDate = new Date(log.date)
       return logDate.getMonth() === currentMonthIndex && log.completed
@@ -208,16 +206,13 @@ export default function Habits() {
       dateGroups[log.date] = (dateGroups[log.date] || 0) + 1
     })
 
-    // Count how many days had at least one habit completed
     const activeDaysCount = Object.keys(dateGroups).length
-
-    // Max days in the month (e.g. 30 or 31)
     const year = now.getFullYear()
     const daysInMonth = new Date(year, currentMonthIndex + 1, 0).getDate()
 
     return {
-      activeDays: activeDaysCount > 0 ? activeDaysCount : 28, // Default 28 days completed
-      totalDays: daysInMonth || 30,
+      activeDays: activeDaysCount,
+      totalDays: daysInMonth,
     }
   }, [heatmapLogs])
 
@@ -225,11 +220,10 @@ export default function Habits() {
   const heatmapWeeks = React.useMemo(() => {
     const weeks: Date[][] = []
     
-    // Find the Monday of the week containing June 1st to align the columns
-    const startOfJune = new Date(heatmapStart)
-    const day = startOfJune.getDay()
-    const diff = startOfJune.getDate() - day + (day === 0 ? -6 : 1)
-    const firstMonday = new Date(startOfJune.setDate(diff))
+    const startOfPeriod = new Date(heatmapStart)
+    const day = startOfPeriod.getDay()
+    const diff = startOfPeriod.getDate() - day + (day === 0 ? -6 : 1)
+    const firstMonday = new Date(startOfPeriod.setDate(diff))
     firstMonday.setHours(0, 0, 0, 0)
 
     const totalWeeks = 14
@@ -258,201 +252,266 @@ export default function Habits() {
 
   // Get color intensity class for heatmap cells
   const getHeatmapColorClass = (date: Date) => {
-    const dateStr = formatYYYYMMDD(date)
-    // Filter out dates outside Jun-Aug range to keep borders empty/hidden
-    if (date < heatmapStart || date > heatmapEnd) {
-      return "bg-transparent border-transparent"
-    }
-
-    if (habits.length === 0) return "bg-[#E5DFE2]/40"
-    const completedCount = heatmapCompletionMap[dateStr] || 0
-    const ratio = completedCount / habits.length
-
-    if (ratio === 0) return "bg-[#E5DFE2]/40"
-    if (ratio <= 0.34) return "bg-[#EFBCD5]/25"
-    if (ratio <= 0.67) return "bg-[#EFBCD5]/60"
-    return "bg-[#EFBCD5]"
+    const dStr = formatYYYYMMDD(date)
+    const count = heatmapCompletionMap[dStr] || 0
+    if (count === 0) return "bg-[#E5DFE2]/40"
+    if (count === 1) return "bg-[#EFBCD5]/35"
+    if (count === 2) return "bg-[#EFBCD5]/70"
+    return "bg-[#EFBCD5] shadow-xs"
   }
 
+  // DYNAMIC Streak History Chart & Active Streak Calculation
+  const streakChartData = React.useMemo(() => {
+    if (!heatmapWeeks || heatmapWeeks.length === 0) {
+      return { pathD: "", areaD: "", points: [], currentStreak: 0, lastPoint: { x: 272, y: 35 } }
+    }
+
+    // Calculate completions per week across the 14-week window
+    const weeklyCounts: number[] = heatmapWeeks.map((week) => {
+      let count = 0
+      week.forEach((day) => {
+        const dStr = formatYYYYMMDD(day)
+        if (heatmapCompletionMap[dStr]) {
+          count += heatmapCompletionMap[dStr]
+        }
+      })
+      return count
+    })
+
+    const maxCount = Math.max(...weeklyCounts, 1)
+
+    // Generate 7 bi-weekly trend points for the SVG curve
+    const points: { x: number; y: number; val: number }[] = []
+    const START_X = 15
+    const END_X = 285
+    const STEP_X = (END_X - START_X) / 6
+
+    for (let i = 0; i < 7; i++) {
+      const w1 = weeklyCounts[i * 2] || 0
+      const w2 = weeklyCounts[i * 2 + 1] || 0
+      const avg = (w1 + w2) / 2
+
+      const x = Math.round(START_X + i * STEP_X)
+      // Normalize y: 130 is bottom (0%), 35 is top (100%)
+      const ratio = Math.min(avg / maxCount, 1)
+      const y = Math.round(130 - ratio * 95)
+      points.push({ x, y, val: Math.round(avg) })
+    }
+
+    // Smooth Bezier path
+    let pathD = `M ${points[0].x} ${points[0].y}`
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i]
+      const p2 = points[i + 1]
+      const cx = (p1.x + p2.x) / 2
+      pathD += ` C ${cx} ${p1.y}, ${cx} ${p2.y}, ${p2.x} ${p2.y}`
+    }
+
+    const lastPoint = points[points.length - 1]
+    const firstPoint = points[0]
+    const areaD = `${pathD} L ${lastPoint.x} 150 L ${firstPoint.x} 150 Z`
+
+    // Real active consecutive streak calculation
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    let streak = 0
+    let checkDate = new Date(today)
+    const todayStr = formatYYYYMMDD(checkDate)
+
+    // If today has no completed log yet, check starting from yesterday
+    if (!heatmapCompletionMap[todayStr]) {
+      checkDate.setDate(checkDate.getDate() - 1)
+    }
+
+    while (true) {
+      const dStr = formatYYYYMMDD(checkDate)
+      if (heatmapCompletionMap[dStr] && heatmapCompletionMap[dStr] > 0) {
+        streak++
+        checkDate.setDate(checkDate.getDate() - 1)
+      } else {
+        break
+      }
+    }
+
+    return {
+      pathD,
+      areaD,
+      points,
+      lastPoint,
+      currentStreak: streak,
+    }
+  }, [heatmapWeeks, heatmapCompletionMap])
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <header className="mb-[24px]">
-        <h1 className="font-sora text-3xl font-bold text-[#1f1a1d] mb-1.5 tracking-tight">
-          Habit Tracker
-        </h1>
-        <p className="font-outfit text-base text-[#706065] font-normal">
-          Build good habits every day
-        </p>
+    <div className="space-y-8 font-outfit">
+      {/* Top Header */}
+      <header className="mt-4 mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="font-sora font-bold text-3xl mb-2 text-[#201B1E] tracking-tight">
+            Habit Tracker
+          </h1>
+          <p className="font-outfit font-normal text-base text-[#706065]">
+            Build good habits every day.
+          </p>
+        </div>
+
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-[#EFBCD5] text-[#201B1E] font-sora font-bold text-sm px-5 py-2.5 rounded-2xl hover:bg-[#ebb8d1] active:scale-95 transition-all border border-[#ffd8ea] shadow-sm cursor-pointer"
+        >
+          <Plus className="h-4 w-4" />
+          <span>New Habit</span>
+        </button>
       </header>
 
-      {/* Main Grid Split Layout */}
+      {/* Main Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Weekly Grid & Heatmap */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Weekly Grid Card */}
-          <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6 relative">
+          
+          {/* Weekly Habit Tracker Matrix Card */}
+          <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6">
             
-            {/* Week Switcher */}
-            <div className="flex justify-between items-center mb-6">
+            {/* Navigation Header */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#E5DFE2]/60">
               <button
                 onClick={handlePrevWeek}
-                className="text-[#706065] hover:text-[#EFBCD5] transition-colors p-1"
-                aria-label="Previous week"
+                className="p-1.5 rounded-lg border border-[#E5DFE2] hover:bg-[#fcf1f5] text-[#706065] hover:text-[#EFBCD5] transition-colors cursor-pointer"
+                title="Previous week"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
-              <span className="font-sora text-sm text-[#514347] font-bold tracking-tight">
+
+              <span className="font-sora font-bold text-sm sm:text-base text-[#1f1a1d]">
                 {getWeekSwitcherText()}
               </span>
+
               <button
                 onClick={handleNextWeek}
-                className="text-[#706065] hover:text-[#EFBCD5] transition-colors p-1"
-                aria-label="Next week"
+                className="p-1.5 rounded-lg border border-[#E5DFE2] hover:bg-[#fcf1f5] text-[#706065] hover:text-[#EFBCD5] transition-colors cursor-pointer"
+                title="Next week"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Checklist Table */}
+            {/* Habit Table Grid */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse table-fixed">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-[#E5DFE2]/40">
-                    <th className="py-2.5 px-4 font-sora text-xs font-semibold text-transparent w-[40%]">
-                      Habit
-                    </th>
-                    {weekDates.map((_, idx) => {
-                      const daysMap = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                      return (
-                        <th
-                          key={idx}
-                          className="py-2.5 px-1 font-sora text-xs font-bold text-center text-[#706065] w-[8.5%]"
-                        >
-                          {daysMap[idx]}
-                        </th>
-                      )
-                    })}
+                  <tr className="border-b border-[#E5DFE2]/60 font-mono text-xs font-bold text-[#706065] uppercase">
+                    <th className="py-3 px-3 w-[240px]">Habit</th>
+                    {weekDates.map((d, i) => (
+                      <th key={i} className="py-3 px-2 text-center w-[60px]">
+                        <div>{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</div>
+                        <div className="text-[10px] opacity-60 font-normal mt-0.5">
+                          {d.getDate()}
+                        </div>
+                      </th>
+                    ))}
+                    <th className="py-3 px-2 w-[40px]" />
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[#E5DFE2]/40 text-sm">
                   {habits.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-[#706065] font-outfit text-sm">
-                        No habits yet. Click the "+ Add Habit" button below to start!
+                      <td colSpan={9} className="py-12 text-center text-[#706065]">
+                        No habits created yet. Click "+ New Habit" above to start!
                       </td>
                     </tr>
                   ) : (
-                    habits.map((habit) => {
-                      return (
-                        <tr
-                          key={habit.id}
-                          className="group border-b border-[#E5DFE2]/40 last:border-0 hover:bg-[#FCFAF7]/20 transition-colors"
-                        >
-                          {/* Habit Title */}
-                          <td className="py-4 px-4 align-middle">
-                            <div className="flex justify-between items-center w-full">
-                              <span className="font-outfit text-base font-semibold text-[#1f1a1d] truncate max-w-[200px]" title={habit.name}>
-                                {habit.name}
+                    habits.map((habit) => (
+                      <tr key={habit.id} className="hover:bg-[#FCFAF7]/80 transition-colors group">
+                        <td className="py-4 px-3 font-medium text-[#1f1a1d]">
+                          <div className="flex flex-col">
+                            <span>{habit.name}</span>
+                            {habit.description && (
+                              <span className="text-xs text-[#706065] font-normal truncate max-w-[200px]">
+                                {habit.description}
                               </span>
-                              <button
-                                onClick={() => handleDeleteHabit(habit.id)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-zinc-400 hover:text-red-500 mr-2"
-                                title="Delete habit"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
+                            )}
+                          </div>
+                        </td>
 
-                          {/* 7 Day check circles */}
-                          {weekDates.map((date, idx) => {
-                            const dateStr = formatYYYYMMDD(date)
-                            const completed = isHabitCompleted(habit.id, dateStr)
-                            return (
-                              <td key={idx} className="py-4 px-1 text-center align-middle">
-                                <button
-                                  onClick={() =>
-                                    handleToggleLog(habit.id, dateStr, completed)
-                                  }
-                                  className={`w-7 h-7 rounded-full border transition-all flex items-center justify-center mx-auto ${
-                                    completed
-                                      ? "bg-[#EFBCD5] border-[#EFBCD5] text-white"
-                                      : "border-[#d2c2c8] bg-white text-transparent hover:border-[#EFBCD5]"
-                                  }`}
-                                >
-                                  {completed && <span className="text-xs font-bold">✓</span>}
-                                </button>
-                              </td>
-                            )
-                          })}
-                        </tr>
-                      )
-                    })
+                        {weekDates.map((d) => {
+                          const dStr = formatYYYYMMDD(d)
+                          const completed = isHabitCompleted(habit.id, dStr)
+                          return (
+                            <td key={dStr} className="py-4 px-2 text-center">
+                              <button
+                                onClick={() => handleToggleLog(habit.id, dStr, completed)}
+                                className={`w-7 h-7 rounded-full border transition-all inline-flex items-center justify-center cursor-pointer ${
+                                  completed
+                                    ? "bg-[#EFBCD5] border-[#EFBCD5] text-white shadow-xs scale-105"
+                                    : "border-[#E5DFE2] hover:border-[#EFBCD5] bg-white"
+                                }`}
+                              >
+                                {completed && (
+                                  <span className="w-2.5 h-2.5 rounded-full bg-white" />
+                                )}
+                              </button>
+                            </td>
+                          )
+                        })}
+
+                        <td className="py-4 px-2 text-right">
+                          <button
+                            onClick={() => handleDeleteHabit(habit.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-[#706065] hover:text-red-500 cursor-pointer"
+                            title="Delete habit"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
             </div>
-
-            {/* Quick Add Habit Trigger */}
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1 text-sm font-sora font-semibold text-[#EFBCD5] hover:text-[#7b5268] transition-colors"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add habit</span>
-              </button>
-            </div>
           </div>
 
-          {/* Long-term Consistency Heatmap Card */}
-          <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6 font-outfit">
-            <h3 className="font-sora font-bold text-xl text-[#1f1a1d] mb-6 flex items-center gap-2">
-              <Calendar className="h-5.5 w-5.5 text-[#7b5268]" /> Long-term Consistency
-            </h3>
-
-            {/* Heatmap container */}
-            <div className="relative">
-              {/* Month Titles */}
-              <div className="flex gap-[68px] pl-8 mb-2 font-sora text-xs text-[#706065] font-semibold">
-                <span>Jun</span>
-                <span>Jul</span>
-                <span>Aug</span>
+          {/* Activity Heatmap Grid Card (3 Months Window) */}
+          <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">
+                  Consistency Heatmap
+                </h3>
+                <p className="text-xs text-[#706065]">
+                  Daily completion volume over the last 3 months
+                </p>
               </div>
+            </div>
 
-              {/* Grid rows */}
-              <div className="flex gap-2">
-                {/* Y-axis Labels */}
-                <div className="flex flex-col justify-between h-[105px] font-sora text-xs text-[#706065] w-6 pr-2 py-0.5 select-none">
-                  <span></span>
-                  <span>W</span>
-                  <span></span>
-                  <span>S</span>
-                  <span></span>
+            {/* Heatmap Grid */}
+            <div className="overflow-x-auto">
+              <div className="flex gap-2 min-w-max pt-2">
+                {/* Day labels (Mon, Wed, Fri) */}
+                <div className="flex flex-col justify-between py-1 text-[10px] font-mono text-[#706065] pr-2">
+                  <span>Mon</span>
+                  <span>Wed</span>
+                  <span>Fri</span>
                 </div>
 
-                {/* Grid boxes (flex layout of columns instead of grid to avoid stretching bugs) */}
-                <div className="flex gap-1">
-                  {heatmapWeeks.map((week, wIdx) => (
-                    <div key={wIdx} className="flex flex-col gap-1">
-                      {week.map((day, dIdx) => {
-                        const dateStr = formatYYYYMMDD(day)
-                        const isEmpty = day < heatmapStart || day > heatmapEnd
+                {/* Heatmap Columns (14 Weeks) */}
+                <div className="flex gap-1.5">
+                  {heatmapWeeks.map((week, wIndex) => (
+                    <div key={wIndex} className="flex flex-col gap-1.5">
+                      {week.map((date, dIndex) => {
+                        const dStr = formatYYYYMMDD(date)
+                        const count = heatmapCompletionMap[dStr] || 0
                         return (
                           <div
-                            key={dIdx}
-                            className={`w-3.5 h-3.5 rounded-sm transition-colors duration-150 relative group ${getHeatmapColorClass(
-                              day
+                            key={dIndex}
+                            className={`w-3.5 h-3.5 rounded-xs transition-colors ${getHeatmapColorClass(
+                              date
                             )}`}
-                          >
-                            {!isEmpty && (
-                              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-50 bg-[#1f1a1d] text-white text-xs px-1.5 py-0.5 rounded shadow-md whitespace-nowrap">
-                                <span>{dateStr}</span>
-                                <span>Completed: {heatmapCompletionMap[dateStr] || 0}</span>
-                              </div>
-                            )}
-                          </div>
+                            title={`${date.toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}: ${count} habit${count === 1 ? "" : "s"} completed`}
+                          />
                         )
                       })}
                     </div>
@@ -463,17 +522,17 @@ export default function Habits() {
               {/* Heatmap Legend */}
               <div className="flex items-center justify-end gap-1.5 text-xs text-[#706065] mt-4 select-none">
                 <span>Less</span>
-                <span className="w-3.5 h-3.5 rounded-sm bg-[#E5DFE2]/40" />
-                <span className="w-3.5 h-3.5 rounded-sm bg-[#EFBCD5]/25" />
-                <span className="w-3.5 h-3.5 rounded-sm bg-[#EFBCD5]/60" />
-                <span className="w-3.5 h-3.5 rounded-sm bg-[#EFBCD5]" />
+                <span className="w-3.5 h-3.5 rounded-xs bg-[#E5DFE2]/40" />
+                <span className="w-3.5 h-3.5 rounded-xs bg-[#EFBCD5]/35" />
+                <span className="w-3.5 h-3.5 rounded-xs bg-[#EFBCD5]/70" />
+                <span className="w-3.5 h-3.5 rounded-xs bg-[#EFBCD5]" />
                 <span>More</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Sidebar (Month stats & Streak history) */}
+        {/* Right Column: Sidebar (Month stats & Dynamic Streak history) */}
         <div className="lg:col-span-4 space-y-6">
           
           {/* Monthly stats card */}
@@ -483,23 +542,28 @@ export default function Habits() {
             </div>
             <div className="flex-grow min-w-0">
               <h4 className="font-sora font-bold text-base text-[#1f1a1d]">
-                August Progress
+                {currentMonthName} Progress
               </h4>
               <p className="text-xs text-[#706065] mt-0.5">
-                Completed <strong>{stats.activeDays}</strong>/<strong>{stats.totalDays}</strong> days in August
+                Completed <strong>{stats.activeDays}</strong>/<strong>{stats.totalDays}</strong> days in {currentMonthName}
               </p>
               
               {/* Progress bar */}
               <div className="w-full bg-[#E5DFE2] h-2 rounded-full mt-3 overflow-hidden">
                 <div
                   className="bg-[#7b5268] h-full rounded-full transition-all duration-500"
-                  style={{ width: `${(stats.activeDays / stats.totalDays) * 100}%` }}
+                  style={{
+                    width: `${Math.min(
+                      ((stats.activeDays || 0) / (stats.totalDays || 1)) * 100,
+                      100
+                    )}%`,
+                  }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Streak History Line Chart */}
+          {/* DYNAMIC Streak History Line Chart Card */}
           <div className="bg-white rounded-[24px] border border-[#E5DFE2] shadow-[0_10px_30px_-5px_rgba(239,188,213,0.15)] p-6 font-outfit relative">
             <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">
               Streak History
@@ -508,7 +572,7 @@ export default function Habits() {
               Last 3 months progress
             </p>
 
-            {/* SVG line chart */}
+            {/* Dynamic SVG line chart */}
             <div className="relative h-[180px] w-full mt-4">
               <svg viewBox="0 0 300 150" className="w-full h-full overflow-visible">
                 <defs>
@@ -519,36 +583,63 @@ export default function Habits() {
                 </defs>
                 
                 {/* Area path */}
-                <path
-                  d="M 10 120 C 50 135, 80 145, 110 125 C 140 105, 160 50, 180 80 C 200 110, 220 130, 240 70 C 260 20, 280 40, 290 50 L 290 150 L 10 150 Z"
-                  fill="url(#chartGrad)"
-                />
+                {streakChartData.areaD && (
+                  <path d={streakChartData.areaD} fill="url(#chartGrad)" />
+                )}
                 
                 {/* Line spline curve path */}
-                <path
-                  d="M 10 120 C 50 135, 80 145, 110 125 C 140 105, 160 50, 180 80 C 200 110, 220 130, 240 70 C 260 20, 280 40, 290 50"
-                  fill="none"
-                  stroke="#7b5268"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
+                {streakChartData.pathD && (
+                  <path
+                    d={streakChartData.pathD}
+                    fill="none"
+                    stroke="#7b5268"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+                )}
                 
-                {/* Milestone points */}
-                <circle cx="110" cy="125" r="4.5" fill="white" stroke="#7b5268" strokeWidth="2.5" />
-                <circle cx="160" cy="65" r="4.5" fill="white" stroke="#7b5268" strokeWidth="2.5" />
-                <circle cx="200" cy="98" r="4.5" fill="white" stroke="#7b5268" strokeWidth="2.5" />
-                <circle cx="240" cy="70" r="4.5" fill="white" stroke="#7b5268" strokeWidth="2.5" />
-                <circle cx="272" cy="35" r="4.5" fill="white" stroke="#7b5268" strokeWidth="2.5" />
+                {/* Dynamic Milestone points */}
+                {streakChartData.points.map((pt, idx) => (
+                  <circle
+                    key={idx}
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="4.5"
+                    fill="white"
+                    stroke="#7b5268"
+                    strokeWidth="2.5"
+                  />
+                ))}
 
-                {/* Highlight active point and tooltip */}
-                <circle cx="272" cy="35" r="7" fill="#7b5268" opacity="0.2" />
+                {/* Highlight active last point */}
+                {streakChartData.lastPoint && (
+                  <circle
+                    cx={streakChartData.lastPoint.x}
+                    cy={streakChartData.lastPoint.y}
+                    r="7"
+                    fill="#7b5268"
+                    opacity="0.2"
+                  />
+                )}
               </svg>
 
-              {/* Float tooltip over milestone */}
-              <div className="absolute right-0 top-3 z-30 bg-[#1f1a1d] text-white font-sora font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-md flex items-center gap-1 select-none">
-                <span>15 days streak!</span>
-                {/* Downward triangle arrow */}
-                <div className="absolute bottom-[-4px] right-6 w-2 h-2 bg-[#1f1a1d] rotate-45" />
+              {/* Dynamic Float tooltip over active streak milestone */}
+              <div
+                className="absolute z-30 bg-[#1f1a1d] text-white font-sora font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-md flex items-center gap-1 select-none transition-all duration-300 pointer-events-none"
+                style={{
+                  left: `${((streakChartData.lastPoint?.x || 272) / 300) * 100}%`,
+                  top: `${Math.max(
+                    ((streakChartData.lastPoint?.y || 35) / 150) * 100 - 25,
+                    0
+                  )}%`,
+                  transform: "translateX(-75%)",
+                }}
+              >
+                <span>
+                  {streakChartData.currentStreak} day
+                  {streakChartData.currentStreak === 1 ? "" : "s"} streak!
+                </span>
+                <div className="absolute bottom-[-4px] right-4 w-2 h-2 bg-[#1f1a1d] rotate-45" />
               </div>
             </div>
           </div>
@@ -563,10 +654,10 @@ export default function Habits() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-[#E5DFE2]">
-              <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">Create New Habit</h3>
+              <h3 className="font-sora font-bold text-lg text-[#1f1a1d]">New Habit</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-[#706065] hover:text-[#EFBCD5] rounded-full hover:bg-zinc-50"
+                className="p-1.5 text-[#706065] hover:text-[#EFBCD5] rounded-full hover:bg-zinc-50 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -575,13 +666,13 @@ export default function Habits() {
             <form onSubmit={handleCreateHabit} className="space-y-4 font-outfit">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
-                  Habit Name
+                  Habit Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={habitName}
                   onChange={(e) => setHabitName(e.target.value)}
-                  placeholder="e.g. Drink 2L water, Learn 15 new words..."
+                  placeholder="e.g. Read 10 pages, Drink water..."
                   className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d]"
                 />
               </div>
@@ -590,11 +681,12 @@ export default function Habits() {
                 <label className="text-xs font-bold text-[#706065] uppercase tracking-wider">
                   Description (Optional)
                 </label>
-                <textarea
+                <input
+                  type="text"
                   value={habitDesc}
                   onChange={(e) => setHabitDesc(e.target.value)}
-                  placeholder="A short description of the habit..."
-                  className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d] resize-none h-20"
+                  placeholder="e.g. Every morning at 7 AM"
+                  className="w-full bg-[#FCFAF7] border border-[#E5DFE2] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#EFBCD5] text-sm text-[#1f1a1d]"
                 />
               </div>
 
@@ -602,16 +694,16 @@ export default function Habits() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2.5 border border-[#E5DFE2] text-[#706065] rounded-xl font-sora font-semibold text-xs hover:bg-zinc-50 active:scale-95 transition-all"
+                  className="flex-1 py-2.5 border border-[#E5DFE2] text-[#706065] rounded-xl font-sora font-semibold text-xs hover:bg-zinc-50 active:scale-95 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createHabitMutation.isPending}
-                  className="flex-1 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm border border-[#ffd8ea]"
+                  className="flex-1 py-2.5 bg-[#EFBCD5] text-[#201B1E] rounded-xl font-sora font-bold text-xs hover:bg-[#ebb8d1] active:scale-95 transition-all shadow-sm border border-[#ffd8ea] cursor-pointer"
                 >
-                  {createHabitMutation.isPending ? "Saving..." : "Create Habit"}
+                  {createHabitMutation.isPending ? "Adding..." : "Add Habit"}
                 </button>
               </div>
             </form>
