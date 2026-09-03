@@ -14,6 +14,7 @@ import EnglishAudioLibrary from "@/pages/EnglishAudioLibrary"
 import EnglishShadowingDetail from "@/pages/EnglishShadowingDetail"
 import Tasks from "@/pages/Tasks"
 import Habits from "@/pages/Habits"
+import Profile from "@/pages/Profile"
 
 export default function App() {
   return (
@@ -30,6 +31,16 @@ export default function App() {
               <ProtectedRoute>
                 <Layout>
                   <Hub />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Profile />
                 </Layout>
               </ProtectedRoute>
             }
