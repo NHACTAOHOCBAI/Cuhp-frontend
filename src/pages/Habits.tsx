@@ -219,7 +219,6 @@ export default function Habits() {
 
   // Calculate consistency analytics for sidebar (only counting up to today)
   const stats = React.useMemo(() => {
-    const now = new Date()
     const targetYear = viewedMonthDate.getFullYear()
     const targetMonth = viewedMonthDate.getMonth()
 

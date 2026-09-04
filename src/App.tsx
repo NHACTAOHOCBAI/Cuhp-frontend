@@ -12,6 +12,7 @@ import EnglishReadingList from "@/pages/EnglishReadingList"
 import EnglishReadingDetail from "@/pages/EnglishReadingDetail"
 import EnglishAudioLibrary from "@/pages/EnglishAudioLibrary"
 import EnglishShadowingDetail from "@/pages/EnglishShadowingDetail"
+import EnglishWordSnake from "@/pages/EnglishWordSnake"
 import Tasks from "@/pages/Tasks"
 import Habits from "@/pages/Habits"
 import Profile from "@/pages/Profile"
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="listening" element={<EnglishAudioLibrary />} />
             <Route path="listening/:id" element={<EnglishShadowingDetail />} />
             <Route path="analytics" element={<EnglishAnalytics />} />
+            <Route path="snake" element={<EnglishWordSnake />} />
           </Route>
           <Route
             path="/todo"

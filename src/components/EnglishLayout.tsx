@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Link, useLocation, Outlet } from "react-router-dom"
-import { BookOpen, Volume2, Layers, TrendingUp } from "lucide-react"
+import { BookOpen, Volume2, Layers, TrendingUp, Gamepad2 } from "lucide-react"
 
 export default function EnglishLayout() {
   const location = useLocation()
@@ -17,6 +17,7 @@ export default function EnglishLayout() {
     { label: "Reading", path: "/english/reading", icon: BookOpen },
     { label: "Listening", path: "/english/listening", icon: Volume2 },
     { label: "Analytics", path: "/english/analytics", icon: TrendingUp },
+    { label: "Word Snake", path: "/english/snake", icon: Gamepad2 },
   ]
 
   return (
@@ -51,16 +52,15 @@ export default function EnglishLayout() {
         </nav>
 
         {/* Sidebar Actions */}
-        {location.pathname === "/english/vocabularies" && (
-          <div className="mt-8 pt-[24px] border-t border-[#E5DFE2]">
-            <button
-              onClick={handleRestartSession}
-              className="w-full py-2.5 bg-[#fcf1f5] text-[#7b5268] font-sora text-base rounded-[24px] font-bold hover:bg-[#EFBCD5]/20 transition-colors border border-[#d2c2c8]"
-            >
-              Reset review session
-            </button>
-          </div>
-        )}
+        <div className="mt-8 pt-[24px] border-t border-[#E5DFE2]">
+          <button
+            onClick={handleRestartSession}
+            className="w-full py-3 bg-white text-[#201B1E] font-sora text-sm rounded-full font-semibold hover:bg-[#FCF1F5] transition-colors border border-[#E5DFE2] flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="text-xs">▶</span>
+            <span>Start Review</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area via Outlet */}
