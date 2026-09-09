@@ -13,6 +13,8 @@ import EnglishReadingDetail from "@/pages/EnglishReadingDetail"
 import EnglishAudioLibrary from "@/pages/EnglishAudioLibrary"
 import EnglishShadowingDetail from "@/pages/EnglishShadowingDetail"
 import EnglishWordSnake from "@/pages/EnglishWordSnake"
+import EnglishReflexPage from "@/pages/EnglishReflexPage"
+import EnglishErrorBankPage from "@/pages/EnglishErrorBankPage"
 import Tasks from "@/pages/Tasks"
 import Habits from "@/pages/Habits"
 import Profile from "@/pages/Profile"
@@ -70,6 +72,8 @@ export default function App() {
           >
             <Route index element={<Navigate to="vocabularies" replace />} />
             <Route path="vocabularies" element={<EnglishVocabularies />} />
+            <Route path="reflex" element={<EnglishReflexPage />} />
+            <Route path="error-bank" element={<EnglishErrorBankPage />} />
             <Route path="reading" element={<EnglishReadingList />} />
             <Route path="reading/:id" element={<EnglishReadingDetail />} />
             <Route path="listening" element={<EnglishAudioLibrary />} />

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Link, useLocation, Outlet } from "react-router-dom"
-import { BookOpen, Volume2, Layers, TrendingUp, Gamepad2 } from "lucide-react"
+import { BookOpen, Volume2, Layers, TrendingUp, Gamepad2, Zap, BookmarkCheck } from "lucide-react"
 
 export default function EnglishLayout() {
   const location = useLocation()
@@ -14,6 +14,8 @@ export default function EnglishLayout() {
 
   const navItems = [
     { label: "Vocabulary", path: "/english/vocabularies", icon: Layers },
+    { label: "Luyện Phản Xạ", path: "/english/reflex", icon: Zap },
+    { label: "Sổ Lỗi Sai", path: "/english/error-bank", icon: BookmarkCheck },
     { label: "Reading", path: "/english/reading", icon: BookOpen },
     { label: "Listening", path: "/english/listening", icon: Volume2 },
     { label: "Analytics", path: "/english/analytics", icon: TrendingUp },
